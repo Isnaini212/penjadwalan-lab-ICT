@@ -2,24 +2,28 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Schedule extends Model
 {
+    use HasFactory;
     protected $table = 'schedules';
     protected $primaryKey = 'id_jadwal';
     
     protected $fillable = [
         'id_lab', 
         'id_asisten', 
-        'tanggal', 
+        'tanggal',
+        'hari',
+        'lab',
         'jam_mulai', 
         'jam_selesai', 
         'matkul', 
         'sks', 
-        'dosen', 
-        'hari'
+        'dosen',
+        'nama_asisten'
     ];
 
     /**

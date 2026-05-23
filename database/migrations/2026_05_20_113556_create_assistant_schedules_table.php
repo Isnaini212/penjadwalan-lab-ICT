@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('assistant_schedules', function (Blueprint $table) {
             $table->id('id_asisten');
             $table->string('nama_asisten');
-            $table->time('jm_mulai');
-            $table->time('jm_selesai');
-            $table->string('matkul');
-            $table->string('hari_matkul');
+            $table->string('hari');
+            $table->time('jam_mulai');
+            $table->time('jam_selesai');
+            $table->string('mata_kuliah');
             $table->timestamps();
         });
     }

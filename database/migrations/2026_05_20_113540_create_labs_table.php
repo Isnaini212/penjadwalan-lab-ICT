@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('labs', function (Blueprint $table) {
             $table->id('id_lab');
-            $table->string('nama_lab');
+            $table->string('nm_lab')->unique();
+            $table->integer('kapasitas');
+            $table->text('fasilitas');
             $table->timestamps();
         });
     }
