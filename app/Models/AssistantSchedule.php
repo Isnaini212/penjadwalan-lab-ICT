@@ -7,20 +7,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssistantSchedule extends Model
 {
+
     protected $table = 'assistant_schedules';
     protected $primaryKey = 'id_asisten';
-    
+
     protected $fillable = [
-        'nama_asisten', 
-        'jm_mulai', 
-        'jm_selesai', 
-        'matkul', 
-        'hari_matkul'
+        'nama_asisten',
+        'hari',
+        'jam_mulai',
+        'jam_selesai',
+        'mata_kuliah',
     ];
 
-    /**
-     * Relasi HasMany: Satu Asisten bisa memiliki banyak Jadwal
-     */
+
     public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class, 'id_asisten', 'id_asisten');
