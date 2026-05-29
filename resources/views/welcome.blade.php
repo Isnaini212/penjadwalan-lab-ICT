@@ -15,9 +15,13 @@
 
 
     <nav class="sticky top-0 z-40 border-b border-white/70 bg-white/80 backdrop-blur">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-5 lg:px-8">
-            <div class="text-lg font-semibold tracking-tight text-blue-800 sm:text-xl">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8">
+            <div class="flex items-center gap-2">
+                <img src="{{ asset('images/LogoICT.png') }}" alt="Logo Untan" class="h-10 w-auto">
+
+                <div class="text-lg font-semibold tracking-tight text-blue-900 sm:text-xl">
                 Penjadwalan Lab ICT
+                </div>
             </div>
 
             <div class="hidden items-center gap-10 text-sm font-semibold text-slate-600 md:flex">
@@ -33,8 +37,8 @@
                         Dashboard
                     </a>
                 @else
-                    <a href="/spv/jadwal" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
-                        Masuk
+                    <a href="/login" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+                        Login
                     </a>
                 @endauth
             </div>
@@ -44,7 +48,7 @@
     <main class="mx-auto max-w-7xl px-5 pb-12 pt-14 lg:px-8">
         {{-- HERO SECTION --}}
         <header class="mx-auto max-w-5xl text-center">
-            <h1 class="text-4xl font-bold tracking-tight text-blue-800 sm:text-4xl lg:text-5xl">
+            <h1 class="text-4xl font-bold tracking-tight text-blue-900 sm:text-4xl lg:text-5xl">
                 Selamat Datang di Penjadwalan Lab ICT
             </h1>
             <p class="mx-auto mt-6 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg">
@@ -76,7 +80,7 @@
                     <select id="filterLab" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                         <option value="">Semua Ruang Lab</option>
                         @for($i=1; $i<=11; $i++)
-                            @php $formatLab = 'LAB ' . sprintf('%02d', $i); @endphp
+                            @php $formatLab = 'Lab ' . sprintf('%02d', $i); @endphp
                             <option value="{{ $formatLab }}">{{ $formatLab }}</option>
                         @endfor
                     </select>
