@@ -25,7 +25,7 @@ class JadwalController extends Controller
         $schedules = Schedule::with(['lab', 'assistantSchedule'])
                          ->whereDate('tanggal', $filterDate)
                          ->whereHas('lab', function($query) {
-                             $query->where('nama_lab', '!=', 'RUANG RA')
+                             $query->where('nama_lab', '!=', 'RUANG ASISTEN')
                                    ->where('nama_lab', '!=', 'RA');
                          })
                          ->orderBy('jam_mulai', 'asc')
@@ -92,16 +92,7 @@ class JadwalController extends Controller
     }
 
 
-    public function reject($id)
-    {
-        try {
-            $booking = Booking::findOrFail($id);
-            $booking->update(['status' => 'rejected']);
-            return back()->with('error', 'SYSTEM_MSG: Pengajuan telah ditolak!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'CRITICAL_ERROR: ' . $e->getMessage());
-        }
-    }
+
 
     public function quickUpdate(Request $request, $id)
     {
