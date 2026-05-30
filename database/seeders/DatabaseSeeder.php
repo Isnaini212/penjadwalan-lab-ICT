@@ -20,6 +20,12 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'no_wa' => '081234567890',
         ]);
+
+        //Memanggil LabSeeder LabSeeder
+        $this->call([
+            LabSeeder::class,
+    ]);
     }
 }
