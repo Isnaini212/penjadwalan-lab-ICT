@@ -21,5 +21,5 @@ Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'dbd
 //LAB//
 Route::get('/spv/lab', [App\Http\Controllers\LabController::class, 'manajemenLab'])->name('spv.lab');
 Route::post('/spv/lab/simpen', [App\Http\Controllers\LabController::class, 'buatLab'])->name('spv.buatLab');
-Route::put('/spv/lab/update/{id_lab}', [App\Http\Controllers\LabController::class, 'update'])->name('spv.lab.update');
+Route::put('/spv/{id_lab}', [App\Http\Controllers\LabController::class, 'update'])->name('spv.lab.update');
 Route::delete('/spv/lab/hapus/{id_lab}', [App\Http\Controllers\LabController::class, 'destroy'])->name('spv.lab.delete');

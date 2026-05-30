@@ -1,109 +1,168 @@
 @extends('layouts.spv')
+
 @section('title', 'Manajemen Lab')
 
 @section('content')
-    <h1>Manajemen Laboratorium</h1>
-    <p>Halaman khusus operasi CRUD Ruang Laboratorium.</p>
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+<div class="min-h-screen font-sans text-slate-800">
+    {{-- HEADER MANAGEMENT --}}
+    <div class="mb-10">
+        <h2 class="text-2xl font-bold tracking-tight text-blue-900 sm:text-3xl">Dashboard Manajemen Laboratorium</h2>
+        <p class="mt-2 text-sm text-slate-500">Gunakan panel ini untuk memonitor dan menambah kapasitas infrastruktur.</p>
+    </div>
 
-    <hr>
+    {{-- GRID UTAMA: 2 KOLOM --}}
+    <div class="grid gap-8 lg:grid-cols-[1fr_2fr]">
+        
+        {{-- SISI KIRI: FORM TAMBAH LAB (CARD STYLE) --}}
+        <div class="h-fit rounded-2xl border border-white/80 bg-white/80 p-6 shadow-xl shadow-blue-950/5 backdrop-blur">
+            <h3 class="mb-5 text-lg font-bold text-blue-900 flex items-center gap-2">
+                <span>➕</span> Tambah Lab Baru
+            </h3>
+            
+            <form action="{{ route('spv.buatLab') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Identitas / Nama Lab</label>
+                    <input type="text" name="nama_lab" placeholder="Misal: Lab Riset AI" required 
+                           class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                </div>
 
-    {{-- 1. NOTIFIKASI / ALERT --}}
-    @if(session('success'))
-        <div style="color: green; background-color: #e6f4ea; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">
-            {{ session('success') }}
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Kapasitas Mahasiswa</label>
+                    <input type="number" name="kapasitas" placeholder="Contoh: 40" required 
+                           class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Deskripsi Fasilitas</label>
+                    <textarea name="fasilitas" rows="4" placeholder="Sebutkan PC, AC, Proyektor, dll..." 
+                              class="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"></textarea>
+                </div>
+
+                <button type="submit" class="mt-2 h-12 w-full rounded-xl bg-blue-700 text-sm font-extrabold uppercase tracking-wide text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200">
+                    Simpan Data Lab
+                </button>
+            </form>
         </div>
-    @endif
 
-    @if($errors->any())
-        <div style="color: red; background-color: #fce8e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">
-            <ul style="margin: 0; padding-left: 20px;">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+        {{-- SISI KANAN: DAFTAR LAB (GRID CARD STYLE) --}}
+        <div class="rounded-2xl border border-white/80 bg-white/40 p-6 backdrop-blur">
+            <div class="mb-6 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-blue-900 flex items-center gap-2">
+                    <span>📦</span> Daftar Lab Tersedia
+                </h3>
+                <span class="inline-flex items-center rounded-full bg-blue-50 px-4 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                    Total: {{ $labs->count() }} Lab
+                </span>
+            </div>
 
-    {{-- Ganti isi dari file lab.blade.php kamu dari bagian FORM TAMBAH sampai TABEL saja --}}
+            {{-- LOOPING KARTU LAB --}}
+            <div class="grid gap-4 sm:grid-cols-2">
+                @foreach ($labs as $lab)
+                <div class="flex flex-col justify-between rounded-xl border border-slate-100 bg-white p-5 shadow-md transition hover:shadow-lg hover:border-blue-100">
+                    <div>
+                        {{-- Perbaikan Tag: Mengganti tag <td> bawaan yang bikin layout rusak --}}
+                        <h4 class="text-base font-extrabold tracking-wide text-blue-900 uppercase border-b border-slate-100 pb-3">
+                            {{ $lab->nama_lab }}
+                        </h4>
+                        
+                        <div class="mt-4 space-y-2 text-sm text-slate-600">
+                            <p class="flex items-center gap-2">
+                                <span class="text-slate-400">👥</span> 
+                                <span class="font-semibold text-slate-700">Kapasitas:</span> {{ $lab->kapasitas }} Orang
+                            </p>
+                            <p class="flex items-start gap-2">
+                                <span class="text-slate-400 mt-0.5">🛠️</span> 
+                                <span><span class="font-semibold text-slate-700">Fasilitas:</span> {{ Str::limit($lab->fasilitas, 80) }}</span>
+                            </p>
+                        </div>
+                    </div>
 
-    {{-- 2. CREATE: FORM TAMBAH LAB BARU --}}
-    <h3>Tambah Lab Baru</h3>
-    <form action="{{ route('spv.buatLab') }}" method="POST">
-        @csrf
-        <table border="0" cellpadding="5">
-            <tr>
-                <td><label>Nama Lab</label></td>
-                <td><input type="text" name="nama_lab" placeholder="Contoh: lab komputer" required></td>
-            </tr>
-            <tr>
-                <td><label>Kapasitas</label></td>
-                {{-- Ditambahkan atribut min="1" agar tidak bisa di-down ke minus --}}
-                <td><input type="number" name="kapasitas" min="1" placeholder="Contoh: 40" required></td>
-            </tr>
-            <tr>
-                <td><label>Fasilitas</label></td>
-                <td><input type="text" name="fasilitas" placeholder="Contoh: AC, PC, Proyektor" required></td>
-            </tr>
-        </table>
-        <button type="submit" style="margin-top: 10px; background-color: blue; color: white; padding: 5px 10px; cursor: pointer;">Simpan Lab</button>
-    </form>
-
-    <hr>
-
-    {{-- 3. READ, UPDATE, & DELETE: TABEL DAFTAR LAB --}}
-    <h3>Daftar Laboratorium</h3>
-    <table border="1" cellpadding="8" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
-        <thead>
-            <tr style="background-color: #f2f2f2;">
-                <th>ID Lab</th>
-                <th>Nama Lab</th>
-                <th>Kapasitas</th>
-                <th>Fasilitas</th>
-                <th>Aksi / Operasi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if($labs->isEmpty())
-                <tr>
-                    <td colspan="5" style="text-align: center;">Belum ada data laboratorium.</td>
-                </tr>
-            @else
-                @foreach($labs as $item)
-                    <tr>
-                        {{-- PERBAIKAN: Route diarahkan ke 'spv.lab.update' --}}
-                        <form action="{{ route('spv.lab.update', $item->id_lab) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            
-                            <td>{{ $item->id_lab }}</td>
-                            <td>
-                                <input type="text" name="nama_lab" value="{{ $item->nama_lab }}" required>
-                            </td>
-                            <td>
-                                {{-- Ditambahkan atribut min="1" pada kolom edit --}}
-                                <input type="number" name="kapasitas" value="{{ $item->kapasitas }}" min="1" style="width: 60px;" required>
-                            </td>
-                            <td>
-                                <input type="text" name="fasilitas" value="{{ $item->fasilitas }}" style="width: 90%;" required>
-                            </td>
-                            <td>
-                                <button type="submit" style="background-color: orange; color: white; padding: 3px 8px; cursor: pointer; border: none; border-radius: 3px;">
-                                    Update
-                                </button>
+                    {{-- TOMBOL AKSI KERJA --}}
+                    <div class="mt-6 flex gap-3 border-t border-slate-50 pt-4">
+                        <button class="h-9 flex-1 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-blue-700" 
+                                onclick="openEditModal({{ json_encode($lab) }})">
+                            Edit
+                        </button>
+                        
+                        <form action="{{ route('spv.lab.delete', $lab->id_lab) }}" method="POST" class="flex-1">
+                            @csrf 
+                            @method('DELETE')
+                            <button type="submit" class="h-9 w-full rounded-lg bg-red-50 text-xs font-bold text-red-700 transition hover:bg-red-100" 
+                                    onclick="return confirm('Hapus lab ini?')">
+                                Hapus
+                            </button>
                         </form>
-
-                                {{-- PERBAIKAN: Route diarahkan ke 'spv.lab.delete' --}}
-                                <form action="{{ route('spv.lab.delete', $item->id_lab) }}" method="POST" style="display: inline; margin-left: 5px;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lab ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" style="background-color: red; color: white; padding: 3px 8px; cursor: pointer; border: none; border-radius: 3px;">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </td>
-                    </tr>
+                    </div>
+                </div>
                 @endforeach
-            @endif
-        </tbody>
-    </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{-- MODAL EDIT GLASSMORPHISM STYLE --}}
+<div id="modalEditLab" class="modal-overlay hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-2xl transition-all border border-slate-100">
+        <h3 class="text-lg font-bold text-blue-900 mb-5">Edit Data Laboratorium</h3>
+        
+        <form id="editForm" method="POST" class="space-y-4">
+            @csrf
+            @method('PUT')
+            
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Nama Lab</label>
+                <input type="text" name="nama_lab" id="edit_nama_lab" required 
+                       class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Kapasitas</label>
+                <input type="number" name="kapasitas" id="edit_kapasitas" required 
+                       class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Fasilitas</label>
+                <textarea name="fasilitas" id="edit_fasilitas" rows="3" required 
+                          class="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"></textarea>
+            </div>
+
+            <div class="mt-6 flex gap-3 pt-2">
+                <button type="button" class="h-11 flex-1 rounded-xl bg-slate-100 text-sm font-bold text-slate-600 transition hover:bg-slate-200" 
+                        onclick="closeEditModal()">
+                    Batal
+                </button>
+                <button type="submit" class="h-11 flex-1 rounded-xl bg-blue-700 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- JAVASCRIPT CORE MODAL TRIGGER --}}
+<script>
+    function openEditModal(lab) {
+        document.getElementById('edit_nama_lab').value = lab.nama_lab;
+        document.getElementById('edit_kapasitas').value = lab.kapasitas;
+        document.getElementById('edit_fasilitas').value = lab.fasilitas;
+        
+        const form = document.getElementById('editForm');
+        form.action = `/spv/${lab.id_lab}`; 
+        
+        // Menggunakan utilitas kelas flex Tailwind untuk memunculkan modal
+        const modal = document.getElementById('modalEditLab');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('modalEditLab');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+</script>
 @endsection
