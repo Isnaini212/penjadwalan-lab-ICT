@@ -4,103 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') - Lab ICT</title>
-    
-    {{-- CSS & Icons --}}
-    <link rel="stylesheet" href="{{ asset('css/spv-space.css') }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <style>[x-cloak] { display: none !important; }</style>
+
     @yield('styles')
-
 </head>
-<body>
+<body class="bg-slate-100 font-sans text-slate-800">
+    <div x-data="{ sidebarOpen: false, profileOpen: false }" class="min-h-screen lg:flex">
+        <div
+            x-cloak
+            x-show="sidebarOpen"
+            x-transition.opacity
+            class="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
+            @click="sidebarOpen = false"
+            aria-hidden="true"
+        ></div>
 
-    {{-- ================= SIDEBAR ================= --}}
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <img src="{{ asset('img/logo-ubl.png') }}" 
-     alt="Foto Profil" 
-     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></i>
-            <h2>Laboratorium<br>ICT Budi Luhur</h2>
-        </div>
-        
-        <div class="sidebar-menu">
-            
-            <a href="{{ route('spv.jadwal') }}" class="{{ request()->routeIs('spv.jadwal') ? 'active' : '' }}">
-                <i class="fas fa-calendar-alt"></i> Manajemen Jadwal
-            </a>
-        
-        </div> 
-        
-        <div class="sidebar-footer">
-           
-                <button type="submit">
-                    <i class="fas fa-sign-out-alt"></i> Log out
-                </button>
-            </form>
-        </div>
-    </aside>
+        <aside
+            class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-blue-950 to-sky-900 text-white shadow-2xl transition-transform duration-300 lg:translate-x-0"
+            :class="{ 'translate-x-0': sidebarOpen }"
+        >
+            <div class="flex items-center gap-3 px-5 py-6">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/20">
+                    <i class="fa-solid fa-flask text-base text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-extrabold leading-tight">Laboratorium</h1>
+                    <p class="text-xs font-bold leading-tight text-blue-100">ICT Budi Luhur</p>
+                </div>
+            </div>
 
-    {{-- ================= KONTEN UTAMA ================= --}}
-    <main class="main-content" id="main-content">
-        <div class="topbar">
-            <div>
-                <button class="burger-btn" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
+            <nav class="mt-2 flex-1 space-y-1.5 px-4 text-xs font-bold">
+                <a href="{{ route('spv.dashboard') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-3 transition {{ request()->routeIs('spv.dashboard') ? 'bg-white/18 text-white shadow-lg shadow-blue-950/20' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-house w-5"></i>
+                    Dashboard
+                </a>
+                <a href="{{ route('spv.jadwal') }}" class="flex items-center gap-3 rounded-xl px-3.5 py-3 transition {{ request()->routeIs('spv.jadwal') ? 'bg-white/18 text-white shadow-lg shadow-blue-950/20' : 'text-blue-100 hover:bg-white/10 hover:text-white' }}">
+                    <i class="fa-solid fa-calendar-days w-5"></i>
+                    Manajemen Jadwal
+                </a>
+                <a href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-3 text-blue-100 transition hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-file-import w-5"></i>
+                    Import Jadwal Asisten
+                </a>
+                <a href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-3 text-blue-100 transition hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-desktop w-5"></i>
+                    Data Lab
+                </a>
+            </nav>
+
+            <div class="border-t border-white/10 p-4">
+                <button type="button" class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-xs font-extrabold text-white transition hover:bg-white/15">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Log out
                 </button>
             </div>
-            
-           
-            <div style="position: relative;" id="profileDropdownContainer">
-                
-                {{-- Tombol Profil --}}
-                <div onclick="toggleProfileDropdown(event)" style="display: flex; align-items: center; gap: 12px; font-weight: bold; color: #334155; cursor: pointer; padding: 6px 14px; border-radius: 12px; transition: 0.2s; border: 1px solid transparent;" onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='transparent';">
-                    
-                    {{-- Avatar Otomatis dari Nama via UI-Avatars --}}
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name ?? 'A') }}&background=e0f2fe&color=0284c7&bold=true" 
-                         alt="Avatar" 
-                         style="width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    
-                    <div style="line-height: 1.3;">
-                        <div style="font-size: 14px;">SPV Penjadwalan</div>
-                        <div style="font-size: 12px; font-weight: 500; color: #64748b;">
-                            {{ Auth::user()->name ?? 'Administrator' }} 
-                        </div>
-                    </div>
-                    <i class="fas fa-chevron-down" style="font-size: 12px; color: #94a3b8; margin-left: 8px;"></i>
-                </div>
+        </aside>
 
-                {{-- Menu Dropdown (Disembunyikan secara paksa pakai display:none) --}}
-                <div id="profileDropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 220px; overflow: hidden; z-index: 50;">
-                    
-                    <div style="padding: 16px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;">
-                        <div style="font-size: 13px; color: #64748b; font-weight: 600; margin-bottom: 2px;">Masuk sebagai:</div>
-                        <div style="font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            {{ Auth::user()->email ?? 'admin@budiluhur.ac.id' }}
-                        </div>
-                    </div>
+        <div class="min-h-screen flex-1 lg:pl-64">
+            <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur lg:px-7">
+                <button
+                    type="button"
+                    class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden"
+                    @click="sidebarOpen = true"
+                    aria-label="Buka menu"
+                >
+                    <i class="fa-solid fa-bars"></i>
+                </button>
 
-                    <a href="" style="display: flex; align-items: center; padding: 12px 16px; color: #475569; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s;" onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.color='#0ea5e9'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#475569'">
-                        <i class="fas fa-user-circle" style="width: 20px; font-size: 16px;"></i> Edit Profil
-                    </a>
-                    
-                    <form method="POST" action="" style="margin: 0; border-top: 1px solid #f1f5f9;">
-                    
-                        <button type="submit" style="width: 100%; text-align: left; background: none; border: none; padding: 12px 16px; color: #ef4444; cursor: pointer; font-size: 14px; font-weight: 500; transition: 0.2s; display: flex; align-items: center;" onmouseover="this.style.backgroundColor='#fef2f2'" onmouseout="this.style.backgroundColor='transparent'">
-                            <i class="fas fa-sign-out-alt" style="width: 20px; font-size: 16px;"></i> Log out
+                <div class="hidden lg:block"></div>
+
+                <div class="relative" @click.outside="profileOpen = false">
+                    <button
+                        type="button"
+                        class="flex items-center gap-3 rounded-2xl px-3 py-2 text-left transition hover:bg-slate-100"
+                        @click="profileOpen = !profileOpen"
+                    >
+                        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-sky-100 text-sm font-extrabold text-sky-700">
+                            {{ strtoupper(substr(Auth::user()?->name ?? 'DN', 0, 2)) }}
+                        </div>
+                        <div class="hidden leading-tight sm:block">
+                            <div class="text-sm font-extrabold text-slate-800">SPV Penjadwalan</div>
+                            <div class="text-xs font-semibold text-slate-500">{{ Auth::user()?->name ?? 'Administrator' }}</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                    </button>
+
+                    <div
+                        x-cloak
+                        x-show="profileOpen"
+                        x-transition
+                        class="absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+                    >
+                        <div class="border-b border-slate-100 bg-slate-50 px-4 py-3">
+                            <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Masuk sebagai</p>
+                            <p class="mt-1 truncate text-sm font-extrabold text-slate-800">{{ Auth::user()?->email ?? 'admin@budiluhur.ac.id' }}</p>
+                        </div>
+                        <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                            <i class="fa-solid fa-user-circle w-5 text-slate-400"></i>
+                            Edit Profil
+                        </a>
+                        <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50">
+                            <i class="fa-solid fa-right-from-bracket w-5"></i>
+                            Log out
                         </button>
-                    </form>
+                    </div>
                 </div>
-            </div>
-            
-        </div>
+            </header>
 
-        <div class="content-area">
-            @yield('content')
+            <main class="p-5 lg:p-7">
+                @yield('content')
+            </main>
         </div>
-    </main>
+    </div>
 
-    
     @yield('scripts')
 </body>
 </html>
