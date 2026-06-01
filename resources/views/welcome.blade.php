@@ -25,10 +25,7 @@
             </div>
 
             <div class="hidden items-center gap-10 text-sm font-semibold text-slate-600 md:flex">
-                <a href="#" class="transition hover:text-blue-700">Home</a>
-                <a href="#" class="transition hover:text-blue-700">About</a>
-                <a href="#" class="transition hover:text-blue-700">Contact</a>
-                <a href="/spv/jadwal" class="border-b-2 border-blue-600 pb-1 text-blue-700">Dashboard spv sonn</a>
+                <a href="/spv/jadwal" class="border-b-2 border-blue-600 pb-1 text-blue-700">Jadwal</a>
             </div>
 
             <div>
