@@ -56,6 +56,11 @@
                 <span>Data Lab</span>
             </a>
 
+            <a href="/spv/tv" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/tv') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                <i class="fa fa-desktop text-base"></i> 
+                <span>Tv Monitor</span>
+            </a>
+
             
         </nav>
         

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AsistenController;
+use App\Http\Controllers\TvController;
 
 
 Route::get('/', [JadwalController::class, 'welcome']);
@@ -49,3 +50,19 @@ Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'das
 
 //tv//
 Route::get('/tv', [App\Http\Controllers\TvController::class, 'tvSon'])->name('tv');
+Route::get('/tv', [TvController::class, 'tvSon'])->name('tv.display');
+
+// Kelompok rute kontrol manajemen TV khusus untuk SPV
+Route::prefix('spv/tv')->group(function () {
+    // Halaman dashboard remote control TV
+    Route::get('/', [TvController::class, 'manageTv'])->name('spv.tv.index');
+    
+    // Proses pembaruan teks agenda berjalan
+    Route::post('/text', [TvController::class, 'updateTvText'])->name('spv.tv.text');
+    
+    // Proses unggah berkas gambar slide baru
+    Route::post('/slide', [TvController::class, 'uploadTvSlide'])->name('spv.tv.slide.upload');
+    
+    // Proses hapus berkas gambar slide berdasarkan ID
+    Route::delete('/slide/{id}', [TvController::class, 'deleteTvSlide'])->name('spv.tv.slide.delete');
+});
