@@ -56,7 +56,7 @@
                             <th style="padding: 14px; font-weight: 800; border: 1px solid #334155; width: 130px; background: #0f172a;">WAKTU</th>
                             @foreach($dayNames as $day)
                                 <th style="padding: 14px; border: 1px solid #334155; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; width: 160px;">
-                                    📅 {{ $day }}
+                                    {{ $day }}
                                 </th>
                             @endforeach
                         </tr>
@@ -64,7 +64,7 @@
 
                     @if(session('success'))
                         <div style="background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
-                            ✅ {{ session('success') }}
+                            {{ session('success') }}
                         </div>
                     @endif
 
@@ -84,7 +84,7 @@
                                 @foreach($dayNames as $day)
                                     @if(strtolower($day) === 'jumat' && ($slot['start'] === '11:35' || $slot['start'] === '12:30'))
                                         <td style="background: #2563eb; color: white; font-weight: 800; font-size: 12px; padding: 10px; border: 1px solid #cbd5e1; text-transform: uppercase;">
-                                            🕌 SHOLAT JUMAT / BREAK
+                                            SHOLAT JUMAT / BREAK
                                         </td>
                                     @else
                                         @php
@@ -180,12 +180,12 @@
                                                 </td>
 
                                             @else
-                                                {{-- ================= KOSONG (BEBAS PILIH) ================= --}}
+
                                                 <td style="padding: 4px; border: 1px solid #cbd5e1; background-color: #ffffff;">
                                                     <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" style="background: transparent; border: none; color: #cbd5e1; text-align-last: center; cursor: pointer; width: 100%; font-size: 12.5px;">
                                                         <option value="KOSONG" selected>---</option>
                                                         <option value="RA" style="background: #fef08a; color: #854d0e; font-weight: bold;">📌 Jaga RA</option>
-                                                        {{-- 🔥 FIX SUNTIKAN 3: Filter Duplikat --}}
+                                                       
                                                         @foreach(array_unique($dropdownMatkul) as $m)
                                                             @if(strtoupper($m) === 'RA' || strtoupper($m) === 'KOSONG') @continue @endif
                                                             <option value="{{ $m }}" style="background: #0ea5e9; color: #ffffff;">🔬 {{ strtoupper($m) }}</option>
@@ -204,13 +204,13 @@
 
             <div style="text-align: right; margin-top: 20px;">
                 <button type="submit" id="btn-submit-matrix-final" style="padding: 14px 30px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);">
-                    🚀 Eksekusi & Simpan Blueprint Mingguan
+                    Eksekusi & Simpan Blueprint Mingguan
                 </button>
             </div>
         </form>
     @else
         <div style="text-align: center; color: #94a3b8; padding: 45px 20px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 10px; font-size: 14px;">
-            🔍 <b>Sistem Blueprint Terkunci:</b> Silakan tentukan Nama Asisten pada pilihan di atas untuk memunculkan tabel matriks template mingguan.
+            <b>Sistem Blueprint Terkunci:</b> Silakan tentukan Nama Asisten pada pilihan di atas untuk memunculkan tabel matriks template mingguan.
         </div>
     @endif
 </div>

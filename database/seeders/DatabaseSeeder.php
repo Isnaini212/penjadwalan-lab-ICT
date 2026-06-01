@@ -27,5 +27,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             LabSeeder::class,
     ]);
+        $this->call(SchedulesTableSeeder::class);
+        $this->call(LabsTableSeeder::class);
+        $this->call(AssistantSchedulesTableSeeder::class);
     }
 }

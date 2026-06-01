@@ -103,7 +103,7 @@
     </div>
 </div>
 
-{{-- MODAL EDIT GLASSMORPHISM STYLE --}}
+
 <div id="modalEditLab" class="modal-overlay hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
     <div class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-2xl transition-all border border-slate-100">
         <h3 class="text-lg font-bold text-blue-900 mb-5">Edit Data Laboratorium</h3>
@@ -143,7 +143,7 @@
     </div>
 </div>
 
-{{-- JAVASCRIPT CORE MODAL TRIGGER --}}
+
 <script>
     function openEditModal(lab) {
         document.getElementById('edit_nama_lab').value = lab.nama_lab;
