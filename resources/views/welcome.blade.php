@@ -75,16 +75,15 @@
                     <input type="date" id="filterDate" value="{{ $filterDate ?? date('Y-m-d') }}" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                 </label>
 
-                <label class="block">
-                    <span class="sr-only">Ruang Lab</span>
-                    <select id="filterLab" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                        <option value="">Semua Ruang Lab</option>
-                        @for($i=1; $i<=11; $i++)
-                            @php $formatLab = 'Lab ' . sprintf('%02d', $i); @endphp
-                            <option value="{{ $formatLab }}">{{ $formatLab }}</option>
-                        @endfor
-                    </select>
-                </label>
+               <label class="block">
+    <span class="sr-only">Ruang Lab</span>
+    <select id="filterLab" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+        <option value="">Semua Ruang Lab</option>
+        @foreach($labs as $lab)
+            <option value="{{ $lab->nama_lab }}">{{ $lab->nama_lab }}</option>
+        @endforeach
+    </select>
+</label>
 
                 <label class="block">
                     <span class="sr-only">Sesi</span>

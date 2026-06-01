@@ -23,7 +23,7 @@ class JadwalController extends Controller
 
 
         $filterDate = $request->query('filter_date', now()->toDateString());
-
+        $labs = Lab::all();
         $schedules = Schedule::with(['lab', 'assistantSchedule'])
                          ->whereDate('tanggal', $filterDate)
                          ->whereHas('lab', function($query) {
@@ -37,7 +37,7 @@ class JadwalController extends Controller
             return response()->json($schedules);
         }
 
-        return view('welcome', compact('schedules', 'filterDate'));
+        return view('welcome', compact('schedules', 'filterDate','labs'));
     }
 
         public function dashboard(Request $request) 
@@ -69,7 +69,7 @@ class JadwalController extends Controller
     return view('spv.dashboard', compact('schedules', 'labs', 'filterDate', 'daySchedules'));
 }
 
-    public function manajemenJadwal(Request $request) {
+public function manajemenJadwal(Request $request) {
     $filterDate = $request->query('filter_date', now()->toDateString());
     $schedules = Schedule::with(['lab', 'assistantSchedule'])->whereDate('tanggal', $filterDate)->orderBy('jam_mulai', 'asc')->get();
     $labs = Lab::all();

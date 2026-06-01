@@ -46,3 +46,6 @@ Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMat
 
 //dashboard//
 Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'dashboard'])->name('spv.dashboard');
+
+//tv//
+Route::get('/tv', [App\Http\Controllers\TvController::class, 'tvSon'])->name('tv');

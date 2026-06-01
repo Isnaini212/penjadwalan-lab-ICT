@@ -1,7 +1,7 @@
 @extends('layouts.spv')
 
 @section('title', 'Jadwal & Edit Asisten')
-
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 @section('content')
 <div class="min-h-screen font-sans text-slate-800">
   

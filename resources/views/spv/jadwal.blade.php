@@ -32,7 +32,7 @@
                     <i class="fas fa-exclamation-triangle text-sm"></i>
                 </span>
                 <div>
-                    <h3 class="text-sm font-black uppercase tracking-wider">⚠️ Terdeteksi Jadwal Bentrok / Tabrakan!</h3>
+                    <h3 class="text-sm font-black uppercase tracking-wider">Terdeteksi Jadwal Bentrok / Tabrakan!</h3>
                     <p class="text-xs font-semibold text-red-600">Ada beberapa kelas praktikum yang menempati ruang Lab yang sama pada jam operasional yang sama.</p>
                 </div>
             </div>

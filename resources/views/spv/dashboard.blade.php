@@ -1,8 +1,9 @@
 @extends('layouts.spv')
 
 @section('title', 'Dashboard')
-
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 @section('content')
+
     <div class="space-y-6">
         <section>
             <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Dashboard</h1>
