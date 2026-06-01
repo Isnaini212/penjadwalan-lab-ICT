@@ -15,14 +15,14 @@ class Schedule extends Model
     protected $primaryKey = 'id_jadwal';
 
     protected $fillable = [
-        'tanggal', 
-        'hari', 
-        'id_lab',       
-        'id_asisten',   
-        'jam_mulai', 
-        'jam_selesai', 
-        'matkul', 
-        'sks', 
+        'tanggal',
+        'hari',
+        'id_lab',
+        'id_asisten',
+        'jam_mulai',
+        'jam_selesai',
+        'matkul',
+        'sks',
         'dosen'
     ];
 
@@ -67,10 +67,7 @@ class Schedule extends Model
         return $statuses;
     }
 
-    /**
-     * 🔥 FIX DUPLIKAT DROPDOWN ASISTEN
-     * Mengelompokkan pilihan berdasarkan nama agar tidak double di web
-     */
+    //Mengelompokkan pilihan berdasarkan nama agar tidak double di web
     public function getAssistantStatuses()
     {
         // 1. Ambil nama asisten yang UNIK menggunakan Group By (ID terkecil jadi perwakilan)
@@ -111,7 +108,7 @@ class Schedule extends Model
                 $status = 'busy_class';
                 $matkul = $busyWithClass->get($namaKey)->mata_kuliah;
                 $label = "(Kuliah: {$matkul})";
-            } 
+            }
             elseif ($busyInOtherLab->has($namaKey)) {
                 $status = 'busy_lab';
                 $scheduleBentrok = $busyInOtherLab->get($namaKey);

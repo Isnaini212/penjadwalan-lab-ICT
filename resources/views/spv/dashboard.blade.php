@@ -27,12 +27,12 @@
                     <table class="min-w-[760px] w-full text-left text-xs">
                         <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">
                             <tr>
-                                <th class="px-3 py-3">Tanggal</th>
-                                <th class="px-3 py-3">Lab</th>
-                                <th class="px-3 py-3">Jam (Mulai - Selesai)</th>
-                                <th class="px-3 py-3">Mata Kuliah</th>
-                                <th class="px-3 py-3">Dosen</th>
-                                <th class="px-3 py-3">Asisten</th>
+                                <th class="px-3 py-3 sticky top-0 z-10 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">Tanggal</th>
+                                <th class="px-3 py-3 sticky top-0 z-10 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">Lab</th>
+                                <th class="px-3 py-3 sticky top-0 z-10 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">Jam (Mulai - Selesai)</th>
+                                <th class="px-3 py-3 sticky top-0 z-10 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">Mata Kuliah</th>
+                                <th class="px-3 py-3 sticky top-0 z-10 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">Dosen</th>
+                                <th class="px-3 py-3 sticky top-0 z-10 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">Asisten</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -97,15 +97,7 @@
             </div>
 
             <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
-                <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <p class="text-sm font-medium text-slate-500">Pengajuan Booking</p>
-                            <p class="mt-2 text-3xl font-black text-slate-900">0</p>
-                        </div>
-                        <i class="fa-solid fa-calendar-check text-2xl text-sky-700/80"></i>
-                    </div>
-                </article>
+
                 <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
                     <div class="flex items-start justify-between gap-4">
                         <div>

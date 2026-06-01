@@ -23,7 +23,7 @@
         ></div>
 
         <aside
-            class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-gradient-to-b from-blue-950 to-sky-900 text-white shadow-2xl transition-transform duration-300 lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-blue-900 text-white shadow-2xl transition-transform duration-300 lg:translate-x-0"
             :class="{ 'translate-x-0': sidebarOpen }"
         >
             <div class="flex items-center gap-3 px-5 py-6">
@@ -45,9 +45,9 @@
                     <i class="fa-solid fa-calendar-days w-5"></i>
                     Manajemen Jadwal
                 </a>
-                <a href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-3 text-blue-100 transition hover:bg-white/10 hover:text-white">
-                    <i class="fa-solid fa-file-import w-5"></i>
-                    Import Jadwal Asisten
+                <a href="#" class="flex items-center gap-4 rounded-xl px-3.5 py-3 text-blue-100 transition hover:bg-white/10 hover:text-white">
+                    <i class="fa-solid fa-business-time"></i>
+                    Jadwal Asisten
                 </a>
                 <a href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-3 text-blue-100 transition hover:bg-white/10 hover:text-white">
                     <i class="fa-solid fa-desktop w-5"></i>
@@ -83,7 +83,7 @@
                         @click="profileOpen = !profileOpen"
                     >
                         <div class="flex h-11 w-11 items-center justify-center rounded-full bg-sky-100 text-sm font-extrabold text-sky-700">
-                            {{ strtoupper(substr(Auth::user()?->name ?? 'DN', 0, 2)) }}
+                            <i class="fa-solid fa-user text-xl "></i>
                         </div>
                         <div class="hidden leading-tight sm:block">
                             <div class="text-sm font-extrabold text-slate-800">SPV Penjadwalan</div>
@@ -100,7 +100,7 @@
                     >
                         <div class="border-b border-slate-100 bg-slate-50 px-4 py-3">
                             <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Masuk sebagai</p>
-                            <p class="mt-1 truncate text-sm font-extrabold text-slate-800">{{ Auth::user()?->email ?? 'admin@budiluhur.ac.id' }}</p>
+                            <p class="mt-1 truncate text-sm font-extrabold text-slate-800">{{ Auth::user()?->email ?? 'admin@student.budiluhur.ac.id' }}</p>
                         </div>
                         <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">
                             <i class="fa-solid fa-user-circle w-5 text-slate-400"></i>

@@ -1,7 +1,7 @@
 @extends('layouts.auth')
 @section('title', 'Login SPV')
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-blue-200 to-blue-600 flex items-center justify-center px-4">
+    <div class="min-h-screen bg-gradient-to-b from-white to-blue-400 flex items-center justify-center px-4">
 
         <div class="w-full max-w-5xl bg-white rounded-lg shadow-xl overflow-hidden grid md:grid-cols-2">
 
@@ -16,12 +16,12 @@
             <div class="px-10 py-12 flex flex-col justify-center">
                 <div class="text-center mb-8">
                     <img
-                        src="{{ asset('image/LogoICT.png') }}"
+                        src="{{ asset('images/LogoICT.png') }}"
                         alt="Logo ICT"
                         class="w-20 h-20 object-contain mx-auto mb-6"
                     >
 
-                    <h1 class="text-3xl font-bold text-blue-900">
+                    <h1 class="text-4xl font-bold text-blue-900">
                         Selamat Datang
                     </h1>
                 </div>
@@ -53,7 +53,7 @@
 
                     <button
                         type="submit"
-                        class="w-full py-3 rounded-lg bg-indigo-950 text-white font-medium hover:bg-indigo-900 transition"
+                        class="w-full py-3 rounded-lg bg-indigo-900 text-white font-medium hover:bg-indigo-800 transition"
                     >
                         Login
                     </button>
