@@ -17,7 +17,7 @@
         {{-- SISI KIRI: FORM TAMBAH LAB (CARD STYLE) --}}
         <div class="h-fit rounded-2xl border border-white/80 bg-white/80 p-6 shadow-xl shadow-blue-950/5 backdrop-blur">
             <h3 class="mb-5 text-lg font-bold text-blue-900 flex items-center gap-2">
-                <span>➕</span> Tambah Lab Baru
+                <span></span> Tambah Lab Baru
             </h3>
             
             <form action="{{ route('spv.buatLab') }}" method="POST" class="space-y-4">
@@ -50,7 +50,7 @@
         <div class="rounded-2xl border border-white/80 bg-white/40 p-6 backdrop-blur">
             <div class="mb-6 flex items-center justify-between">
                 <h3 class="text-lg font-bold text-blue-900 flex items-center gap-2">
-                    <span>📦</span> Daftar Lab Tersedia
+                    <span></span> Daftar Lab Tersedia
                 </h3>
                 <span class="inline-flex items-center rounded-full bg-blue-50 px-4 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-700/10">
                     Total: {{ $labs->count() }} Lab
@@ -69,11 +69,11 @@
                         
                         <div class="mt-4 space-y-2 text-sm text-slate-600">
                             <p class="flex items-center gap-2">
-                                <span class="text-slate-400">👥</span> 
+                                <span class="text-slate-400"></span> 
                                 <span class="font-semibold text-slate-700">Kapasitas:</span> {{ $lab->kapasitas }} Orang
                             </p>
                             <p class="flex items-start gap-2">
-                                <span class="text-slate-400 mt-0.5">🛠️</span> 
+                                <span class="text-slate-400 mt-0.5"></span> 
                                 <span><span class="font-semibold text-slate-700">Fasilitas:</span> {{ Str::limit($lab->fasilitas, 80) }}</span>
                             </p>
                         </div>
