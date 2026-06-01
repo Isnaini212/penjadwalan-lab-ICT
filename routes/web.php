@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AsistenController;
+use App\Http\Controllers\TvController;
 
 
 Route::get('/', [JadwalController::class, 'welcome']);
@@ -11,6 +12,9 @@ Route::get('/', [JadwalController::class, 'welcome']);
 Route::get('/login', function (){
     return view('auth.login');
     })->name('login');
+
+//TV//
+Route::get('/tv', [App\Http\Controllers\TvController::class, 'tvSon'])->name('tv');
 
 //login//
 Route::get('/spv/jadwal', [App\Http\Controllers\JadwalController::class, 'manajemenJadwal'])->name('spv.jadwal');
@@ -46,3 +50,4 @@ Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMat
 
 //dashboard//
 Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'dashboard'])->name('spv.dashboard');
+
