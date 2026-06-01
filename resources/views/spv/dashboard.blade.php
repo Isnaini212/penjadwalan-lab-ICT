@@ -11,7 +11,7 @@
 
         <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
             
-            {{-- BLOK KIRI: JADWAL UTAMA (PAGINATION + SEARCH WORKING) --}}
+           
             <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5 h-fit">
                 
                 <form method="GET" action="" class="mb-4 flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-end lg:justify-between">
@@ -77,7 +77,7 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-3 py-8 text-center text-sm font-bold text-slate-400">
-                                        🚫 Tidak ada kelas praktikum yang cocok dengan kriteria pencarian.
+                                        Tidak ada kelas praktikum yang cocok dengan kriteria pencarian.
                                     </td>
                                 </tr>
                             @endforelse
@@ -92,7 +92,7 @@
                 @endif
             </div>
 
-            {{-- BLOK KANAN: COUNTER AKURAT AMBIL DARI DAY SCHEDULES (ANTI-MELAR) --}}
+           
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 h-fit">
                 <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
                     <div class="flex items-start justify-between gap-4">
@@ -128,7 +128,7 @@
             </div>
         </section>
 
-        {{-- SEKSI STATUS PETUGAS JAGA (SEKARANG FIX TAMPIL FULL NON-PAGINATION) --}}
+       
         <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
             <div class="mb-5 flex items-center gap-4">
                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
@@ -185,7 +185,7 @@
                         @empty
                             <tr>
                                 <td colspan="4" class="px-4 py-6 text-center text-sm font-bold text-slate-400">
-                                    🍃 Tidak ada asisten yang terjadwal bertugas hari ini.
+                                    Tidak ada asisten yang terjadwal bertugas hari ini.
                                 </td>
                             </tr>
                         @endforelse
