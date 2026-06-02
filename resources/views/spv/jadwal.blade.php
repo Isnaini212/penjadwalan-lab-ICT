@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    
+
     {{-- Menggunakan aset Tailwind & JS bawaan proyek --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="{{ asset('js/spv-table.js') }}"></script>
@@ -36,7 +36,7 @@
                     <p class="text-xs font-semibold text-red-600">Ada beberapa kelas praktikum yang menempati ruang Lab yang sama pada jam operasional yang sama.</p>
                 </div>
             </div>
-            
+
             <div class="overflow-x-auto rounded-xl border border-red-200 bg-white">
                 <table class="w-full min-w-[800px] text-left text-xs">
                     <thead class="bg-red-600 text-white font-extrabold uppercase tracking-wider">
@@ -52,7 +52,7 @@
                         @foreach($conflicts as $c)
                             <tr class="hover:bg-red-100/40 transition font-bold">
                                 <td class="px-5 py-3 text-slate-700">
-                                    {{ \Carbon\Carbon::parse($c->tanggal)->format('d M Y') }} 
+                                    {{ \Carbon\Carbon::parse($c->tanggal)->format('d M Y') }}
                                     <span class="text-[10px] bg-red-100 text-red-700 rounded p-0.5 px-1.5 ml-1">{{ strtoupper($c->hari) }}</span>
                                 </td>
                                 <td class="px-5 py-3 text-red-700 font-extrabold">
@@ -78,14 +78,14 @@
             <button id="btnCetakPDF" class="inline-flex h-11 items-center gap-2 rounded-xl bg-red-600 px-5 text-sm font-bold text-white shadow-md shadow-red-600/10 transition hover:bg-red-700">
                 <i class="fas fa-file-pdf"></i> Cetak PDF Sesuai Filter
             </button>
-            
+
             {{-- Tombol Tambah Jadwal Manual --}}
             <button onclick="toggleTambahJadwal()" class="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-700">
                 <i class="fas fa-plus-circle"></i> Tambah Jadwal Manual
             </button>
 
             {{-- Form Import XLSX --}}
-            <form action="{{ route('schedule.import') }}" method="POST" enctype="multipart/form-data" id="form-import-cepat" 
+            <form action="{{ route('schedule.import') }}" method="POST" enctype="multipart/form-data" id="form-import-cepat"
                   class="m-0 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-1 px-3">
                 @csrf
                 <span class="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">Periode:</span>
@@ -126,7 +126,7 @@
             </select>
         </div>
     </div>
-                    
+
     {{-- FORM TAMBAH MANUAL --}}
     <div id="form-tambah-jadwal" class="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-blue-950/5 transition-all">
         <div class="bg-slate-50 border-b border-slate-100 px-6 py-4">
@@ -183,7 +183,7 @@
             @endif
         </form>
     </div>
-                    
+
     {{-- DATA LIMIT DISPLAY CONTROL --}}
     <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
         <span>Tampilkan</span>
@@ -200,15 +200,15 @@
     <div class="overflow-hidden rounded-2xl border border-white bg-white shadow-2xl shadow-blue-950/5">
         <div class="overflow-x-auto">
             <table class="w-full min-w-[1100px] border-collapse text-left text-sm" id="scheduleTable">
-                <thead class="bg-slate-900 text-white text-xs font-extrabold uppercase tracking-wider">
+                <thead class="bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider">
                     <tr>
                         <th class="px-6 py-4">Tanggal</th>
-                        <th class="px-6 py-4 w-52">Lab</th>
-                        <th class="px-6 py-4 w-60">Jam (Mulai - Selesai)</th>
+                        <th class="px-6 py-4">Lab</th>
+                        <th class="px-6 py-4">Jam (Mulai - Selesai)</th>
                         <th class="px-6 py-4">Mata Kuliah</th>
                         <th class="px-6 py-4">Dosen</th>
-                        <th class="px-6 py-4 w-56">Asisten</th>
-                        <th class="px-6 py-4 text-right w-36">Aksi</th>
+                        <th class="px-6 py-4">Asisten</th>
+                        <th class="px-6 py-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
@@ -233,11 +233,11 @@
                 $labJadwalSaatIni = $s->id_lab;
                 $labDalamLoop = $lab['id_lab'];
                 $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
-                
+
                 // Cek apakah ruangan saat ini adalah Ruang RA
                 $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
             @endphp
-            
+
             @if($apakahLabSendiri)
                 <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
                     {{ $lab['nama_lab'] }} (Aktif)
@@ -302,7 +302,7 @@
                                     <i class="fas fa-save text-xs"></i>
                                 </button>
                                 <form method="POST" action="{{ route('spv.delete', $s->id_jadwal) }}" class="inline m-0" onsubmit="return confirm('Hapus jadwal ini?')">
-                                    @csrf 
+                                    @csrf
                                     @method('DELETE')
                                     <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-100">
                                         Hapus
@@ -363,7 +363,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const matchDay = !selectedDay || hariAttribute === selectedDay;
             const matchLab = !selectedLab || labName.toUpperCase().includes(selectedLab.toUpperCase());
-            
+
             let matchType = true;
             if (selectedType === 'praktikum') {
                 matchType = !labName.toUpperCase().includes('RA');

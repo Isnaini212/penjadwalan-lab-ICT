@@ -24,10 +24,6 @@
                 </div>
             </div>
 
-            <div class="hidden items-center gap-10 text-sm font-semibold text-slate-600 md:flex">
-                <a href="/spv/jadwal" class="border-b-2 border-blue-600 pb-1 text-blue-700">Jadwal</a>
-            </div>
-
             <div>
                 @auth
                     <a href="/spv/jadwal" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
