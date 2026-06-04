@@ -30,11 +30,14 @@
                         Dashboard
                     </a>
                 @else
-                    <a href="/login" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
-                        Login
+                    <a href="/spv/dashboard" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+                        dashbboard
                     </a>
                 @endauth
             </div>
+             <a href="/login" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+                        Login
+                    </a>
         </div>
     </nav>
 

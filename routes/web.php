@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AsistenController;
+use App\Http\Controllers\TvController;
 
 
 Route::get('/', [JadwalController::class, 'welcome']);
@@ -12,13 +13,13 @@ Route::get('/login', function (){
     return view('auth.login');
     })->name('login');
 
-//login//
+//jadwal//
 Route::get('/spv/jadwal', [App\Http\Controllers\JadwalController::class, 'manajemenJadwal'])->name('spv.jadwal');
 Route::post('/spv/jadwal/simpen', [App\Http\Controllers\JadwalController::class, 'store'])->name('spv.store');
 Route::get('/spv/jadwal/edit/{id_jadwal}', [App\Http\Controllers\JadwalController::class, 'editJadwal'])->name('spv.edit');
 Route::put('/jadwal/update/{id_jadwal}', [JadwalController::class, 'update'])->name('spv.update');
 Route::delete('/spv/jadwal/hapus/{id_jadwal}', [App\Http\Controllers\JadwalController::class, 'destroy'])->name('spv.delete');
-
+Route::delete('/spv/jadwal/bersih', [JadwalController::class, 'bersihin'])->name('bersih');
 ///import jdwl//
 Route::post('/spv/', [JadwalController::class, 'importExcel'])->name('schedule.import');
 
@@ -46,3 +47,23 @@ Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMat
 
 //dashboard//
 Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'dashboard'])->name('spv.dashboard');
+
+
+//tv//
+Route::get('/tv', [App\Http\Controllers\TvController::class, 'tvSon'])->name('tv');
+Route::get('/tv', [TvController::class, 'tvSon'])->name('tv.display');
+
+// Kelompok rute kontrol manajemen TV khusus untuk SPV
+Route::prefix('spv/tv')->group(function () {
+    // Halaman dashboard remote control TV
+    Route::get('/', [TvController::class, 'manageTv'])->name('spv.tv.index');
+    
+    // Proses pembaruan teks agenda berjalan
+    Route::post('/text', [TvController::class, 'updateTvText'])->name('spv.tv.text');
+    
+    // Proses unggah berkas gambar slide baru
+    Route::post('/slide', [TvController::class, 'uploadTvSlide'])->name('spv.tv.slide.upload');
+    
+    // Proses hapus berkas gambar slide berdasarkan ID
+    Route::delete('/slide/{id}', [TvController::class, 'deleteTvSlide'])->name('spv.tv.slide.delete');
+});
