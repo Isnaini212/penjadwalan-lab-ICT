@@ -23,10 +23,7 @@ class DatabaseSeeder extends Seeder
             'no_wa' => '081234567890',
         ]);
 
-        //Memanggil LabSeeder LabSeeder
-        $this->call([
-            LabSeeder::class,
-    ]);
+        
         $this->call(SchedulesTableSeeder::class);
         $this->call(LabsTableSeeder::class);
         $this->call(AssistantSchedulesTableSeeder::class);

@@ -1,3 +1,18 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    {{-- Menggunakan aset Tailwind & JS bawaan proyek --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="{{ asset('js/spv-table.js') }}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Manajemen Jadwal - Lab ICT</title>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100 font-sans text-slate-800 antialiased">
+
 @extends('layouts.spv')
 
 @section('title', 'Manajemen Jadwal')
@@ -24,7 +39,7 @@
                     <p class="text-xs font-semibold text-red-600">Ada beberapa kelas praktikum yang menempati ruang Lab yang sama pada jam operasional yang sama.</p>
                 </div>
             </div>
-            
+
             <div class="overflow-x-auto rounded-xl border border-red-200 bg-white">
                 <table class="w-full min-w-[800px] text-left text-xs">
                     <thead class="bg-red-600 text-white font-extrabold uppercase tracking-wider">
@@ -40,7 +55,7 @@
                         @foreach($conflicts as $c)
                             <tr class="hover:bg-red-100/40 transition font-bold">
                                 <td class="px-5 py-3 text-slate-700">
-                                    {{ \Carbon\Carbon::parse($c->tanggal)->format('d M Y') }} 
+                                    {{ \Carbon\Carbon::parse($c->tanggal)->format('d M Y') }}
                                     <span class="text-[10px] bg-red-100 text-red-700 rounded p-0.5 px-1.5 ml-1">{{ strtoupper($c->hari) }}</span>
                                 </td>
                                 <td class="px-5 py-3 text-red-700 font-extrabold">
@@ -64,12 +79,14 @@
             <button id="btnCetakPDF" class="inline-flex h-11 items-center gap-2 rounded-xl bg-red-600 px-5 text-sm font-bold text-white shadow-md shadow-red-600/10 transition hover:bg-red-700">
                 <i class="fas fa-file-pdf"></i> Cetak PDF Sesuai Filter
             </button>
-            
+
+            {{-- Tombol Tambah Jadwal Manual --}}
             <button onclick="toggleTambahJadwal()" class="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-700">
                 <i class="fas fa-plus-circle"></i> Tambah Jadwal Manual
             </button>
 
-            <form action="{{ route('schedule.import') }}" method="POST" enctype="multipart/form-data" id="form-import-cepat" 
+            {{-- Form Import XLSX --}}
+            <form action="{{ route('schedule.import') }}" method="POST" enctype="multipart/form-data" id="form-import-cepat"
                   class="m-0 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-1 px-3">
                 @csrf
                 <span class="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">Periode:</span>
@@ -116,7 +133,8 @@
             </select>
         </div>
     </div>
-                    
+
+    {{-- FORM TAMBAH MANUAL --}}
     <div id="form-tambah-jadwal" class="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-blue-950/5 transition-all">
         <div class="bg-slate-50 border-b border-slate-100 px-6 py-4">
             <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">Form Tambah Jadwal Manual</h3>
@@ -171,7 +189,8 @@
             @endif
         </form>
     </div>
-                    
+
+    {{-- DATA LIMIT DISPLAY CONTROL --}}
     <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
         <span>Tampilkan</span>
         <select class="limitSelect h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none cursor-pointer">
@@ -186,15 +205,15 @@
     <div class="overflow-hidden rounded-2xl border border-white bg-white shadow-2xl shadow-blue-950/5">
         <div class="overflow-x-auto">
             <table class="w-full min-w-[1100px] border-collapse text-left text-sm" id="scheduleTable">
-                <thead class="bg-slate-900 text-white text-xs font-extrabold uppercase tracking-wider">
+                <thead class="bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider">
                     <tr>
                         <th class="px-6 py-4">Tanggal</th>
-                        <th class="px-6 py-4 w-52">Lab</th>
-                        <th class="px-6 py-4 w-60">Jam (Mulai - Selesai)</th>
+                        <th class="px-6 py-4">Lab</th>
+                        <th class="px-6 py-4">Jam (Mulai - Selesai)</th>
                         <th class="px-6 py-4">Mata Kuliah</th>
                         <th class="px-6 py-4">Dosen</th>
-                        <th class="px-6 py-4 w-56">Asisten</th>
-                        <th class="px-6 py-4 text-right w-36">Aksi</th>
+                        <th class="px-6 py-4">Asisten</th>
+                        <th class="px-6 py-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
@@ -213,31 +232,35 @@
                         </td>
 
                         <td class="px-4 py-3.5">
-                            <select name="id_lab" class="h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-                                @foreach($s->getLabStatuses() as $lab)
-                                    @php
-                                        $labJadwalSaatIni = $s->id_lab;
-                                        $labDalamLoop = $lab['id_lab'];
-                                        $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
-                                        $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
-                                    @endphp
-                                    
-                                    @if($apakahLabSendiri)
-                                        <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
-                                            {{ $lab['nama_lab'] }} (Aktif)
-                                        </option>
-                                    @elseif($lab['status'] === 'busy' && !$isRuangRa)
-                                        <option value="" disabled class="text-red-500 bg-red-50 cursor-not-allowed">
-                                            {{ $lab['nama_lab'] }} (Dipakai)
-                                        </option>
-                                    @else
-                                        <option value="{{ $lab['id_lab'] }}" class="text-slate-700">
-                                            {{ $lab['nama_lab'] }} {{ $isRuangRa && $lab['status'] === 'busy' ? '(Tersedia)' : '' }}
-                                        </option>
-                                    @endif
-                                @endforeach
-                            </select>
-                        </td>
+    <select name="id_lab" class="h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+        @foreach($s->getLabStatuses() as $lab)
+            @php
+                $labJadwalSaatIni = $s->id_lab;
+                $labDalamLoop = $lab['id_lab'];
+                $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
+
+                // Cek apakah ruangan saat ini adalah Ruang RA
+                $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
+            @endphp
+
+            @if($apakahLabSendiri)
+                <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
+                    {{ $lab['nama_lab'] }} (Aktif)
+                </option>
+            {{-- Jika lab biasa penuh dan bukan Ruang RA, maka kunci aksesnya --}}
+            @elseif($lab['status'] === 'busy' && !$isRuangRa)
+                <option value="" disabled class="text-red-500 bg-red-50 cursor-not-allowed">
+                    {{ $lab['nama_lab'] }} (Dipakai)
+                </option>
+            {{-- Jika Ruang RA, biarkan tetap terbuka dan bisa dipilih walaupun berstatus busy --}}
+            @else
+                <option value="{{ $lab['id_lab'] }}" class="text-slate-700">
+                    {{ $lab['nama_lab'] }} {{ $isRuangRa && $lab['status'] === 'busy' ? '(Tersedia)' : '' }}
+                </option>
+            @endif
+        @endforeach
+    </select>
+</td>
 
                         <td class="px-4 py-3.5">
     <div class="flex items-center gap-1.5 font-mono">
@@ -296,7 +319,7 @@
                                 </button>
 
                                 <form method="POST" action="{{ route('spv.delete', $s->id_jadwal) }}" class="inline m-0" onsubmit="return confirm('Hapus jadwal ini?')">
-                                    @csrf 
+                                    @csrf
                                     @method('DELETE')
                                     <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-100">
                                         Hapus
@@ -355,7 +378,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const matchDay = !selectedDay || hariAttribute === selectedDay;
             const matchLab = !selectedLab || labName.toUpperCase().includes(selectedLab.toUpperCase());
-            
+
             let matchType = true;
             if (selectedType === 'praktikum') {
                 matchType = !labName.toUpperCase().includes('RA');
@@ -569,53 +592,6 @@ function triggerAutoSubmit() {
 }
 
 </script>
-<script>
-    // 🔥 MESIN AUTO-FORMAT JAM (ANTI AM/PM DEVICE LIAR)
-document.addEventListener('input', function (e) {
-    if (e.target.classList.contains('time-formatter')) {
-        // 1. Buang semua huruf/simbol, cuma sisakan angka
-        let inputVal = e.target.value.replace(/\D/g, ''); 
-        if (inputVal.length > 4) inputVal = inputVal.substring(0, 4);
-        
-        // 2. Otomatis sisipkan titik dua (:) kalau digit sudah lebih dari 2
-        let formatted = inputVal;
-        if (inputVal.length > 2) {
-            formatted = inputVal.substring(0, 2) + ':' + inputVal.substring(2, 4);
-        }
-        
-        e.target.value = formatted;
-    }
-});
-
-// 🔥 VALIDASI MAX 23:59 SAAT PINDAH KOLOM (BLUR)
-document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('time-formatter')) {
-        let val = e.target.value;
-        
-        // Cek jika panjangnya pas 5 karakter (HH:MM)
-        if (val.length === 5) {
-            let parts = val.split(':');
-            let hours = parseInt(parts[0], 10);
-            let mins = parseInt(parts[1], 10);
-            
-            // Koreksi otomatis jika ngawur (misal ngetik 25:80 -> jadi 23:59)
-            if (hours > 23) hours = 23;
-            if (mins > 59) mins = 59;
-            if (isNaN(hours)) hours = 0;
-            if (isNaN(mins)) mins = 0;
-            
-            // Format ulang jadi dua digit
-            let hrStr = hours < 10 ? '0' + hours : hours;
-            let mnStr = mins < 10 ? '0' + mins : mins;
-            
-            e.target.value = hrStr + ':' + mnStr;
-        } else if (val.length > 0 && val.length < 5) {
-            // Kalau ngetiknya nanggung, reset/kosongin aja
-            alert('Format jam tidak lengkap! Harap masukkan 4 digit angka (contoh: 0800).');
-            e.target.value = '';
-        }
-    }
-});
-</script>
-
 @endsection
+</body>
+</html>

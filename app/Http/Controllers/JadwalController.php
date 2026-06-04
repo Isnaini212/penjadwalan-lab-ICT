@@ -31,11 +31,13 @@ class JadwalController extends Controller
                          ->orderBy('jam_mulai', 'asc')
                          ->get();
 
+        $labs = Lab::all();
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json($schedules);
         }
 
-        return view('welcome', compact('schedules', 'filterDate','labs'));
+        return view('welcome', compact('schedules', 'filterDate', 'labs'));
     }
 
         public function dashboard(Request $request) 
