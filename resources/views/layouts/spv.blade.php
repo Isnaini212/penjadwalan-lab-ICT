@@ -33,6 +33,11 @@
                 <i class="fas fa-home text-base"></i> 
                 <span>Dashboard</span>
             </a>
+         
+            <a href="/spv/booking" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/booking') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                <i class="fas fa-home text-base"></i> 
+                <span>Aprove Booking</span>
+            </a>
 
             <a href="/spv/jadwal" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jadwal') || request('filter_date') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
                 <i class="fas fa-calendar-alt text-base"></i> 

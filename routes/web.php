@@ -5,7 +5,9 @@ use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\LabController;
 use App\Http\Controllers\AsistenController;
 use App\Http\Controllers\TvController;
-
+use App\Http\Controllers\MhsController;
+use App\Http\Controllers\DosenController;
+use App\Http\Controllers\SetujuController;
 
 Route::get('/', [JadwalController::class, 'welcome']);
 
@@ -48,6 +50,15 @@ Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMat
 //dashboard//
 Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'dashboard'])->name('spv.dashboard');
 
+/////aprove////
+Route::prefix('spv/booking')->group(function () {
+    Route::get('/', [SetujuController::class, 'index'])->name('spv.booking.index');
+    
+    // Update Lab, Approve, dan Reject (Butuh parameter type: ormawa/dosen)
+    Route::patch('/update-lab/{type}/{id}', [SetujuController::class, 'updateLab'])->name('spv.booking.update_lab');
+    Route::post('/approve/{type}/{id}', [SetujuController::class, 'approve'])->name('spv.booking.approve');
+    Route::post('/reject/{type}/{id}', [SetujuController::class, 'reject'])->name('spv.booking.reject');
+});
 
 //tv//
 Route::get('/tv', [App\Http\Controllers\TvController::class, 'tvSon'])->name('tv');
@@ -70,3 +81,17 @@ Route::prefix('spv/tv')->group(function () {
 
 Route::get('/asisten/input', [AsistenController::class, 'inputMatrix'])->name('schedule.matrix');
 Route::post('/asisten/update', [AsistenController::class, 'storsis'])->name('simput');
+
+////mhs//
+
+Route::prefix('ormawa')->group(function () {
+    Route::get('/booking', [MhsController::class, 'index'])->name('ormawa.booking.index');
+    Route::post('/booking/store', [MhsController::class, 'store'])->name('ormawa.booking.store');
+});
+
+//dosen///
+Route::prefix('dosen')->group(function () {
+    Route::get('/booking', [DosenController::class, 'index'])->name('dosen.booking.index');
+    Route::post('/booking/store', [DosenController::class, 'store'])->name('dosen.booking.store');
+    Route::post('/booking/check-labs', [DosenController::class, 'checkAvailableLabs'])->name('dosen.booking.check_labs');
+});
