@@ -46,20 +46,22 @@
                 <span>Import Jadwal Asisten</span>
             </a>
 
-            <a href="/spv/jasis" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jasis') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fa fa-desktop text-base"></i> 
-                <span>Jadwal Asisten</span>
-            </a>
+         
+<a href="/spv/jasis" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jasis') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+    <i class="fa fa-calendar-check text-base"></i> 
+    <span>Jadwal Asisten</span>
+</a>
 
-            <a href="/spv/lab" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/lab') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fa fa-desktop text-base"></i> 
-                <span>Data Lab</span>
-            </a>
 
-            <a href="/spv/tv" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/tv') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fa fa-desktop text-base"></i> 
-                <span>Tv Monitor</span>
-            </a>
+<a href="/spv/lab" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/lab') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+    <i class="fa fa-database text-base"></i> 
+    <span>Data Lab</span>
+</a>
+
+<a href="/spv/tv" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/tv') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+    <i class="fa fa-tv text-base"></i> 
+    <span>Tv Monitor</span>
+</a>
 
             
         </nav>

@@ -13,13 +13,13 @@ Route::get('/login', function (){
     return view('auth.login');
     })->name('login');
 
-//login//
+//jadwal//
 Route::get('/spv/jadwal', [App\Http\Controllers\JadwalController::class, 'manajemenJadwal'])->name('spv.jadwal');
 Route::post('/spv/jadwal/simpen', [App\Http\Controllers\JadwalController::class, 'store'])->name('spv.store');
 Route::get('/spv/jadwal/edit/{id_jadwal}', [App\Http\Controllers\JadwalController::class, 'editJadwal'])->name('spv.edit');
 Route::put('/jadwal/update/{id_jadwal}', [JadwalController::class, 'update'])->name('spv.update');
 Route::delete('/spv/jadwal/hapus/{id_jadwal}', [App\Http\Controllers\JadwalController::class, 'destroy'])->name('spv.delete');
-
+Route::delete('/spv/jadwal/bersih', [JadwalController::class, 'bersihin'])->name('bersih');
 ///import jdwl//
 Route::post('/spv/', [JadwalController::class, 'importExcel'])->name('schedule.import');
 
@@ -47,6 +47,7 @@ Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMat
 
 //dashboard//
 Route::get('/spv/dashboard', [App\Http\Controllers\JadwalController::class, 'dashboard'])->name('spv.dashboard');
+
 
 //tv//
 Route::get('/tv', [App\Http\Controllers\TvController::class, 'tvSon'])->name('tv');

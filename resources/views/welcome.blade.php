@@ -24,24 +24,20 @@
                 </div>
             </div>
 
-            <div class="hidden items-center gap-10 text-sm font-semibold text-slate-600 md:flex">
-                <a href="#" class="transition hover:text-blue-700">Home</a>
-                <a href="#" class="transition hover:text-blue-700">About</a>
-                <a href="#" class="transition hover:text-blue-700">Contact</a>
-                <a href="/spv/jadwal" class="border-b-2 border-blue-600 pb-1 text-blue-700">Dashboard spv sonn</a>
-            </div>
-
             <div>
                 @auth
                     <a href="/spv/jadwal" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
                         Dashboard
                     </a>
                 @else
-                    <a href="/login" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
-                        Login
+                    <a href="/spv/dashboard" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+                        dashbboard
                     </a>
                 @endauth
             </div>
+             <a href="/login" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+                        Login
+                    </a>
         </div>
     </nav>
 
@@ -75,15 +71,15 @@
                     <input type="date" id="filterDate" value="{{ $filterDate ?? date('Y-m-d') }}" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                 </label>
 
-               <label class="block">
-    <span class="sr-only">Ruang Lab</span>
-    <select id="filterLab" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-        <option value="">Semua Ruang Lab</option>
-        @foreach($labs as $lab)
-            <option value="{{ $lab->nama_lab }}">{{ $lab->nama_lab }}</option>
-        @endforeach
-    </select>
-</label>
+                <label class="block">
+                    <span class="sr-only">Ruang Lab</span>
+                    <select id="filterLab" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <option value="">Semua Ruang Lab</option>
+                        @foreach($labs as $lab)
+                            <option value="{{ $lab->nama_lab }}">{{ $lab->nama_lab }}</option>
+                        @endforeach
+                    </select>
+                </label>
 
                 <label class="block">
                     <span class="sr-only">Sesi</span>

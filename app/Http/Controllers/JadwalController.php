@@ -3,15 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Schedule;
-use App\Models\Booking; 
 use App\Models\AssistantSchedule;
 use App\Models\Lab;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+
 
 class JadwalController extends Controller
 {
@@ -163,50 +161,64 @@ public function manajemenJadwal(Request $request) {
         return back()->with('success', 'Asisten diperbarui!');
     }
 
+
     public function update(Request $request, $id)
 {
     $request->validate([
-        'tanggal'      => 'required|date',
-        'id_lab'       => 'required',
-        'jam_mulai'    => 'required',
-        'jam_selesai'  => 'required',
-        'matkul'       => 'required|string',
-        'dosen'        => 'required|string',
-        'id_asisten'   => 'nullable',
-        'update_scope' => 'required|string'
+        'tanggal' => 'required|date',
+        'matkul' => 'required',
+        'dosen' => 'required',
+        'id_lab' => 'required',
+        'jam_mulai' => 'required',
+        'jam_selesai' => 'required',
     ]);
 
     $schedule = Schedule::findOrFail($id);
 
-    if ($request->input('update_scope') === 'all') {
-        Schedule::where('id_lab', $schedule->id_lab)
-            ->where('hari', $schedule->hari)
-            ->where('jam_mulai', $schedule->jam_mulai)
-            ->where('matkul', $schedule->matkul)
-            ->where('tanggal', '>=', $schedule->tanggal)
+    // Simpan data lama sebagai acuan pencarian
+    $matkulLama     = $schedule->matkul;
+    $dosenLama      = $schedule->dosen;
+    $jamMulaiLama   = $schedule->jam_mulai;
+    $jamSelesaiLama = $schedule->jam_selesai;
+
+    \Carbon\Carbon::setLocale('id');
+    $namaHariOtomatis = \Carbon\Carbon::parse($request->tanggal)
+        ->translatedFormat('l');
+
+    // Jika update semua yang serupa
+    if ($request->scope === 'all') {
+
+        Schedule::where('matkul', $matkulLama)
+            ->where('dosen', $dosenLama)
+            ->where('jam_mulai', $jamMulaiLama)
+            ->where('jam_selesai', $jamSelesaiLama)
             ->update([
-                'id_lab'      => $request->id_lab,
-                'jam_mulai'   => $request->jam_mulai,
-                'jam_selesai' => $request->jam_selesai,
                 'matkul'      => $request->matkul,
                 'dosen'       => $request->dosen,
+                'jam_mulai'   => $request->jam_mulai,
+                'jam_selesai' => $request->jam_selesai,
+                'id_lab'      => $request->id_lab,
                 'id_asisten'  => $request->id_asisten,
             ]);
+
     } else {
+
+        // Hanya update jadwal yang dipilih
         $schedule->update([
-            'tanggal'     => $request->tanggal,
-            'id_lab'      => $request->id_lab,
-            'jam_mulai'   => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
             'matkul'      => $request->matkul,
             'dosen'       => $request->dosen,
+            'jam_mulai'   => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+            'id_lab'      => $request->id_lab,
             'id_asisten'  => $request->id_asisten,
+            'tanggal'     => $request->tanggal,
+            'hari'        => $namaHariOtomatis,
         ]);
     }
 
-    return back()->with('success', 'Perubahan jadwal berhasil diterapkan.');
+    return redirect()->back()
+        ->with('success', 'Jadwal berhasil diperbarui!');
 }
-
     public function clearSchedule()
     {
         Schedule::truncate();
@@ -286,25 +298,13 @@ public function manajemenJadwal(Request $request) {
         return back()->with('success', "🚀 Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
     }
 
-    public function index(Request $request)
+    public function bersihin()
 {
-    // ... (kodingan penarikan data $schedules dan $labs milik lu sebelumnya) ...
+    // Menghapus seluruh data di tabel schedules
+    Schedule::truncate(); 
 
-    // 🔥 LOGIKA CERDAS: Mencari semua jadwal yang tanggal & lab-nya kembar, tapi jam-nya bertubrukan
-    $conflicts = Schedule::whereIn('id_jadwal', function($query) {
-        $query->select('s1.id_jadwal')
-            ->from('schedules as s1')
-            ->join('schedules as s2', function($join) {
-                $join->on('s1.tanggal', '=', 's2.tanggal')
-                     ->on('s1.id_lab', '=', 's2.id_lab')
-                     ->on('s1.id_jadwal', '!=', 's2.id_jadwal') // Gak boleh mendeteksi dirinya sendiri
-                     ->whereRaw('s1.jam_mulai < s2.jam_selesai') // Waktu mulai kelas A sebelum kelas B selesai
-                     ->whereRaw('s1.jam_selesai > s2.jam_mulai'); // Waktu selesai kelas A melewati kelas B mulai
-            });
-    })->with('lab')->get(); // Load relasi lab-nya sekalian
-
-    // Lempar data variabel $conflicts ke view blade
-    return view('spv.jadwal', compact('schedules', 'labs', 'conflicts'));
+    // Kembalikan ke halaman sebelumnya dengan alert sukses
+    return redirect()->back()->with('success', 'Semua data jadwal laboratorium berhasil dikosongkan!');
 }
 
     
