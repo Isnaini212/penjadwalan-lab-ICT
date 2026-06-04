@@ -22,13 +22,19 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): \Illuminate\Http\RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+
+        // LOGIKA REDIRECT LANGSUNG (Tanpa Intended)
+        if ($user->role === 'spv') {
+            return redirect()->route('spv.dashboard'); // Langsung tembak ke rute
+        }
+
+        return redirect()->route('dashboard');
     }
 
     /**

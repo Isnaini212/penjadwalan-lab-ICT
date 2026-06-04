@@ -9,13 +9,10 @@ use Illuminate\Support\Facades\Hash;
 class AkunController extends Controller
 {
 
-    public function buat()
-    {
-        return view('spv.akun');
-    }
+
 
     // Proses pembuatan akun oleh SPV
-    public function store(Request $request)
+    public function simpen(Request $request)
     {
         // 1. Validasi
         $request->validate([
@@ -35,4 +32,12 @@ class AkunController extends Controller
 
         return back()->with('success', 'Akun ' . strtoupper($request->role) . ' atas nama ' . $request->name . ' berhasil dibuat!');
     }
+
+    // Contoh isi controller lu harus kayak gini ya Bre
+public function buat()
+{
+    $users = User::whereIn('role', ['asisten', 'ormawa', 'dosen'])->latest()->get();
+    
+    return view('spv.akun', compact('users'));
+}
 }

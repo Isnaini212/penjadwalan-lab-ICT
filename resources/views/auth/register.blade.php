@@ -1,52 +1,114 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+@extends('layouts.auth')
+@section('title', 'Register SPV')
+@section('content')
+    <div class="min-h-screen bg-gradient-to-b from-white to-blue-400 flex items-center justify-center px-4">
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+        <div class="w-full max-w-5xl bg-white rounded-lg shadow-xl overflow-hidden grid md:grid-cols-2">
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+            <div class="hidden md:block">
+                <img
+                    src="{{ asset('images/.png') }}"
+                    alt="Laboratorium ICT"
+                    class="w-full h-full object-cover"
+                >
+            </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <div class="px-10 py-12 flex flex-col justify-center">
+                <div class="text-center mb-8">
+                    <img
+                        src="{{ asset('images/LogoICT.png') }}"
+                        alt="Logo ICT"
+                        class="w-20 h-20 object-contain mx-auto mb-6"
+                    >
 
-            <x-text-input id="password" class="block mt-1 w-full"
+                    <h1 class="text-3xl font-bold text-blue-900">
+                        Buat Akun SPV
+                    </h1>
+                </div>
+
+                <form method="POST" action="{{ route('register') }}">
+                @csrf
+                    
+                    {{-- 🌟 INPUT TERSEMBUNYI: Memaksa Role menjadi SPV --}}
+                    <input type="hidden" name="role" value="spv">
+
+                    {{-- INPUT NAMA LENGKAP --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Nama Lengkap
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            value="{{ old('name') }}"
+                            required autofocus
+                            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                        @error('name')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    {{-- INPUT EMAIL --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                        @error('email')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    {{-- INPUT PASSWORD --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Password
+                        </label>
+                        <input
                             type="password"
                             name="password"
-                            required autocomplete="new-password" />
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                        @error('password')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
+                    {{-- INPUT KONFIRMASI PASSWORD --}}
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Konfirmasi Password
+                        </label>
+                        <input
                             type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+                            name="password_confirmation"
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                    </div>
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    <button
+                        type="submit"
+                        class="w-full py-3 rounded-lg bg-indigo-900 text-white font-medium hover:bg-indigo-800 transition"
+                    >
+                        Register SPV
+                    </button>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{{ route('login') }}" class="text-sm text-blue-600 hover:underline font-semibold">Sudah punya akun? Login di sini</a>
+                    </div>
+                </form>
+            </div>
+
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+    </div>
+@endsection

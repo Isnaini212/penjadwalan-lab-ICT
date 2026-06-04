@@ -1,47 +1,95 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+@extends('layouts.auth')
+@section('title', 'Login SPV')
+@section('content')
+    <div class="min-h-screen bg-gradient-to-b from-white to-blue-400 flex items-center justify-center px-4">
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+        <div class="w-full max-w-5xl bg-white rounded-lg shadow-xl overflow-hidden grid md:grid-cols-2">
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+            <div class="hidden md:block">
+                <img
+                    src="{{ asset('images/.png') }}"
+                    alt="Laboratorium ICT"
+                    class="w-full h-full object-cover"
+                >
+            </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+            <div class="px-10 py-12 flex flex-col justify-center">
+                <div class="text-center mb-8">
+                    <img
+                        src="{{ asset('images/LogoICT.png') }}"
+                        alt="Logo ICT"
+                        class="w-20 h-20 object-contain mx-auto mb-6"
+                    >
 
-            <x-text-input id="password" class="block mt-1 w-full"
+                    <h1 class="text-4xl font-bold text-blue-900">
+                        Selamat Datang
+                    </h1>
+                </div>
+
+                {{-- 🌟 LOGIC INDIKATOR ALERT: Muncul di atas form jika ada kesalahan login --}}
+                @if ($errors->any())
+                    <div style="background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; font-weight: bold; text-align: center;">
+                        ⚠️ Login Gagal! Email belum terdaftar atau Password Anda salah.
+                    </div>
+                @endif
+                
+                <form method="POST" action="{{ route('login') }}">
+                @csrf
+                    {{-- INPUT EMAIL --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Email
+                        </label>
+                        {{-- 🌟 LOGIC INDIKATOR INPUT: Border otomatis merah & bg merah tipis jika salah --}}
+                        <input
+                            type="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 {{ $errors->has('email') ? 'border-red-500 bg-red-50/30 focus:ring-red-400' : 'border-slate-300 focus:ring-blue-400' }}"
+                        >
+                        @error('email')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
+
+                    {{-- INPUT PASSWORD --}}
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Password
+                        </label>
+                        {{-- 🌟 LOGIC INDIKATOR INPUT: Ikut memerah jika login gagal --}}
+                        <input
                             type="password"
                             name="password"
-                            required autocomplete="current-password" />
+                            class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 {{ $errors->has('email') || $errors->has('password') ? 'border-red-500 bg-red-50/30 focus:ring-red-400' : 'border-slate-300 focus:ring-blue-400' }}"
+                        >
+                        @error('password')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                        
+                        @if (Route::has('password.request'))
+                            <div class="mt-2">
+                                <a href="{{ route('password.request') }}" class="text-xs font-bold text-indigo-600 hover:underline">
+                                    Lupa Sandi?
+                                </a>
+                            </div>
+                        @endif
+                    </div>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    <button
+                        type="submit"
+                        class="w-full py-3 rounded-lg bg-indigo-900 text-white font-medium hover:bg-indigo-800 transition"
+                    >
+                        Login
+                    </button>
+                </form>
+            </div>
+
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
-
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+    </div>
+@endsection
