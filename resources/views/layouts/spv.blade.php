@@ -33,6 +33,11 @@
                 <i class="fas fa-home text-base"></i> 
                 <span>Dashboard</span>
             </a>
+         
+            <a href="/spv/booking" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/booking') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+                <i class="fas fa-home text-base"></i> 
+                <span>Aprove Booking</span>
+            </a>
 
             <a href="/spv/jadwal" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jadwal') || request('filter_date') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
                 <i class="fas fa-calendar-alt text-base"></i> 
@@ -63,20 +68,25 @@
     <span>Tv Monitor</span>
 </a>
 
+<a href="/spv/akun" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/akun') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+    <i class="fa fa-tv text-base"></i> 
+    <span>Buat Akun</span>
+</a>
+
             
         </nav>
         
-        <!-- Footer Tombol Log Out (Sesuai Desain image_fca9a7.png) -->
         <div class="p-4 border-t border-white/10 bg-[#3f6579]">
-            <form method="POST" action="/" class="m-0">
-                @csrf
-                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15 focus:outline-none">
-                    <i class="fas fa-sign-out-alt text-base"></i>
-                    <span>Log out</span>
-                </button>
-            </form>
-        </div>
-    </aside>
+    {{-- 🌟 LOGIC BREEZE: Ubah action menjadi route('logout') resmi --}}
+    <form method="POST" action="{{ route('logout') }}" class="m-0">
+        @csrf
+        <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15 focus:outline-none cursor-pointer">
+            <i class="fas fa-sign-out-alt text-base"></i>
+            <span>Log out</span>
+        </button>
+    </form>
+</div>
+</aside>
 
     <!-- Overlay Mobile Background -->
     <div class="fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300 md:hidden hidden" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
@@ -113,16 +123,18 @@
                             {{ Auth::user()->email ?? 'admin@budiluhur.ac.id' }}
                         </div>
                     </div>
-                    <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-700">
-                        <i class="fas fa-user-circle text-base text-slate-400"></i> Edit Profil
-                    </a>
-                    <form method="POST" action="/" class="m-0 border-t border-slate-100">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 w-full text-left">
-                            <i class="fas fa-sign-out-alt text-base text-red-400"></i> Log out
-                        </button>
-                    </form>
-                </div>
+                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-blue-700">
+    <i class="fas fa-user-circle text-base text-slate-400"></i> Edit Profil
+</a>
+
+{{-- 🌟 LOGIC BREEZE: Form Logout yang udah bener jalurnya --}}
+<form method="POST" action="{{ route('logout') }}" class="m-0 border-t border-slate-100">
+    @csrf
+    <button type="submit" class="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-600 text-left cursor-pointer">
+        <i class="fas fa-sign-out-alt text-base text-slate-400 transition-colors group-hover:text-red-500"></i> 
+        <span>Keluar / Logout</span>
+    </button>
+</form>
             </div>
         </header>
 

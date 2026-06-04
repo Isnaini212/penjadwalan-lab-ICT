@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         // Tabel untuk teks pengumuman berjalan
-        Schema::create('tv_announcements', function (Blueprint $table) {
+        Schema::create('pengunguman', function (Blueprint $table) {
             $table->id();
             $table->text('message');
             $table->timestamps();
         });
 
         // Tabel untuk daftar gambar slide JPG
-        Schema::create('tv_slides', function (Blueprint $table) {
+        Schema::create('slide_tv', function (Blueprint $table) {
             $table->id();
             $table->string('image_path');
             $table->timestamps();

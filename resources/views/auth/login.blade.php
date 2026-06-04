@@ -26,29 +26,58 @@
                     </h1>
                 </div>
 
-                <form method="POST" action="/login" class="space-y-6">
-                    @csrf
-
-                    <div>
+                {{-- 🌟 LOGIC INDIKATOR ALERT: Muncul di atas form jika ada kesalahan login --}}
+                @if ($errors->any())
+                    <div style="background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; font-weight: bold; text-align: center;">
+                        ⚠️ Login Gagal! Email belum terdaftar atau Password Anda salah.
+                    </div>
+                @endif
+                
+                <form method="POST" action="{{ route('login') }}">
+                @csrf
+                    {{-- INPUT EMAIL --}}
+                    <div class="mb-4">
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Email
                         </label>
+                        {{-- 🌟 LOGIC INDIKATOR INPUT: Border otomatis merah & bg merah tipis jika salah --}}
                         <input
                             type="email"
                             name="email"
-                            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            value="{{ old('email') }}"
+                            class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 {{ $errors->has('email') ? 'border-red-500 bg-red-50/30 focus:ring-red-400' : 'border-slate-300 focus:ring-blue-400' }}"
                         >
+                        @error('email')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">
+                                {{ $message }}
+                            </span>
+                        @enderror
                     </div>
 
-                    <div>
+                    {{-- INPUT PASSWORD --}}
+                    <div class="mb-6">
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Password
                         </label>
+                        {{-- 🌟 LOGIC INDIKATOR INPUT: Ikut memerah jika login gagal --}}
                         <input
                             type="password"
                             name="password"
-                            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            class="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 {{ $errors->has('email') || $errors->has('password') ? 'border-red-500 bg-red-50/30 focus:ring-red-400' : 'border-slate-300 focus:ring-blue-400' }}"
                         >
+                        @error('password')
+                            <span style="color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 4px; display: block;">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                        
+                        @if (Route::has('password.request'))
+                            <div class="mt-2">
+                                <a href="{{ route('password.request') }}" class="text-xs font-bold text-indigo-600 hover:underline">
+                                    Lupa Sandi?
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     <button

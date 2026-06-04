@@ -10,8 +10,8 @@ class TvController extends Controller
 // Halaman Manajemen Konten TV untuk SPV
 public function manageTv()
 {
-    $announcement = DB::table('tv_announcements')->first();
-    $slides = DB::table('tv_slides')->get();
+    $announcement = DB::table('pengunguman')->first();
+    $slides = DB::table('slide_tv')->get();
 
     return view('spv.tv', compact('announcement', 'slides'));
 }
@@ -21,15 +21,15 @@ public function updateTvText(Request $request)
 {
     $request->validate(['message' => 'required|string']);
 
-    $exists = DB::table('tv_announcements')->first();
+    $exists = DB::table('pengunguman')->first();
 
     if ($exists) {
-        DB::table('tv_announcements')->where('id', $exists->id)->update([
+        DB::table('pengunguman')->where('id', $exists->id)->update([
             'message' => $request->message,
             'updated_at' => now()
         ]);
     } else {
-        DB::table('tv_announcements')->insert([
+        DB::table('pengunguman')->insert([
             'message' => $request->message,
             'created_at' => now(),
             'updated_at' => now()
@@ -47,9 +47,9 @@ public function uploadTvSlide(Request $request)
     ]);
 
     if ($request->hasFile('image')) {
-        $path = $request->file('image')->store('tv_slides', 'public');
+        $path = $request->file('image')->store('slide_tv', 'public');
 
-        DB::table('tv_slides')->insert([
+        DB::table('slide_tv')->insert([
             'image_path' => $path,
             'created_at' => now(),
             'updated_at' => now()
@@ -62,11 +62,11 @@ public function uploadTvSlide(Request $request)
 // Menghapus gambar slide (Otomatis mengurangi jumlah slide di TV)
 public function deleteTvSlide($id)
 {
-    $slide = DB::table('tv_slides')->where('id', $id)->first();
+    $slide = DB::table('slide_tv')->where('id', $id)->first();
 
     if ($slide) {
         Storage::disk('public')->delete($slide->image_path);
-        DB::table('tv_slides')->where('id', $id)->delete();
+        DB::table('slide_tv')->where('id', $id)->delete();
     }
 
     return redirect()->back()->with('success', 'Slide gambar berhasil dihapus.');
@@ -83,10 +83,10 @@ public function tvSon()
         ->orderBy('jam_mulai', 'asc')
         ->get();
 
-    $announcement = DB::table('tv_announcements')->first();
+    $announcement = DB::table('pengunguman')->first();
     $runningText = $announcement ? $announcement->message : 'Selamat Datang di Laboratorium Komputer Universitas Budi Luhur.';
     
-    $slides = DB::table('tv_slides')->get();
+    $slides = DB::table('slide_tv')->get();
 
     return view('tv', compact('jadwal', 'runningText', 'slides'));
 }}
