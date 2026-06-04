@@ -62,7 +62,7 @@ class MhsController extends Controller
 
             DB::commit();
 
-            return back()->with('success', '🚀 Pengajuan Booking berhasil dikirim! Silakan tunggu konfirmasi selanjutnya dari SPV.');
+            return back()->with('success', 'Pengajuan Booking berhasil dikirim! Silakan tunggu konfirmasi selanjutnya dari SPV.');
 
         } catch (\Exception $e) {
             DB::rollBack();

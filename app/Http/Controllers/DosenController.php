@@ -101,7 +101,7 @@ class DosenController extends Controller
                 'status'      => 'pending',
             ]);
 
-            return back()->with('success', '🚀 Pengajuan Booking Lab berhasil dikirim ke SPV!');
+            return back()->with('success', 'Pengajuan Booking Lab berhasil dikirim ke SPV!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }

@@ -14,7 +14,7 @@ class SetujuController extends Controller
 {
     public function index()
     {
-        // 1. Ambil Data Pending dari Ormawa
+       
         $pendingOrmawa = Ormawa::where('status', 'pending')->get()->map(function($item) {
             $item->type = 'ormawa';
             $item->nama_pengaju = $item->penanggung_jawab;
@@ -26,7 +26,6 @@ class SetujuController extends Controller
             return $item;
         });
 
-        // 2. Ambil Data Pending dari Dosen (Tarik relasi lab)
         $pendingDosen = Dosen::with('lab')->where('status', 'pending')->get()->map(function($item) {
             $item->type = 'dosen';
             $item->nama_pengaju = $item->nm_dosen;
@@ -38,10 +37,10 @@ class SetujuController extends Controller
             return $item;
         });
 
-        // 3. Gabungkan Keduanya & Urutkan dari yang paling lama menunggu
+      
         $bookings = $pendingOrmawa->concat($pendingDosen)->sortBy('created_at');
 
-        // Statistik
+      
         $totalOrmawa = $pendingOrmawa->count();
         $totalDosen = $pendingDosen->count();
         $allLabs = Lab::all();
@@ -54,7 +53,7 @@ class SetujuController extends Controller
         return view('spv.setuju', compact('bookings', 'totalOrmawa', 'totalDosen'));
     }
 
-    // Fungsi Update Pilihan Lab di Dropdown
+   
     public function updateLab(Request $request, $type, $id)
     {
         $request->validate(['lab_id' => 'required|exists:labs,id_lab']);
@@ -70,7 +69,7 @@ class SetujuController extends Controller
         return back()->with('success', "Lab berhasil diubah menjadi {$namaLab}.");
     }
 
-    // Fungsi Approve
+   
     public function approve($type, $id)
     {
         // Mulai Transaksi Ganda (DB Transaction)
@@ -132,7 +131,7 @@ class SetujuController extends Controller
             // Jika semua langkah di atas sukses tanpa error, kunci data ke MySQL
             DB::commit();
 
-            return back()->with('success', '🚀 Pengajuan berhasil disetujui dan otomatis sinkron ke Jadwal Utama (Schedules)!');
+            return back()->with('success', 'Pengajuan berhasil disetujui dan otomatis sinkron ke Jadwal Utama (Schedules)!');
 
         } catch (\Exception $e) {
             // Jika di tengah jalan ada error (misal kolom schedules beda), batalkan semua aksi!
