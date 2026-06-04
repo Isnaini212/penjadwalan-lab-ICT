@@ -67,3 +67,6 @@ Route::prefix('spv/tv')->group(function () {
     // Proses hapus berkas gambar slide berdasarkan ID
     Route::delete('/slide/{id}', [TvController::class, 'deleteTvSlide'])->name('spv.tv.slide.delete');
 });
+
+Route::get('/asisten/input', [AsistenController::class, 'inputMatrix'])->name('schedule.matrix');
+Route::post('/asisten/update', [AsistenController::class, 'storsis'])->name('simput');

@@ -361,6 +361,58 @@ class AsistenController extends Controller
             return back()->with('error', 'Waduh gagal Bre: ' . $e->getMessage());
         }
     }
+    /////////////role asisten/////
+   
+    /**
+     * 1. Menampilkan Halaman Matrix Input Jadwal (Untuk Asisten)
+     */
+    public function inputMatrix()
+    {
+        // Langsung arahkan ke file view blade yang udah lu copas sebelumnya
+        // Pastikan file bladenya ada di resources/views/asisten/input-matrix.blade.php
+        return view('asisten.input');
+    }
+
+    /**
+     * 2. Memproses Data Matrix yang Dikirim Asisten ke Database
+     */
+    public function storsis(Request $request)
+    {
+      $request->validate([
+            'nama_asisten' => 'required|string',
+            'hari'         => 'required|string',
+            'jam_mulai'    => 'required|string|size:5',
+            'sks'          => 'required|integer',
+            'mata_kuliah'  => 'required|string',
+        ]);
+
+        // Hitung Jam Selesai (1 SKS = 50 Menit)
+        $jamMulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
+        $totalMenit = $request->sks * 50;
+        $jamSelesai = $jamMulai->copy()->addMinutes($totalMenit)->format('H:i');
+
+        AssistantSchedule::create([
+            'nama_asisten' => strtoupper(trim($request->nama_asisten)),
+            'hari'         => $request->hari,
+            'jam_mulai'    => $request->jam_mulai,
+            'jam_selesai'  => $jamSelesai,
+            'mata_kuliah'  => trim($request->mata_kuliah),
+        ]);
+
+        // Pakai session biar nama dan hari terakhir kesimpen, asisten ga usah milih ulang
+        return back()
+            ->with('success', 'Jadwal ' . $request->mata_kuliah . ' berhasil ditambahkan!')
+            ->with('last_asisten', $request->nama_asisten)
+            ->with('last_hari', $request->hari);}
+
+            public function hapusJadwal($id)
+    {
+        // Hapus berdasarkan Primary Key tabel lu 
+        // (Pastikan nama variable primary key lu sesuai, di model lu primaryKey = 'id_asisten')
+        AssistantSchedule::where('id_asisten', $id)->delete();
+
+        return back()->with('success', 'Jadwal berhasil dihapus!');
+    }
 
 }
 
