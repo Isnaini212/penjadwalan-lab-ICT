@@ -11,6 +11,7 @@ class Dosen extends Model
     protected $primaryKey = 'id_booking';
 
     protected $fillable = [
+        'user_id',
         'nm_dosen',
         'tanggal',
         'hari',
@@ -22,6 +23,12 @@ class Dosen extends Model
         'sks',
         'status',
     ];
+
+    // Relasi balik ke model user
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 
     // Relasi balik ke model Lab
     public function lab(): BelongsTo

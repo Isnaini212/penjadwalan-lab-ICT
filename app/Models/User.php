@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 // use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -49,4 +50,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function bookingOrmawa(): HasMany
+    {
+        return $this->hasMany(Ormawa::class, 'user_id', 'id');
+    }
+
+    public function bookingDosen(): HasMany
+    {
+        return $this->hasMany(Dosen::class, 'user_id', 'id');
+    }
+    
 }
