@@ -41,7 +41,7 @@
 <div class="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/40 overflow-hidden">
     <div class="overflow-x-auto custom-scrollbar">
         <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-slate-800 text-white font-extrabold uppercase tracking-wider text-xs">
+            <thead class="bg-blue-900 text-white font-extrabold uppercase tracking-wider text-xs">
                 <tr>
                     <th class="px-6 py-4">Pengaju & Kontak</th>
                     <th class="px-4 py-4 text-center">Tipe Identitas</th>
@@ -55,7 +55,7 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse($bookings as $b)
                 <tr class="hover:bg-slate-50 transition">
-                    
+
                     {{-- Pengaju --}}
                     <td class="px-6 py-4">
                         <div class="font-bold text-slate-800 text-base">{{ $b->nama_pengaju }}</div>
@@ -98,7 +98,7 @@
                         <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}" method="POST">
                             @csrf @method('PATCH')
                             <select name="lab_id" onchange="this.form.submit()" class="h-10 w-44 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
-                                
+
                                 @if($b->current_lab === 'TBD')
                                     <option value="" selected disabled class="text-red-500">Pilih Lab (Wajib)</option>
                                 @endif

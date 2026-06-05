@@ -14,7 +14,7 @@ class Dosen extends Model
         'nm_dosen',
         'tanggal',
         'hari',
-        'id_lab', // 🔥 Diubah jadi id_lab
+        'id_lab',
         'jam_mulai',
         'jam_selesai',
         'kapasitas',
