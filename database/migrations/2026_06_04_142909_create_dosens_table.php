@@ -10,6 +10,8 @@ return new class extends Migration
     {
         Schema::create('booking_dosen', function (Blueprint $table) {
             $table->id('id_booking'); // Primary Key
+
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             
             $table->string('nm_dosen');
             $table->date('tanggal');

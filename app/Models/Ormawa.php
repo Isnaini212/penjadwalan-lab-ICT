@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Ormawa extends Model
 {
@@ -10,6 +11,7 @@ class Ormawa extends Model
     protected $primaryKey = 'id_booking'; // Kunci utamanya
 
     protected $fillable = [
+        'user_id',
         'nama_ormawa',
         'penanggung_jawab',
         'tanggal',
@@ -22,4 +24,10 @@ class Ormawa extends Model
         'file_surat',
         'status',
     ];
+
+    // Relasi balik ke model user
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

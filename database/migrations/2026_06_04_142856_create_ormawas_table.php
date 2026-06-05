@@ -11,6 +11,8 @@ return new class extends Migration
         Schema::create('booking_ormawa', function (Blueprint $table) {
             $table->id('id_booking'); // Primary Key
             
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+
             $table->string('nama_ormawa');
             $table->string('penanggung_jawab');
             $table->date('tanggal');
