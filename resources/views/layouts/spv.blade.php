@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title') - Lab ICT</title>
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     @yield('styles')
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100 font-sans text-slate-800 antialiased">
 
     <!-- Sidebar Container (Warna disesuaikan dengan image_fca9a7.png) -->
     <aside class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#476f84] text-white transition-transform duration-300 md:translate-x-0 -translate-x-full" id="sidebar">
-        
+
         <!-- Header Sidebar -->
         <div class="flex h-24 items-center gap-3 px-6 border-b border-white/10">
             <img src="{{ asset('img/logo-ubl.png') }}" alt="Logo" class="h-12 w-12 rounded-full object-cover bg-white p-0.5" onerror="this.src='https://ui-avatars.com/api/?name=ICT&background=fff&color=0284c7'">
@@ -26,58 +26,58 @@
                 <span class="text-base font-extrabold tracking-wide block">ICT Budi Luhur</span>
             </div>
         </div>
-        
+
         <!-- Menu Navigasi -->
         <nav class="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
             <a href="/spv/dashboard" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/dashboard') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-home text-base"></i> 
+                <i class="fas fa-home text-base"></i>
                 <span>Dashboard</span>
             </a>
-         
+
             <a href="/spv/booking" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/booking') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-home text-base"></i> 
+                <i class="fas fa-home text-base"></i>
                 <span>Aprove Booking</span>
             </a>
 
             <a href="/spv/jadwal" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jadwal') || request('filter_date') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-calendar-alt text-base"></i> 
+                <i class="fas fa-calendar-alt text-base"></i>
                 <span>Manajemen Jadwal</span>
             </a>
 
-           
+
 
             <a href="/spv/asisten" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/asisten') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-user-clock"></i> 
+                <i class="fas fa-user-clock"></i>
                 <span>Import Jadwal Asisten</span>
             </a>
 
-         
+
 <a href="/spv/jasis" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jasis') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-calendar-check text-base"></i> 
+    <i class="fa fa-calendar-check text-base"></i>
     <span>Jadwal Asisten</span>
 </a>
 
 
 <a href="/spv/lab" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/lab') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-database text-base"></i> 
+    <i class="fa fa-database text-base"></i>
     <span>Data Lab</span>
 </a>
 
 <a href="/spv/tv" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/tv') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-tv text-base"></i> 
+    <i class="fa fa-tv text-base"></i>
     <span>Tv Monitor</span>
 </a>
 
 <a href="/spv/akun" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/akun') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-tv text-base"></i> 
+    <i class="fa fa-tv text-base"></i>
     <span>Buat Akun</span>
 </a>
 
-            
+
         </nav>
-        
+
         <div class="p-4 border-t border-white/10 bg-[#3f6579]">
-    {{-- LOGIC BREEZE: Ubah action menjadi route('logout') resmi --}}
+    {{--  LOGIC BREEZE: Ubah action menjadi route('logout') resmi --}}
     <form method="POST" action="{{ route('logout') }}" class="m-0">
         @csrf
         <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/15 focus:outline-none cursor-pointer">
@@ -93,7 +93,7 @@
 
     <!-- Main Content Area -->
     <div class="flex flex-col md:pl-64" id="main-content">
-        
+
         <!-- Topbar Header -->
         <header class="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/60 bg-white/60 px-6 backdrop-blur lg:px-8">
             <div>
@@ -101,7 +101,7 @@
                     <i class="fas fa-bars text-lg"></i>
                 </button>
             </div>
-            
+
             <!-- User Profile Section -->
             <div class="relative" id="profileDropdownContainer">
                 <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-3 py-1.5 text-left transition hover:border-slate-200 hover:bg-white/80 focus:outline-none">
@@ -109,7 +109,7 @@
                     <div class="hidden leading-tight sm:block">
                         <div class="text-xs font-bold uppercase tracking-wider text-slate-400">SPV Penjadwalan</div>
                         <div class="text-sm font-extrabold text-slate-700">
-                            {{ Auth::user()->name ?? 'Administrator' }} 
+                            {{ Auth::user()->name ?? 'Administrator' }}
                         </div>
                     </div>
                     <i class="fas fa-chevron-down text-xs text-slate-400 ml-1 hidden sm:block"></i>
@@ -131,7 +131,7 @@
 <form method="POST" action="{{ route('logout') }}" class="m-0 border-t border-slate-100">
     @csrf
     <button type="submit" class="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-600 text-left cursor-pointer">
-        <i class="fas fa-sign-out-alt text-base text-slate-400 transition-colors group-hover:text-red-500"></i> 
+        <i class="fas fa-sign-out-alt text-base text-slate-400 transition-colors group-hover:text-red-500"></i>
         <span>Keluar / Logout</span>
     </button>
 </form>
@@ -155,7 +155,7 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebarBackdrop');
-            
+
             sidebar.classList.toggle('-translate-x-full');
             backdrop.classList.toggle('hidden');
         }
@@ -176,7 +176,7 @@
             }
         });
     </script>
-    
+
     @yield('scripts')
 </body>
 </html>
