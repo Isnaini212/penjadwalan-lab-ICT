@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 
 class TvController extends Controller
 {
-// Halaman Manajemen Konten TV untuk SPV
+
 public function manageTv()
 {
     $announcement = DB::table('pengunguman')->first();
@@ -16,7 +16,7 @@ public function manageTv()
     return view('spv.tv', compact('announcement', 'slides'));
 }
 
-// Menyimpan atau memperbarui running text
+
 public function updateTvText(Request $request)
 {
     $request->validate(['message' => 'required|string']);
@@ -39,7 +39,7 @@ public function updateTvText(Request $request)
     return redirect()->back()->with('success', 'Teks agenda TV berhasil diperbarui.');
 }
 
-// Menambah gambar slide baru (Otomatis menambah jumlah slide di TV)
+
 public function uploadTvSlide(Request $request)
 {
     $request->validate([
@@ -59,7 +59,7 @@ public function uploadTvSlide(Request $request)
     return redirect()->back()->with('success', 'Slide gambar baru berhasil ditambahkan.');
 }
 
-// Menghapus gambar slide (Otomatis mengurangi jumlah slide di TV)
+
 public function deleteTvSlide($id)
 {
     $slide = DB::table('slide_tv')->where('id', $id)->first();
@@ -72,7 +72,7 @@ public function deleteTvSlide($id)
     return redirect()->back()->with('success', 'Slide gambar berhasil dihapus.');
 }
 
-// UPDATE FUNGSI TV LAMA: Sekarang melempar data jadwal, teks, dan gambar sekaligus
+
 public function tvSon()
 {
     $jadwal = Schedule::with('lab')

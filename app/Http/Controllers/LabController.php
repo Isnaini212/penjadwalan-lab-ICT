@@ -6,17 +6,13 @@ use Illuminate\Http\Request;
 
 class LabController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    
     public function manajemenLab(Request $request) {
         $labs = Lab::all();
         return view('spv.lab', compact('labs'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    
     public function buatLab(Request $request)
     {
         $messages = [
@@ -74,9 +70,7 @@ class LabController extends Controller
 
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    
     public function destroy($id_lab)
     {
         $labs = Lab::findOrFail($id_lab);

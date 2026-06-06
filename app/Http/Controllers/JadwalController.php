@@ -16,7 +16,96 @@ class JadwalController extends Controller
 
 
 
-    public function welcome(Request $request)
+ public function minggu(Request $request)
+{
+    // 🌟 SAKLAR MODE TAMPILAN: Ubah jadi false kalau mau pakai Date Now (Harian)
+    // Nanti bisa lu hubungkan ke database, contoh: $isWeeklyMode = SystemSetting::first()->is_weekly;
+    $isWeeklyMode = true; 
+
+    $labs = \App\Models\Lab::all();
+
+    // ==============================================================
+    // ⬇️ LOGIKA MODE HARIAN (DATE NOW) ⬇️
+    // ==============================================================
+    if (!$isWeeklyMode) {
+        $filterDate = $request->query('filter_date', now()->toDateString());
+        
+        $schedules = \App\Models\Schedule::with(['lab', 'assistantSchedule'])
+            ->whereDate('tanggal', $filterDate)
+            ->whereHas('lab', function($query) {
+                $query->where('nama_lab', '!=', 'RUANG ASISTEN')
+                      ->where('nama_lab', '!=', 'RA');
+            })
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        return view('perminggu', compact('schedules', 'filterDate', 'labs', 'isWeeklyMode'));
+    }
+
+    // ==============================================================
+    // ⬇️ LOGIKA MODE MINGGUAN (DROPDOWN) ⬇️
+    // ==============================================================
+    $minDate = \App\Models\Schedule::min('tanggal');
+    $maxDate = \App\Models\Schedule::max('tanggal');
+
+    if (!$minDate || !$maxDate) {
+        $startPeriode = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $endPeriode = \Carbon\Carbon::now()->endOfWeek(\Carbon\Carbon::SUNDAY);
+    } else {
+        $startPeriode = \Carbon\Carbon::parse($minDate)->startOfWeek(\Carbon\Carbon::MONDAY);
+        $endPeriode = \Carbon\Carbon::parse($maxDate)->endOfWeek(\Carbon\Carbon::SUNDAY);
+    }
+
+    $listMinggu = [];
+    $current = $startPeriode->copy();
+    $index = 1;
+    $defaultWeek = 1;
+    $today = \Carbon\Carbon::now()->toDateString();
+
+    while ($current->lessThanOrEqualTo($endPeriode)) {
+        $senin = $current->copy()->toDateString();
+        $sabtu = $current->copy()->addDays(5)->toDateString();
+
+        $listMinggu[] = [
+            'id_minggu' => $index,
+            'label'     => "Minggu " . $index,
+            'start'     => $senin,
+            'end'       => $sabtu,
+        ];
+
+        if ($today >= $senin && $today <= $sabtu) {
+            $defaultWeek = $index;
+        }
+
+        $current->addWeek();
+        $index++;
+    }
+
+    $mingguDipilih = $request->query('week', $defaultWeek);
+    $arrayIndex = (int)$mingguDipilih - 1;
+    $activeRange = isset($listMinggu[$arrayIndex]) ? $listMinggu[$arrayIndex] : $listMinggu[0];
+
+    $schedules = \App\Models\Schedule::with(['lab', 'assistantSchedule'])
+        ->whereBetween('tanggal', [$activeRange['start'], $activeRange['end']])
+        ->whereHas('lab', function($query) {
+            $query->where('nama_lab', '!=', 'RUANG ASISTEN')
+                  ->where('nama_lab', '!=', 'RA');
+        })
+        ->orderBy('tanggal', 'asc')
+        ->orderBy('jam_mulai', 'asc')
+        ->get();
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'schedules'    => $schedules,
+            'active_range' => $activeRange
+        ]);
+    }
+
+    return view('perminggu', compact('schedules', 'listMinggu', 'mingguDipilih', 'activeRange', 'labs', 'isWeeklyMode'));
+}
+
+ public function welcome(Request $request)
     {
 
 
@@ -177,7 +266,7 @@ public function manajemenJadwal(Request $request) {
 
     $schedule = Schedule::findOrFail($id);
 
-    // Simpan data lama sebagai acuan pencarian
+    
     $matkulLama     = $schedule->matkul;
     $dosenLama      = $schedule->dosen;
     $jamMulaiLama   = $schedule->jam_mulai;
@@ -187,7 +276,7 @@ public function manajemenJadwal(Request $request) {
     $namaHariOtomatis = \Carbon\Carbon::parse($request->tanggal)
         ->translatedFormat('l');
 
-    // Jika update semua yang serupa
+    
     if ($request->scope === 'all') {
 
         Schedule::where('matkul', $matkulLama)
@@ -205,7 +294,7 @@ public function manajemenJadwal(Request $request) {
 
     } else {
 
-        // Hanya update jadwal yang dipilih
+        
         $schedule->update([
             'matkul'      => $request->matkul,
             'dosen'       => $request->dosen,
@@ -297,15 +386,15 @@ public function manajemenJadwal(Request $request) {
             return back()->with('error', 'Waduh, datanya kebaca tapi nggak nemu satupun jadwal yang ruangannya LAB.');
         }
 
-        return back()->with('success', "🚀 Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
+        return back()->with('success', " Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
     }
 
     public function bersihin()
 {
-    // Menghapus seluruh data di tabel schedules
+    
     Schedule::truncate(); 
 
-    // Kembalikan ke halaman sebelumnya dengan alert sukses
+    
     return redirect()->back()->with('success', 'Semua data jadwal laboratorium berhasil dikosongkan!');
 }
 

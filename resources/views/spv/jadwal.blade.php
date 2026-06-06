@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="space-y-6">
-  
+
     <div>
         <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Manajemen Jadwal</h1>
         <p class="mt-1 text-sm font-medium text-slate-500">Kelola jadwal praktikum dan persetujuan peminjaman lab.</p>
@@ -98,7 +98,7 @@
                     <i class="fas fa-file-excel mr-1.5"></i> IMPORT XLSX
                 </button>
             </form>
-            
+
             <form action="{{ route('bersih') }}" method="POST" class="m-0 inline-flex"
                   onsubmit="return confirm('PERINGATAN KERAS!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA JADWAL yang ada di dalam database?\nTindakan ini permanen dan data tidak dapat dikembalikan.');">
                 @csrf
@@ -110,20 +110,20 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <select id="filterType" class="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
+            <select id="filterType" class="h-11 rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
                 <option value="all">Semua Jadwal (MIX)</option>
                 <option value="praktikum">Jadwal Matkul Saja</option>
                 <option value="ra">Jaga RA Saja</option>
             </select>
 
-            <select id="filterDay" class="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
+            <select id="filterDay" class="h-11 rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
                 <option value="">Semua Hari</option>
                 @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $h)
                     <option value="{{ $h }}">{{ $h }}</option>
                 @endforeach
             </select>
 
-            <select id="filterLab" class="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
+            <select id="filterLab" class="h-11 rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
                 <option value="">Semua Lab / Ruangan</option>
                 <option value="RA">RUANG RA</option>
                 @for($i=1; $i<=11; $i++)
@@ -193,7 +193,7 @@
     {{-- DATA LIMIT DISPLAY CONTROL --}}
     <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
         <span>Tampilkan</span>
-        <select class="limitSelect h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-extrabold text-slate-700 outline-none cursor-pointer">
+        <select class="limitSelect h-8 rounded-lg border border-slate-200 bg-white px-2 pr-8 text-xs font-extrabold text-slate-700 outline-none cursor-pointer">
             <option value="5" selected>5</option>
             <option value="10">10</option>
             <option value="25">25</option>
@@ -266,9 +266,9 @@
     <div class="flex items-center gap-1.5 font-mono">
         <!-- Input Jam Mulai -->
         <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-        
+
         <span class="text-slate-400 font-bold text-xs">-</span>
-        
+
         <!-- Input Jam Selesai -->
         <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
     </div>
@@ -307,8 +307,8 @@
 
                         <td class="px-6 py-3.5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <button type="button" title="Simpan Perubahan Seterusnya (Minggu-Minggu Berikutnya)" 
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm transition hover:bg-blue-100" 
+                                <button type="button" title="Simpan Perubahan Seterusnya (Minggu-Minggu Berikutnya)"
+                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm transition hover:bg-blue-100"
                                         onclick="
                                             if (confirm('Apakah Anda ingin menerapkan perubahan baris ini ke semua jadwal yang sama di minggu-minggu berikutnya?')) {
                                                 document.getElementById('scope-field-{{ $s->id_jadwal }}').value = 'all';
@@ -516,7 +516,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         current = { ...item };
                     } else {
                         const jeda = item.menitMulai - current.menitSelesai;
-                        if (jeda >= 0 && jeda <= 15) { 
+                        if (jeda >= 0 && jeda <= 15) {
                             current.menitSelesai = Math.max(current.menitSelesai, item.menitSelesai);
                             current.jamSelesaiStr = item.jamSelesaiStr;
                         } else {

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 // use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -13,7 +14,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    protected $primaryKey = 'user_id';
+    //protected $primaryKey = 'user_id';
 
     /**
      * The attributes that are mass assignable.
@@ -21,10 +22,10 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'no_wa',
+    'name',
+    'email',
+    'password',
+    'role',
     ];
 
     /**
@@ -49,4 +50,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function bookingOrmawa(): HasMany
+    {
+        return $this->hasMany(Ormawa::class, 'user_id', 'id');
+    }
+
+    public function bookingDosen(): HasMany
+    {
+        return $this->hasMany(Dosen::class, 'user_id', 'id');
+    }
+    
 }
