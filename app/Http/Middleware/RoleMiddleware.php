@@ -15,7 +15,6 @@ class RoleMiddleware
             return $next($request);
         }
         
-        // Kalau role beda, tendang ke halaman 403 (Akses Ditolak)
         abort(403, 'Ente bukan ' . strtoupper($role) . ' Bre! Jangan ngadi-ngadi.');
     }
 }

@@ -177,7 +177,7 @@ public function manajemenJadwal(Request $request) {
 
     $schedule = Schedule::findOrFail($id);
 
-    // Simpan data lama sebagai acuan pencarian
+    
     $matkulLama     = $schedule->matkul;
     $dosenLama      = $schedule->dosen;
     $jamMulaiLama   = $schedule->jam_mulai;
@@ -187,7 +187,7 @@ public function manajemenJadwal(Request $request) {
     $namaHariOtomatis = \Carbon\Carbon::parse($request->tanggal)
         ->translatedFormat('l');
 
-    // Jika update semua yang serupa
+    
     if ($request->scope === 'all') {
 
         Schedule::where('matkul', $matkulLama)
@@ -205,7 +205,7 @@ public function manajemenJadwal(Request $request) {
 
     } else {
 
-        // Hanya update jadwal yang dipilih
+        
         $schedule->update([
             'matkul'      => $request->matkul,
             'dosen'       => $request->dosen,
@@ -297,15 +297,15 @@ public function manajemenJadwal(Request $request) {
             return back()->with('error', 'Waduh, datanya kebaca tapi nggak nemu satupun jadwal yang ruangannya LAB.');
         }
 
-        return back()->with('success', "🚀 Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
+        return back()->with('success', " Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
     }
 
     public function bersihin()
 {
-    // Menghapus seluruh data di tabel schedules
+    
     Schedule::truncate(); 
 
-    // Kembalikan ke halaman sebelumnya dengan alert sukses
+    
     return redirect()->back()->with('success', 'Semua data jadwal laboratorium berhasil dikosongkan!');
 }
 

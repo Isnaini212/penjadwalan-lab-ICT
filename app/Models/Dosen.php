@@ -24,13 +24,11 @@ class Dosen extends Model
         'status',
     ];
 
-    // Relasi balik ke model user
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    // Relasi balik ke model Lab
     public function lab(): BelongsTo
     {
         return $this->belongsTo(Lab::class, 'id_lab', 'id_lab');

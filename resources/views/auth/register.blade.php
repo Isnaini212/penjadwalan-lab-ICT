@@ -29,7 +29,7 @@
                 <form method="POST" action="{{ route('register') }}">
                 @csrf
                     
-                    {{-- 🌟 INPUT TERSEMBUNYI: Memaksa Role menjadi SPV --}}
+                    {{-- INPUT TERSEMBUNYI: Memaksa Role menjadi SPV --}}
                     <input type="hidden" name="role" value="spv">
 
                     {{-- INPUT NAMA LENGKAP --}}

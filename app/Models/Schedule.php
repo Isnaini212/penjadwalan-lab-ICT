@@ -67,13 +67,9 @@ class Schedule extends Model
         return $statuses;
     }
 
-    /**
-     * 🔥 FIX DUPLIKAT DROPDOWN ASISTEN
-     * Mengelompokkan pilihan berdasarkan nama agar tidak double di web
-     */
+    
     public function getAssistantStatuses()
     {
-        // 1. Ambil nama asisten yang UNIK menggunakan Group By (ID terkecil jadi perwakilan)
         $allAssistants = \App\Models\AssistantSchedule::select(DB::raw('MIN(id_asisten) as id_asisten'), 'nama_asisten')
             ->groupBy('nama_asisten')
             ->get();
@@ -83,7 +79,7 @@ class Schedule extends Model
         $mulaiTarget = $this->jam_mulai;
         $selesaiTarget = $this->jam_selesai;
 
-        // 2. Lacak bentrok kuliah pribadi asisten berdasarkan NAMA teks
+
         $busyWithClass = \App\Models\AssistantSchedule::where('hari', $hariTarget)
             ->where(function($query) use ($mulaiTarget, $selesaiTarget) {
                 $query->where('jam_mulai', '<', $selesaiTarget)
@@ -92,7 +88,7 @@ class Schedule extends Model
             ->get(['nama_asisten', 'mata_kuliah'])
             ->keyBy('nama_asisten');
 
-        // 3. Lacak bentrok jaga lab lain berdasarkan NAMA teks
+        
         $busyInOtherLab = \App\Models\Schedule::with(['lab', 'assistantSchedule'])
             ->where('tanggal', $tanggalTarget)
             ->where('id_jadwal', '!=', $this->id_jadwal)
@@ -101,7 +97,7 @@ class Schedule extends Model
             ->filter(fn($s) => $s->assistantSchedule !== null)
             ->keyBy(fn($s) => $s->assistantSchedule->nama_asisten);
 
-        // 4. Mapping status anti-duplikat tanpa merusak sistem Selected di Blade
+        
         return $allAssistants->map(function ($asisten) use ($busyWithClass, $busyInOtherLab) {
             $status = 'available';
             $label = '';
@@ -119,7 +115,7 @@ class Schedule extends Model
                 $label = "(Jaga: {$namaLabBentrok})";
             }
 
-            // Trik Kunci: Jika namanya sama dengan yang sedang terpilih, samakan ID-nya agar nempel "selected" di blade
+            
             $idFinal = $asisten->id_asisten;
             if ($this->assistantSchedule && $this->assistantSchedule->nama_asisten === $namaKey) {
                 $idFinal = $this->id_asisten;
