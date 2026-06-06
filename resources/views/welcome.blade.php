@@ -24,21 +24,38 @@
                 </div>
             </div>
 
-            <div>
-                @auth
-                    <a href="/spv/jadwal" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
-                        Dashboard
-                    </a>
-                @else
-                    <a href="/spv/dashboard" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
-                        dashbboard
-                    </a>
-                @endauth
-            </div>
-             <a href="/login" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
-                        Login
-                    </a>
-        </div>
+            <div class="flex gap-3">
+    @auth
+        {{-- LOGIC: Kalau udah login, arahin sesuai Jabatannya (Role) --}}
+        @if(auth()->user()->role === 'spv')
+            <a href="{{ route('spv.dashboard') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
+                Dashboard SPV
+            </a>
+        @elseif(auth()->user()->role === 'ormawa')
+            <a href="{{ route('ormawa.booking.index') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
+                Portal Ormawa
+            </a>
+        @elseif(auth()->user()->role === 'dosen')
+            <a href="{{ route('dosen.booking.index') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
+                Portal Dosen
+            </a>
+        @elseif(auth()->user()->role === 'asisten')
+            <a href="{{ route('') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
+                Jadwal Asisten
+            </a>
+        @else
+            <a href="/" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
+                Dashboard
+            </a>
+        @endif
+        
+    @else
+        {{-- LOGIC: Kalau BELUM login, baru munculin tombol Login ini --}}
+        <a href="{{ route('login') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+            Login Sistem
+        </a>
+    @endauth
+</div>
     </nav>
 
     <main class="mx-auto max-w-7xl px-5 pb-12 pt-14 lg:px-8">

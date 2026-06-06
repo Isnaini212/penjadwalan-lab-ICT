@@ -7,18 +7,19 @@ use App\Models\Dosen;
 use App\Models\Ormawa;
 use App\Models\Schedule;
 use App\Models\Lab; 
+use App\Models\User; 
 use Carbon\Carbon;
 
 class DosenController extends Controller
 {
     public function index()
     {
-        // Panggil relasi 'lab' biar di riwayat tabel bisa muncul nama lab-nya
+        
         $myBookings = Dosen::with('lab')->orderBy('created_at', 'desc')->take(10)->get();
         return view('booking.dosen', compact('myBookings'));
     }
 
-    // AJAX: Cek Lab Kosong + Ambil Fasilitas
+    
     public function checkAvailableLabs(Request $request)
     {
         $tanggal = $request->tanggal;
@@ -30,20 +31,20 @@ class DosenController extends Controller
         Carbon::setLocale('id');
         $hari = Carbon::parse($tanggal)->translatedFormat('l');
 
-        // Cari Lab Sibuk di Schedules (Jadwal Tetap)
+        
         $busySchedules = Schedule::where('hari', $hari)
             ->where(function($q) use ($mulai, $jamSelesai) {
                 $q->where('jam_mulai', '<', $jamSelesai)
                   ->where('jam_selesai', '>', $mulai);
             })->pluck('id_lab')->toArray();
 
-        // Cari Lab Sibuk di Booking Dosen
+        
         $busyDosen = Dosen::where('tanggal', $tanggal)->where('status', 'approved')
             ->where(function($q) use ($mulai, $jamSelesai) {
                 $q->where('jam_mulai', '<', $jamSelesai)->where('jam_selesai', '>', $mulai);
             })->pluck('id_lab')->toArray();
 
-        // 🔥 PERBAIKAN: Tabel Ormawa pakai kolom 'lab', bukan 'id_lab'
+        
         $busyOrmawa = Ormawa::where('tanggal', $tanggal)->where('status', 'approved')
             ->where(function($q) use ($mulai, $jamSelesai) {
                 $q->where('jam_mulai', '<', $jamSelesai)->where('jam_selesai', '>', $mulai);
@@ -54,7 +55,7 @@ class DosenController extends Controller
 
         $response = [];
         foreach ($allLabs as $lab) {
-            // Deteksi bentrok berdasarkan id_lab
+            
             $isBusy = in_array($lab->id_lab, $allBusyLabs);
             
             $response[] = [
@@ -70,40 +71,48 @@ class DosenController extends Controller
             'labs' => $response
         ]);
     }
+public function store(Request $request)
+{
+    
+    $request->validate([
+        'nm_dosen'  => 'required',
+        'tanggal'   => 'required',
+        'jam_mulai' => 'required',
+        'sks'       => 'required|numeric',
+        'id_lab'    => 'required',
+    ]);
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nm_dosen'  => 'required|string|max:255',
-            'tanggal'   => 'required|date',
-            'jam_mulai' => 'required|string|size:5',
-            'sks'       => 'required|integer|min:1',
-            'id_lab'    => 'required|exists:labs,id_lab', 
-            'kapasitas' => 'required|integer|min:1',
-            'keperluan' => 'required|string',
-        ]);
+    
+    $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');
 
-        Carbon::setLocale('id');
-        $hari = Carbon::parse($request->tanggal)->translatedFormat('l');
-        $jamSelesai = Carbon::createFromFormat('H:i', $request->jam_mulai)->addMinutes($request->sks * 50)->format('H:i');
+    
+    
+    $total_menit = $request->sks * 50; 
+    $jam_selesai_otomatis = Carbon::createFromFormat('H:i', $request->jam_mulai)
+                                  ->addMinutes($total_menit)
+                                  ->format('H:i');
 
-        try {
-            Dosen::create([
-                'nm_dosen'    => ucwords($request->nm_dosen),
-                'tanggal'     => $request->tanggal,
-                'hari'        => $hari,
-                'id_lab'      => $request->id_lab, 
-                'jam_mulai'   => $request->jam_mulai,
-                'jam_selesai' => $jamSelesai,
-                'kapasitas'   => $request->kapasitas,
-                'keperluan'   => $request->keperluan,
-                'sks'         => $request->sks,
-                'status'      => 'pending',
-            ]);
+    
+    Dosen::create([
+        'user_id'     => auth()->id(),
+        'nm_dosen'    => $request->nm_dosen,
+        'tanggal'     => $request->tanggal,
+        
+        'hari'        => $hari_otomatis,        
+        'jam_selesai' => $jam_selesai_otomatis,  
+        
+        'id_lab'      => $request->id_lab,
+        'jam_mulai'   => $request->jam_mulai,
+        'kapasitas'   => $request->kapasitas,
+        'keperluan'   => $request->keperluan,
+        'sks'         => $request->sks,
+        'status'      => 'pending',
+    ]);
 
-            return back()->with('success', 'Pengajuan Booking Lab berhasil dikirim ke SPV!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
+    return redirect()->back()->with('success', 'Reservasi laboratorium berhasil dikirim!');
+}
+    
+
+          
+    
 }

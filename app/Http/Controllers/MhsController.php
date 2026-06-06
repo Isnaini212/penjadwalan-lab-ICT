@@ -9,64 +9,59 @@ use Illuminate\Support\Facades\DB;
 
 class MhsController extends Controller
 {
-    // Tampilkan Halaman Index Ormawa
-    public function index()
+    
+    public function index(Request $request)
     {
-        // Ambil 10 riwayat pengajuan terbaru untuk ditampilkan di tabel bawah
+        
         $myBookings = Ormawa::orderBy('created_at', 'desc')->take(10)->get();
         
         return view('booking.mahasiswa', compact('myBookings'));
     }
 
-    // Proses Form Submit
-    public function store(Request $request)
+    
+   public function store(Request $request)
     {
-        // 1. Validasi Input (Surat PDF Wajib)
+        
         $request->validate([
-            'nama_ormawa'      => 'required|string|max:255',
-            'penanggung_jawab' => 'required|string|max:255',
+            'penanggung_jawab' => 'required',
             'tanggal'          => 'required|date',
-            'jam_mulai'        => 'required|string|size:5',
-            'jam_selesai'      => 'required|string|size:5',
-            'kapasitas'        => 'required|integer|min:1',
-            'keperluan'        => 'required|string',
+            'jam_mulai'        => 'required',
+            'jam_selesai'      => 'required',
+            'kapasitas'        => 'required|numeric',
+            'keperluan'        => 'required',
             'file_surat'       => 'required|mimes:pdf|max:2048',
         ]);
 
-        // 2. Upload Surat ke folder 'storage/app/public/surat-booking'
-        $path = null;
+        
+        $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');
+
+
+        $nama_file_surat = null;
         if ($request->hasFile('file_surat')) {
-            $path = $request->file('file_surat')->store('surat-booking', 'public');
+            $file = $request->file('file_surat');
+            
+            $nama_file_surat = str_replace(' ', '_', auth()->user()->name) . '_' . time() . '.' . $file->getClientOriginalExtension();
+            
+            
+            $file->storeAs('public/surat_ormawa', $nama_file_surat);
         }
 
-        // 3. Konversi Tanggal jadi Nama Hari (Bahasa Indonesia)
-        Carbon::setLocale('id');
-        $hari = Carbon::parse($request->tanggal)->translatedFormat('l');
+        
+        Ormawa::create([
+            'user_id'          => auth()->id(),              
+            'nama_ormawa'      => auth()->user()->name,      
+            'penanggung_jawab' => $request->penanggung_jawab,
+            'tanggal'          => $request->tanggal,
+            'hari'             => $hari_otomatis,            
+            'lab'              => 'Menunggu SPV',            
+            'jam_mulai'        => $request->jam_mulai,
+            'jam_selesai'      => $request->jam_selesai,
+            'kapasitas'        => $request->kapasitas,
+            'keperluan'        => $request->keperluan,
+            'file_surat'       => $nama_file_surat,         
+            'status'           => 'pending',
+        ]);
 
-        DB::beginTransaction();
-        try {
-            // 4. Simpan ke database
-            Ormawa::create([
-                'nama_ormawa'      => strtoupper($request->nama_ormawa),
-                'penanggung_jawab' => ucwords($request->penanggung_jawab),
-                'tanggal'          => $request->tanggal,
-                'hari'             => $hari,
-                'lab'              => 'TBD', // Lab belum ditentukan (Tunggu SPV)
-                'jam_mulai'        => $request->jam_mulai,
-                'jam_selesai'      => $request->jam_selesai,
-                'kapasitas'        => $request->kapasitas,
-                'keperluan'        => $request->keperluan,
-                'file_surat'       => $path,
-                'status'           => 'pending',
-            ]);
-
-            DB::commit();
-
-            return back()->with('success', 'Pengajuan Booking berhasil dikirim! Silakan tunggu konfirmasi selanjutnya dari SPV.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Waduh gagal menyimpan pengajuan: ' . $e->getMessage());
-        }
+        return back()->with('success', 'Pengajuan booking laboratorium berhasil dikirim!');
     }
 }

@@ -127,7 +127,7 @@
     <i class="fas fa-user-circle text-base text-slate-400"></i> Edit Profil
 </a>
 
-{{-- 🌟 LOGIC BREEZE: Form Logout yang udah bener jalurnya --}}
+{{-- LOGIC BREEZE: Form Logout yang udah bener jalurnya --}}
 <form method="POST" action="{{ route('logout') }}" class="m-0 border-t border-slate-100">
     @csrf
     <button type="submit" class="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-red-50 hover:text-red-600 text-left cursor-pointer">

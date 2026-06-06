@@ -168,7 +168,7 @@
     </main>
 </body>
 <script>
-// 🔥 MESIN AUTO-FORMAT JAM (Anti AM/PM Device)
+// MESIN AUTO-FORMAT JAM (Anti AM/PM Device)
 document.addEventListener('input', function (e) {
     if (e.target.classList.contains('time-formatter')) {
         let inputVal = e.target.value.replace(/\D/g, ''); 
@@ -182,7 +182,7 @@ document.addEventListener('input', function (e) {
     }
 });
 
-// 🔥 VALIDASI MAX 23:59 SAAT PINDAH KOLOM
+// VALIDASI MAX 23:59 SAAT PINDAH KOLOM
 document.addEventListener('change', function (e) {
     if (e.target.classList.contains('time-formatter')) {
         let val = e.target.value;

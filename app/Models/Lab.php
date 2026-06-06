@@ -13,9 +13,7 @@ class Lab extends Model
     
     protected $fillable = ['nama_lab', 'kapasitas', 'fasilitas'];
 
-    /**
-     * Relasi HasMany: Satu Lab bisa memiliki banyak Jadwal
-     */
+    
     public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class, 'id_lab', 'id_lab');

@@ -13,9 +13,8 @@ use App\Http\Controllers\AkunController;
 
 Route::get('/', [JadwalController::class, 'welcome']);
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -80,5 +79,22 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
     
 });
     Route::get('/tv', [TvController::class, 'tvSon'])->name('tv.display');
+
+
+
+Route::middleware(['auth', 'role:ormawa'])->group(function () {
+Route::prefix('ormawa')->group(function () {
+    Route::get('/booking', [MhsController::class, 'index'])->name('ormawa.booking.index');
+    Route::post('/booking/store', [MhsController::class, 'store'])->name('ormawa.booking.store');
+});});
+
+Route::middleware(['auth', 'role:dosen'])->group(function () {
+Route::prefix('dosen')->group(function () {
+    Route::get('/booking', [DosenController::class, 'index'])->name('dosen.booking.index');
+    Route::post('/booking/store', [DosenController::class, 'store'])->name('dosen.booking.store');
+    Route::post('/booking/check-labs', [DosenController::class, 'checkAvailableLabs'])->name('dosen.booking.check_labs');
+}); 
+
+});
 
 require __DIR__.'/auth.php';

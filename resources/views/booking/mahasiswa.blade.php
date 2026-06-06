@@ -16,15 +16,26 @@
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
 
-    {{-- Navbar --}}
+    {{-- Navbar Terhubung dengan Session Auth --}}
     <nav class="sticky top-0 z-50 border-b border-slate-200 bg-white/80 py-4 backdrop-blur-md shadow-sm">
         <div class="container mx-auto px-6 flex items-center justify-between max-w-5xl">
             <div class="flex items-center gap-3 font-black text-indigo-600 text-xl tracking-tight">
                 <i class="fas fa-rocket text-2xl"></i>
                 <span>LabSystem <span class="text-slate-400 font-medium">| Ormawa Portal</span></span>
             </div>
-            <div class="text-sm font-bold text-slate-500 hidden sm:block bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-                Pengajuan Peminjaman Lab
+            
+            {{-- 🌟 LOGIC: Profil User & Tombol Logout --}}
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
+                    <i class="fas fa-user-circle text-indigo-500 text-lg"></i>
+                    <span>{{ auth()->user()->name ?? 'Ormawa' }}</span>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" class="m-0">
+                    @csrf
+                    <button type="submit" class="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none">
+                        <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -66,16 +77,21 @@
             <form action="{{ route('ormawa.booking.store') }}" method="POST" enctype="multipart/form-data" id="booking-form">
                 @csrf
 
+                {{-- 🌟 LOGIC: Default value Lab dikirim tersembunyi biar validasi tembus --}}
+                <input type="hidden" name="lab" value="Menunggu SPV">
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    {{-- Nama Ormawa --}}
+                    {{-- Nama Ormawa (Terkunci & Otomatis) --}}
                     <div>
-                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Organisasi <span class="text-red-500">*</span></label>
+                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Organisasi</label>
                         <div class="relative">
-                            <input type="text" name="nama_ormawa" required placeholder="Cth: BEM FTI" value="{{ old('nama_ormawa') }}" 
-                                   class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-11 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 uppercase">
+                            {{-- 🌟 LOGIC: Di-readonly dan diisi nama akunnya otomatis --}}
+                            <input type="text" name="nama_ormawa" required readonly value="{{ auth()->user()->name }}" 
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-100 py-3 px-4 pl-11 text-sm font-bold text-slate-500 outline-none cursor-not-allowed uppercase">
                             <i class="fas fa-users absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
+                        <p class="text-[10px] font-bold text-indigo-500 mt-1">*Diambil otomatis dari akun Anda.</p>
                     </div>
 
                     {{-- Penanggung Jawab --}}
@@ -95,7 +111,7 @@
                                class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
 
-                    {{-- Lab (Disabled) --}}
+                    {{-- Lab (Disabled Visual) --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Laboratorium</label>
                         <div class="w-full rounded-xl border border-slate-200 bg-slate-100 py-3 px-4 text-sm font-bold text-slate-400 cursor-not-allowed text-center tracking-wider">
@@ -106,12 +122,12 @@
                     {{-- Jam Mulai & Jam Selesai --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai <span class="text-red-500">*</span></label>
-                        <input type="text" name="jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required>
+                        <input type="text" name="jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required value="{{ old('jam_mulai') }}">
                     </div>
 
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Selesai <span class="text-red-500">*</span></label>
-                        <input type="text" name="jam_selesai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="10:30" maxlength="5" required>
+                        <input type="text" name="jam_selesai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="10:30" maxlength="5" required value="{{ old('jam_selesai') }}">
                     </div>
 
                     {{-- Kapasitas --}}
@@ -158,7 +174,7 @@
             
             <div class="mb-6 flex items-center justify-between">
                 <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                    <i class="fas fa-history text-indigo-500"></i> Riwayat Pengajuan Terbaru
+                    <i class="fas fa-history text-indigo-500"></i> Riwayat Pengajuan Anda
                 </h3>
             </div>
 
@@ -167,59 +183,58 @@
                     <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                         <tr>
                             <th class="px-6 py-4">Tanggal & Hari</th>
-                            <th class="px-6 py-4">Ormawa</th>
                             <th class="px-6 py-4">Lab & Waktu</th>
                             <th class="px-6 py-4 w-full">Keperluan</th>
                             <th class="px-6 py-4 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
-                        @forelse($myBookings as $book)
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-800">{{ \Carbon\Carbon::parse($book->tanggal)->translatedFormat('d F Y') }}</div>
-                                <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}</div>
-                            </td>
-                            <td class="px-6 py-4 font-bold text-indigo-600">
-                                {{ $book->nama_ormawa }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1">
-                                    {{ $book->lab }}
-                                </span>
-                                <div class="font-mono text-xs font-bold text-slate-500">
-                                    {{ substr($book->jam_mulai, 0, 5) }} - {{ substr($book->jam_selesai, 0, 5) }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 font-semibold text-slate-700 whitespace-normal min-w-[200px]">
-                                {{ $book->keperluan }}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                @if($book->status === 'pending')
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800 border border-amber-300">
-                                        <i class="fas fa-hourglass-half"></i> Menunggu
+                        {{-- 🌟 Pastikan MhsController mengirim data $myBookings --}}
+                        @if(isset($myBookings) && $myBookings->count() > 0)
+                            @foreach($myBookings as $book)
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-slate-800">{{ \Carbon\Carbon::parse($book->tanggal)->translatedFormat('d F Y') }}</div>
+                                    <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1">
+                                        {{ $book->lab }}
                                     </span>
-                                @elseif($book->status === 'approved')
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 border border-emerald-300">
-                                        <i class="fas fa-check"></i> Disetujui
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-red-800 border border-red-300">
-                                        <i class="fas fa-times"></i> Ditolak
-                                    </span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center text-slate-400">
-                                    <i class="fas fa-clipboard-check text-4xl mb-3 text-slate-300"></i>
-                                    <span class="font-bold">Belum ada riwayat pengajuan.</span>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
+                                    <div class="font-mono text-xs font-bold text-slate-500">
+                                        {{ substr($book->jam_mulai, 0, 5) }} - {{ substr($book->jam_selesai, 0, 5) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 font-semibold text-slate-700 whitespace-normal min-w-[200px]">
+                                    {{ $book->keperluan }}
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if($book->status === 'pending')
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800 border border-amber-300">
+                                            <i class="fas fa-hourglass-half"></i> Menunggu
+                                        </span>
+                                    @elseif($book->status === 'approved')
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 border border-emerald-300">
+                                            <i class="fas fa-check"></i> Disetujui
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-red-800 border border-red-300">
+                                            <i class="fas fa-times"></i> Ditolak
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-slate-400">
+                                        <i class="fas fa-clipboard-check text-4xl mb-3 text-slate-300"></i>
+                                        <span class="font-bold">Anda belum pernah mengajukan peminjaman.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -233,14 +248,12 @@
 
     {{-- Mesin Ketik JS --}}
     <script>
-        // Efek Loading Saat Disubmit
         document.getElementById('booking-form').addEventListener('submit', function() {
             const btn = document.getElementById('btn-submit');
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses Pengajuan...';
             btn.classList.add('opacity-70', 'pointer-events-none');
         });
 
-        // MESIN AUTO-FORMAT JAM
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('time-formatter')) {
                 let inputVal = e.target.value.replace(/\D/g, ''); 

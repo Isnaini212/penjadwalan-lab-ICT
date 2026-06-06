@@ -68,7 +68,7 @@ class AsistenController extends Controller
     
     public function updateAsisten(Request $request, $id)
     {
-    // 1. Validasi super ketat agar data yang masuk tidak kosong/cacat
+    
     $request->validate([
         'nama_asisten' => 'required|string|max:255',
         'hari'         => 'required|string',
@@ -77,26 +77,25 @@ class AsistenController extends Controller
         'mata_kuliah'  => 'required|string|max:255',
     ]);
 
-    // 2. Cari data berdasarkan ID
-    // ⚠️ CATATAN: Jika nama primary key di database lu 'id_asisten', ganti 'id' di bawah menjadi 'id_asisten'
+    
     $jadwal = AssistantSchedule::where('id_asisten', $id)->first();
 
-    // Jaga-jaga kalau data tidak ketemu di database
+    
     if (!$jadwal) {
         return back()->with('error', 'Gagal! Data jadwal asisten tidak ditemukan.');
     }
 
-    // 3. Eksekusi update data dari form HTML ke kolom database
+    
     $jadwal->nama_asisten = $request->nama_asisten;
     $jadwal->hari         = $request->hari;
     $jadwal->jam_mulai    = $request->jam_mulai;
     $jadwal->jam_selesai  = $request->jam_selesai;
     $jadwal->mata_kuliah  = $request->mata_kuliah;
 
-    // 4. KUNCI PERUBAHAN (Sapu bersih, paksa masuk database)
+    
     $jadwal->save();
 
-    // 5. Kembalikan user ke halaman dengan status sukses
+    
     return back()->with('success', 'Jadwal asisten berhasil diperbarui secara permanen!');
     }
    
@@ -213,7 +212,7 @@ class AsistenController extends Controller
 
 
 
-    //ngasih jadwal//
+    
 
     public function manajemenasisten(Request $request)
     {
@@ -292,7 +291,7 @@ class AsistenController extends Controller
             );
             $ruangRAObj = Lab::firstOrCreate(['nama_lab' => 'RUANG RA'], ['kapasitas' => 0, 'fasilitas' => '-']);
 
-            // Mengambil semua ID untuk antisipasi duplikat
+            
             $allAsistenIds = AssistantSchedule::where('nama_asisten', $nama)->pluck('id_asisten')->toArray();
 
             foreach ($cells as $day => $slots) {
@@ -306,9 +305,9 @@ class AsistenController extends Controller
 
                     $jamSelesai = $slotEnds[$jamMulai] ?? '00:00';
 
-                    // 🔥 FIX 1: Logika Pelepasan Tugas Lama yang benar
+                    
                     if ($statusLama !== 'KOSONG' && $statusLama !== 'RA') {
-                        // Lepas tugas dari matkul (Ubah jadi NULL)
+                        
                         Schedule::whereIn('id_asisten', $allAsistenIds)
                             ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                             ->whereRaw('LEFT(jam_mulai, 5) = ?', [$jamMulai])
@@ -316,7 +315,7 @@ class AsistenController extends Controller
                             ->update(['id_asisten' => null]); 
 
                     } elseif ($statusLama === 'RA') {
-                        // Hapus jadwal RA khusus
+                        
                         Schedule::whereIn('id_asisten', $allAsistenIds)
                             ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                             ->whereRaw('LEFT(jam_mulai, 5) = ?', [$jamMulai])
@@ -324,7 +323,7 @@ class AsistenController extends Controller
                             ->delete();
                     }
 
-                    // 🔥 FIX 2: Logika Penugasan Baru
+                    
                     if ($statusBaru === 'RA') {
                         $period = CarbonPeriod::create(Carbon::now(), Carbon::now()->addMonths(6));
 
@@ -344,7 +343,7 @@ class AsistenController extends Controller
                             }
                         }
                     } elseif ($statusBaru !== 'KOSONG') {
-                        // Tugaskan asisten ini ke jadwal matkul yang baru dipilih
+                        
                         Schedule::where('matkul', $statusBaru)
                             ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                             ->whereRaw('LEFT(jam_mulai, 5) = ?', [$jamMulai])
@@ -361,21 +360,15 @@ class AsistenController extends Controller
             return back()->with('error', 'Waduh gagal Bre: ' . $e->getMessage());
         }
     }
-    /////////////role asisten/////
+    
    
-    /**
-     * 1. Menampilkan Halaman Matrix Input Jadwal (Untuk Asisten)
-     */
     public function inputMatrix()
     {
-        // Langsung arahkan ke file view blade yang udah lu copas sebelumnya
-        // Pastikan file bladenya ada di resources/views/asisten/input-matrix.blade.php
+        
         return view('asisten.input');
     }
 
-    /**
-     * 2. Memproses Data Matrix yang Dikirim Asisten ke Database
-     */
+    
     public function storsis(Request $request)
     {
       $request->validate([
@@ -386,12 +379,13 @@ class AsistenController extends Controller
             'mata_kuliah'  => 'required|string',
         ]);
 
-        // Hitung Jam Selesai (1 SKS = 50 Menit)
+        
         $jamMulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
         $totalMenit = $request->sks * 50;
         $jamSelesai = $jamMulai->copy()->addMinutes($totalMenit)->format('H:i');
 
         AssistantSchedule::create([
+            'user_id'     => auth()->id(),
             'nama_asisten' => strtoupper(trim($request->nama_asisten)),
             'hari'         => $request->hari,
             'jam_mulai'    => $request->jam_mulai,
@@ -399,7 +393,7 @@ class AsistenController extends Controller
             'mata_kuliah'  => trim($request->mata_kuliah),
         ]);
 
-        // Pakai session biar nama dan hari terakhir kesimpen, asisten ga usah milih ulang
+        
         return back()
             ->with('success', 'Jadwal ' . $request->mata_kuliah . ' berhasil ditambahkan!')
             ->with('last_asisten', $request->nama_asisten)
@@ -407,8 +401,7 @@ class AsistenController extends Controller
 
             public function hapusJadwal($id)
     {
-        // Hapus berdasarkan Primary Key tabel lu 
-        // (Pastikan nama variable primary key lu sesuai, di model lu primaryKey = 'id_asisten')
+         
         AssistantSchedule::where('id_asisten', $id)->delete();
 
         return back()->with('success', 'Jadwal berhasil dihapus!');

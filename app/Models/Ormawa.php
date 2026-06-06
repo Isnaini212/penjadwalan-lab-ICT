@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Ormawa extends Model
 {
     protected $table = 'booking_ormawa';
-    protected $primaryKey = 'id_booking'; // Kunci utamanya
+    protected $primaryKey = 'id_booking'; 
 
     protected $fillable = [
         'user_id',
@@ -25,7 +25,7 @@ class Ormawa extends Model
         'status',
     ];
 
-    // Relasi balik ke model user
+    
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
