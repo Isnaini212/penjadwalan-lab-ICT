@@ -60,10 +60,10 @@ Route::prefix('spv/tv')->group(function () {
     
     // Proses pembaruan teks agenda berjalan
     Route::post('/text', [TvController::class, 'updateTvText'])->name('spv.tv.text');
-    
-    // Proses unggah berkas gambar slide baru
     Route::post('/slide', [TvController::class, 'uploadTvSlide'])->name('spv.tv.slide.upload');
-    
-    // Proses hapus berkas gambar slide berdasarkan ID
     Route::delete('/slide/{id}', [TvController::class, 'deleteTvSlide'])->name('spv.tv.slide.delete');
 });
+
+//asisten//
+Route::get('/asisten/input', [AsistenController::class, 'putsen'])->name('putsen');
+Route::post('/asisten/simpen', [AsistenController::class, 'simput'])->name('simput');

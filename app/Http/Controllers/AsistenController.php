@@ -316,7 +316,7 @@ class AsistenController extends Controller
                             ->update(['id_asisten' => null]); 
 
                     } elseif ($statusLama === 'RA') {
-                        // Hapus jadwal RA khusus
+                        // Hapus jadwal RA khususgit
                         Schedule::whereIn('id_asisten', $allAsistenIds)
                             ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                             ->whereRaw('LEFT(jam_mulai, 5) = ?', [$jamMulai])
@@ -362,7 +362,81 @@ class AsistenController extends Controller
         }
     }
 
-}
+
+public function putsen()
+    { $jadwalAsisten = AssistantSchedule::all();
+        return view('asisten.input');
+    }
+
+
+    public function storeJadwalMatrix(Request $request)
+{
+    // 1. Validasi
+    $request->validate([
+        'nama_asisten' => 'required|string|max:255',
+        'matrix'       => 'array'
+    ]);
+
+    $namaAsisten = $request->nama_asisten;
+    $matrixData = $request->matrix;
+
+    // Array untuk mengambil jam selesai berdasarkan jam mulai
+    $slotEnds = [
+        '08:00' => '08:50', '08:55' => '09:45', '09:50' => '10:40', '10:45' => '11:35',
+        '12:30' => '13:20', '13:25' => '14:15', '14:20' => '15:10', '15:15' => '16:05', 
+        '16:10' => '17:00', '18:00' => '18:50', '18:55' => '19:45', '19:50' => '20:40', '20:45' => '21:35'
+    ];
+
+    DB::beginTransaction();
+
+    try {
+        // 2. Hapus jadwal matkul lama asisten ini (Biar nggak numpuk kalau dia update)
+        AssistantSchedule::where('nama_asisten', $namaAsisten)->delete();
+
+        $dataToInsert = [];
+
+        // 3. Looping data array 2D dari matrix Blade
+        foreach ($matrixData as $hari => $slots) {
+            foreach ($slots as $jamMulai => $matkul) {
+                
+                // Kalau kotaknya diisi teks (nggak kosong), berarti dia lagi Kuliah
+                if (!empty(trim($matkul))) {
+                    $dataToInsert[] = [
+                        'nama_asisten' => $namaAsisten,
+                        'hari'         => $hari,
+                        'jam_mulai'    => $jamMulai,
+                        'jam_selesai'  => $slotEnds[$jamMulai] ?? '00:00',
+                        'mata_kuliah'  => trim($matkul), // Ini masukin KULIAH_SENDIRI
+                        'created_at'   => now(),
+                        'updated_at'   => now(),
+                    ];
+                }
+            }
+        }
+
+        // 4. Eksekusi simpan massal ke database
+        if (!empty($dataToInsert)) {
+            AssistantSchedule::insert($dataToInsert);
+        } else {
+            // Kalau semua kotak kosong, buatin 1 dummy record biar nama asistennya tetep kedaftar di DB
+            AssistantSchedule::create([
+                'nama_asisten' => $namaAsisten,
+                'hari'         => '-',
+                'jam_mulai'    => '00:00',
+                'jam_selesai'  => '00:00',
+                'mata_kuliah'  => '-'
+            ]);
+        }
+
+        DB::commit();
+        return back()->with('success', 'Mantap! Jadwal kesibukan Anda berhasil disimpan.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Gagal menyimpan jadwal: ' . $e->getMessage());
+    }
+
+}}
 
 
     
