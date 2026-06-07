@@ -51,7 +51,7 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
     Route::post('/spv/import-asisten', [AsistenController::class, 'importAsistenExcel'])->name('spv.importAsisten');
 
     // MANAJEMEN ASISTEN & MATRIX
-    Route::get('/spv/jasis', [AsistenController::class, 'manajemenasisten'])->name('spv.jasis'); // FIX: Nama diganti jadi spv.jasis
+    Route::get('/spv/jasis', [AsistenController::class, 'manajemenasisten'])->name('spv.jasis'); 
     Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMatrixRA'])->name('schedule.matrix.update');
 
     // APPROVE BOOKING

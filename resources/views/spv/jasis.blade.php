@@ -150,7 +150,7 @@
                                             <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
 
                                             @if($statusAwal === 'KULIAH_SENDIRI')
-                                                {{-- ⛔ SIBUK KULIAH PRIBADI --}}
+                                                {{--  SIBUK KULIAH PRIBADI --}}
                                                 <td class="border border-slate-200 bg-red-300 p-1">
                                                     <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="KULIAH_SENDIRI">
                                                     <select disabled class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-red-900 outline-none cursor-not-allowed">
@@ -159,25 +159,25 @@
                                                 </td>
 
                                             @elseif($statusAwal === 'RA')
-                                                {{-- ⚠️ JAGA RA OFFICE --}}
+                                                {{--  JAGA RA OFFICE --}}
                                                 <td class="border border-slate-200 bg-yellow-200 p-1 transition-colors duration-300">
                                                     <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[12px] font-black text-yellow-800 outline-none cursor-pointer">
-                                                        <option value="RA" selected>📌 RA</option>
-                                                        <option value="KOSONG" class="bg-white text-red-500 font-normal">⚪ Kosongkan</option>
+                                                        <option value="RA" selected> RA</option>
+                                                        <option value="KOSONG" class="bg-white text-red-500 font-normal"> Kosongkan</option>
                                                         @foreach(array_unique($dropdownMatkul) as $m)
                                                             @php $mClean = trim($m); @endphp
                                                             @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG') @continue @endif
-                                                            <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">🔬 {{ strtoupper($mClean) }}</option>
+                                                            <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold"> {{ strtoupper($mClean) }}</option>
                                                         @endforeach
                                                     </select>
                                                 </td>
 
                                             @elseif($statusAwal === 'ASISTEN_LAB')
-                                                {{-- 🔬 ASISTEN PRAKTIKUM --}}
+                                                {{--  ASISTEN PRAKTIKUM --}}
                                                 <td class="border border-slate-200 bg-sky-500 p-1 transition-colors duration-300">
                                                     <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-white outline-none cursor-pointer">
                                                         <option value="{{ $namaMatkulAktif }}" selected class="bg-white text-slate-800">
-                                                            🔬 {{ strtoupper($namaMatkulAktif) }}
+                                                             {{ strtoupper($namaMatkulAktif) }}
                                                         </option>
                                                         @foreach(array_unique($dropdownMatkul) as $m)
                                                             @php $mClean = trim($m); @endphp
@@ -185,20 +185,20 @@
                                                                 @continue 
                                                             @endif
                                                             <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">
-                                                                🔬 {{ strtoupper($mClean) }}
+                                                                 {{ strtoupper($mClean) }}
                                                             </option>
                                                         @endforeach
-                                                        <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold">📌 Jaga RA</option>
-                                                        <option value="KOSONG" class="bg-white text-red-500 font-normal">⚪ Lepas Tugas</option>
+                                                        <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold"> Jaga RA</option>
+                                                        <option value="KOSONG" class="bg-white text-red-500 font-normal"> Lepas Tugas</option>
                                                     </select>
                                                 </td>
 
                                             @else
-                                                {{-- ⚪ SLOT KOSONG --}}
+                                                {{--  SLOT KOSONG --}}
                                                 <td class="border border-slate-200 bg-white p-1 transition-colors duration-300">
                                                     <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[12px] font-bold text-slate-400 outline-none cursor-pointer hover:text-slate-600">
                                                         <option value="KOSONG" selected>---</option>
-                                                        <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold">📌 Jaga RA</option>
+                                                        <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold"> Jaga RA</option>
                                                         @foreach(array_unique($dropdownMatkul) as $m)
                                                             @php $mClean = trim($m); @endphp
                                                             @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG') @continue @endif
