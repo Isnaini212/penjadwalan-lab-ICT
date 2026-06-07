@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('tanggal');
             $table->string('hari');
             
-            // 🔥 SEKARANG MENGGUNAKAN FOREIGN KEY (ID_LAB) HUBUNGKAN KE TABEL LABS
+            
             $table->foreignId('id_lab')->constrained('labs', 'id_lab')->onDelete('cascade');
             
             $table->time('jam_mulai');

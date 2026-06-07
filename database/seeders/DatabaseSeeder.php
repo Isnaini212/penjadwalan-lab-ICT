@@ -10,12 +10,36 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Bikin Akun Master SPV
         User::create([
-            'name'     => 'son son apa yg tau',
+            'name'     => 'SPV Penjadwalan',
             'email'    => 'son@gmail.com',
-            'password' => Hash::make('123'), // Passwordnya: password123
+            'password' => Hash::make('123'),
             'role'     => 'spv',
+        ]);
+
+        User::create([
+            'name'     => 'Asisten Laboratorium',
+            'email'    => 'asisten@gmail.com',
+            'password' => Hash::make('123'),
+            'role'     => 'asisten',
+        ]);
+
+        User::create([
+            'name'     => 'BEM / Ormawa',
+            'email'    => 'ormawa@gmail.com',
+            'password' => Hash::make('123'),
+            'role'     => 'ormawa',
+        ]);
+
+        User::create([
+            'name'     => 'Dosen Pengajar',
+            'email'    => 'dosen@gmail.com',
+            'password' => Hash::make('123'),
+            'role'     => 'dosen',
+        ]);
+
+        $this->call([
+            LabSeeder::class,
         ]);
     }
 }
