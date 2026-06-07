@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
         // 3. Cek siapa yang login
         $user = $request->user();
 
-        // 🌟 4. ARAHIN LANGSUNG SESUAI JABATAN (TANPA MAMPIR DASHBOARD)
+        // 4. ARAHIN LANGSUNG SESUAI JABATAN (TANPA MAMPIR DASHBOARD)
         if ($user->role === 'spv') {
             // SPV langsung ke dashboard admin
             return redirect()->route('spv.dashboard');
