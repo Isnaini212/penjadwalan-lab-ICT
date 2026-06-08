@@ -252,15 +252,33 @@ public function manajemenJadwal(Request $request) {
                 $dosen     = $row[9] ?? '';
                 $asisten   = isset($row[10]) ? trim($row[10]) : '';
 
-                if (str_contains(strtoupper($ruangRaw), 'LAB')) {
-                    preg_match('/LAB\s?\d+/i', strtoupper($ruangRaw), $matches);
-                    $namaLab = $matches[0] ?? 'LAB TBD';
 
+                if (str_contains(strtoupper($ruangRaw), 'LAB')) {
+    
+                    // Hanya ambil angka jika ada kata "LAB" langsung diikuti angka (boleh pakai spasi)
+                    if (preg_match('/LAB\s*(\d+)/i', $ruangRaw, $matches)) {
+                        $angkaLab = $matches[1]; 
+                    } else {
+                        continue; // Jika formatnya bukan "LAB [angka]" (seperti LAB SK 2), lewati baris ini
+                    }
+
+                    // Format angka agar menjadi 2 digit sesuai Seeder (contoh: "2" menjadi "02")
+                    $angkaFormat = str_pad($angkaLab, 2, '0', STR_PAD_LEFT);
+                    $namaLabDicari = "Lab " . $angkaFormat; 
+
+                    // Cari ke database, pastikan Lab tersebut terdaftar di Seeder
+                    $labObj = Lab::where('nama_lab', $namaLabDicari)->first();
+
+                    // JIKA TIDAK ADA DI DATABASE (SEEDER), JANGAN IMPORT & SKIP BARIS INI
+                    if (!$labObj) {
+                        continue; 
+                    }
+
+                    // Pecah jam kuliah (Sama seperti kode lama kamu)
                     $jamSplit = explode('-', $jamStr);
                     $jamMulai = trim($jamSplit[0]);
                     $jamSelesai = isset($jamSplit[1]) ? trim($jamSplit[1]) : '00:00';
-
-                    $labObj = Lab::firstOrCreate(['nama_lab' => strtoupper($namaLab)], ['kapasitas' => 40, 'fasilitas' => '-']);
+    
                     
                     $id_asisten = null;
                     if (!empty($asisten) && strtoupper($asisten) !== 'TBD') {

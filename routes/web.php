@@ -30,7 +30,7 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
     // JADWAL
     Route::get('/spv/jadwal', [JadwalController::class, 'manajemenJadwal'])->name('spv.jadwal');
     Route::post('/spv/jadwal/simpen', [JadwalController::class, 'store'])->name('spv.store');
-    Route::get('/spv/jadwal/edit/{id_jadwal}', [JadwalController::class, 'editJadwal'])->name('spv.edit');
+    // Route::get('/spv/jadwal/edit/{id_jadwal}', [JadwalController::class, 'editJadwal'])->name('spv.edit');
     Route::put('/jadwal/update/{id_jadwal}', [JadwalController::class, 'update'])->name('spv.update');
     Route::delete('/spv/jadwal/hapus/{id_jadwal}', [JadwalController::class, 'destroy'])->name('spv.delete');
     Route::delete('/spv/jadwal/bersih', [JadwalController::class, 'bersihin'])->name('bersih');
