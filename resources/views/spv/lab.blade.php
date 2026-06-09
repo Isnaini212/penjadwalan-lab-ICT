@@ -11,6 +11,22 @@
         <p class="mt-2 text-sm text-slate-500">Gunakan panel ini untuk memonitor dan menambah kapasitas infrastruktur.</p>
     </div>
 
+    @if(session('success'))
+        <div class="mb-4 p-4 text-sm text-green-700 bg-green-100 rounded-xl font-semibold">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-xl font-semibold">
+            <ul class="list-disc pl-5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- GRID UTAMA: 2 KOLOM --}}
     <div class="grid gap-8 lg:grid-cols-[1fr_2fr]">
         
@@ -30,7 +46,7 @@
 
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Kapasitas Mahasiswa</label>
-                    <input type="number" name="kapasitas" placeholder="Contoh: 40" required 
+                    <input type="number" name="kapasitas" min="0" placeholder="Contoh: 40" required 
                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                 </div>
 
@@ -81,8 +97,12 @@
 
                     {{-- TOMBOL AKSI KERJA --}}
                     <div class="mt-6 flex gap-3 border-t border-slate-50 pt-4">
-                        <button class="h-9 flex-1 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-blue-700" 
-                                onclick="openEditModal({{ json_encode($lab) }})">
+                        <button type="button"
+                                class="h-9 flex-1 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-blue-700 btn-edit-lab" 
+                                data-nama="{{ $lab->nama_lab }}"
+                                data-kapasitas="{{ $lab->kapasitas }}"
+                                data-fasilitas="{{ $lab->fasilitas }}"
+                                data-url="{{ route('spv.lab.update', $lab->id_lab) }}">
                             Edit
                         </button>
                         
@@ -120,7 +140,7 @@
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Kapasitas</label>
-                <input type="number" name="kapasitas" id="edit_kapasitas" required 
+                <input type="number" name="kapasitas" id="edit_kapasitas" min="0" required 
                        class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
             </div>
 
@@ -145,20 +165,36 @@
 
 
 <script>
-    function openEditModal(lab) {
-        document.getElementById('edit_nama_lab').value = lab.nama_lab;
-        document.getElementById('edit_kapasitas').value = lab.kapasitas;
-        document.getElementById('edit_fasilitas').value = lab.fasilitas;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Menangkap semua tombol dengan class 'btn-edit-lab'
+        const editButtons = document.querySelectorAll('.btn-edit-lab');
         
-        const form = document.getElementById('editForm');
-        form.action = `/spv/${lab.id_lab}`; 
-        
-        // Menggunakan utilitas kelas flex Tailwind untuk memunculkan modal
-        const modal = document.getElementById('modalEditLab');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                // Mengambil data dari atribut tombol yang diklik
+                const namaLab = this.getAttribute('data-nama');
+                const kapasitas = this.getAttribute('data-kapasitas');
+                const fasilitas = this.getAttribute('data-fasilitas');
+                const updateUrl = this.getAttribute('data-url');
+                
+                // Memasukkan data ke dalam field input modal edit
+                document.getElementById('edit_nama_lab').value = namaLab;
+                document.getElementById('edit_kapasitas').value = kapasitas;
+                document.getElementById('edit_fasilitas').value = fasilitas;
+                
+                // Mengubah action form modal agar mengarah ke route update yang benar
+                const form = document.getElementById('editForm');
+                form.action = updateUrl; 
+                
+                // Memunculkan modal dengan mengubah class Tailwind
+                const modal = document.getElementById('modalEditLab');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        });
+    });
 
+    // Fungsi menutup modal edit
     function closeEditModal() {
         const modal = document.getElementById('modalEditLab');
         modal.classList.add('hidden');

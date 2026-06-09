@@ -76,5 +76,12 @@ class LabSeeder extends Seeder
             'kapasitas' => 36,
             'fasilitas' => 'Windows 11, VS Code, MS Office, Chrome',
         ]);
+
+        // RUANG ASISTEN
+        Lab::create([
+            'nama_lab' => 'RUANG ASISTEN',
+            'kapasitas' => 0,
+            'fasilitas' => 'admin dan asisten',
+        ]);
     }
 }

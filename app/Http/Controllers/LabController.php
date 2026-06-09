@@ -20,15 +20,15 @@ class LabController extends Controller
             'nama_lab.required' => 'Nama lab wajib diisi.',
             'kapasitas.required'=> 'Kapasitas wajib diisi.',
             'kapasitas.numeric' => 'Kapasitas harus berupa angka.',
-            'kapasitas.min'     => 'Kapasitas minimal adalah 1 kursi.',
+            'kapasitas.min'     => 'Kapasitas minimal adalah 0 kursi.',
             'fasilitas.required'=> 'Fasilitas wajib diisi.',
         ];
 
          $request->validate([
             'nama_lab'     => 'required|unique:labs,nama_lab',
-            'kapasitas'     => 'required|numeric|min:1',
+            'kapasitas'     => 'required|numeric|min:0',
             'fasilitas'     => 'required',
-        ]);
+        ], $messages);
 
 
         Lab::create([
@@ -50,13 +50,13 @@ class LabController extends Controller
             'nama_lab.required' => 'Nama lab wajib diisi.',
             'kapasitas.required'=> 'Kapasitas wajib diisi.',
             'kapasitas.numeric' => 'Kapasitas harus berupa angka.',
-            'kapasitas.min'     => 'Kapasitas minimal adalah 1 kursi.',
+            'kapasitas.min'     => 'Kapasitas minimal adalah 0 kursi.',
             'fasilitas.required'=> 'Fasilitas wajib diisi.',
         ];
 
          $request->validate([
             'nama_lab'  => 'required|unique:labs,nama_lab,' . $id_Lab . ',id_lab',
-            'kapasitas' => 'required|numeric|min:1',
+            'kapasitas' => 'required|numeric|min:0',
             'fasilitas' => 'required',
          ], $messages);
 
