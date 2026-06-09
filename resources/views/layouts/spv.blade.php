@@ -28,50 +28,65 @@
         </div>
 
         <!-- Menu Navigasi -->
-        <nav class="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
-            <a href="/spv/dashboard" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/dashboard') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-home text-base"></i>
-                <span>Dashboard</span>
-            </a>
+       <nav class="flex-1 space-y-1 px-4 py-6 overflow-y-auto">
 
-            <a href="/spv/booking" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/booking') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-home text-base"></i>
-                <span>Aprove Booking</span>
-            </a>
+    {{-- Dashboard --}}
+    <a href="/spv/dashboard"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/dashboard') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-gauge-high text-base"></i>
+        <span>Dashboard</span>
+    </a>
 
-            <a href="/spv/jadwal" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jadwal') || request('filter_date') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-calendar-alt text-base"></i>
-                <span>Manajemen Jadwal</span>
-            </a>
+    {{-- Approve Booking --}}
+    <a href="/spv/booking"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/booking') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-clipboard-check text-base"></i>
+        <span>Approve Booking</span>
+    </a>
 
+    {{-- Manajemen Jadwal --}}
+    <a href="/spv/jadwal"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jadwal') || request('filter_date') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-calendar-days text-base"></i>
+        <span>Manajemen Jadwal</span>
+    </a>
 
+    {{-- Import Jadwal Asisten --}}
+    <a href="/spv/asisten"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/asisten') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-file-import text-base"></i>
+        <span>Import Jadwal Asisten</span>
+    </a>
 
-            <a href="/spv/asisten" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/asisten') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-                <i class="fas fa-user-clock"></i>
-                <span>Import Jadwal Asisten</span>
-            </a>
+    {{-- Jadwal Asisten --}}
+    <a href="/spv/jasis"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jasis') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-user-clock text-base"></i>
+        <span>Jadwal Asisten</span>
+    </a>
 
+    {{-- Data Lab --}}
+    <a href="/spv/lab"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/lab') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-flask text-base"></i>
+        <span>Data Lab</span>
+    </a>
 
-<a href="/spv/jasis" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/jasis') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-calendar-check text-base"></i>
-    <span>Jadwal Asisten</span>
-</a>
+    {{-- TV Monitor --}}
+    <a href="/spv/tv"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/tv') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-display text-base"></i>
+        <span>TV Monitor</span>
+    </a>
 
+    {{-- Buat Akun --}}
+    <a href="/spv/akun"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/akun') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
+        <i class="fas fa-user-plus text-base"></i>
+        <span>Buat Akun</span>
+    </a>
 
-<a href="/spv/lab" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/lab') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-database text-base"></i>
-    <span>Data Lab</span>
-</a>
-
-<a href="/spv/tv" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/tv') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-tv text-base"></i>
-    <span>Tv Monitor</span>
-</a>
-
-<a href="/spv/akun" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold tracking-wide transition {{ request()->is('spv/akun') ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white' }}">
-    <i class="fa fa-tv text-base"></i>
-    <span>Buat Akun</span>
-</a>
+</nav>
 
 
         </nav>

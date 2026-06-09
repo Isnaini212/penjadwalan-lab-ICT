@@ -214,7 +214,7 @@ class AsistenController extends Controller
 
     
 
-        public function manajemenasisten(Request $request)
+      public function manajemenasisten(Request $request)
 {
     // 🌟 FORMAT SAKTI: Semua jeda pas 5 menit, jam asli lu gak ada yang kehapus!
     $timeSlots = [
@@ -361,40 +361,26 @@ public function updateMatrixRA(Request $request)
                         ->first();
 
                     if ($targetMatkul) {
-    $timeStart = substr($targetMatkul->jam_mulai, 0, 5);
-    $timeEnd   = substr($targetMatkul->jam_selesai, 0, 5);
+                        $timeStart = substr($targetMatkul->jam_mulai, 0, 5);
+                        $timeEnd   = substr($targetMatkul->jam_selesai, 0, 5);
 
-    $bentrokKuliahLab = AssistantSchedule::where('nama_asisten', $nama)
-        ->where('mata_kuliah', '!=', '-')
-        ->where('mata_kuliah', '!=', '')
-        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-        ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
-        ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
-        ->exists();
+                        $bentrokKuliahLab = AssistantSchedule::where('nama_asisten', $nama)
+                            ->where('mata_kuliah', '!=', '-')
+                            ->where('mata_kuliah', '!=', '')
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
+                            ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
+                            ->exists();
 
-    if ($bentrokKuliahLab) {
-        throw new \Exception("Gagal! Durasi praktikum {$statusBaru} BENTROK dengan jadwal kuliah asisten.");
-    }
+                        if ($bentrokKuliahLab) {
+                            throw new \Exception("Gagal! Durasi praktikum {$statusBaru} BENTROK dengan jadwal kuliah asisten.");
+                        }
 
-    $bentrokJagaLab = Schedule::whereIn('id_asisten', $allAsistenIds)
-        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-        ->where('matkul', '!=', $statusBaru)
-        ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
-        ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
-        ->first();
-
-    if ($bentrokJagaLab) {
-        $matkulBentrok = $bentrokJagaLab->matkul;
-        $jamBentrok    = substr($bentrokJagaLab->jam_mulai, 0, 5) . '-' . substr($bentrokJagaLab->jam_selesai, 0, 5);
-        throw new \Exception("Gagal! {$statusBaru} TABRAKAN dengan {$matkulBentrok} ({$jamBentrok}) di hari yang sama.");
-    }
-
-    Schedule::where('matkul', $statusBaru)
-        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-        ->update(['id_asisten' => $asistenObj->id_asisten]);
-}
+                        Schedule::where('matkul', $statusBaru)
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->where('id_lab', '!=', $ruangRAObj->id_lab)
+                            ->update(['id_asisten' => $asistenObj->id_asisten]);
+                    }
                 }
             }
 
@@ -407,72 +393,8 @@ public function updateMatrixRA(Request $request)
                     ->where('id_lab', $ruangRAObj->id_lab)
                     ->delete();
 
-        // --- PHASE 1: VALIDASI DETEKSI BENTROK SEBENARNYA (DURASI PENUH) ---
-        foreach ($cells as $day => $slots) {
-            foreach ($slots as $jamMulai => $statusBaru) {
-                $statusLama = $oldCells[$day][$jamMulai] ?? 'KOSONG';
-
-                // Kita hanya memeriksa slot tempat Supervisor *memulai klik/pilih* matkul baru
-                if ($statusBaru === $statusLama || $statusBaru === 'KOSONG' || $statusBaru === 'KULIAH_SENDIRI') {
-                    continue;
-                }
-
-                // 1. Cari durasi asli (jam_mulai sampai jam_selesai) dari mata kuliah praktikum tersebut
-                // Kita ambil dari database Schedule berdasarkan nama matkul dan harinya
-                $infoPraktikum = Schedule::where('matkul', $statusBaru)
-                    ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                    ->first();
-
-                if ($infoPraktikum) {
-                    // Gunakan jam kerja asli praktikum tersebut (Misal: Mulai 08:00, Selesai 10:40 karena 3 SKS)
-                    $waktuMulaiPraktikum = substr($infoPraktikum->jam_mulai, 0, 5);
-                    $waktuSelesaiPraktikum = substr($infoPraktikum->jam_selesai, 0, 5);
-                } else {
-                    // Fallback jika berupa RA atau data tidak ketemu, gunakan range default slot itu sendiri
-                    $waktuMulaiPraktikum = $jamMulai;
-                    $waktuSelesaiPraktikum = $slotEnds[$jamMulai] ?? '00:00';
-                }
-
-                // 2. Cek apakah di sepanjang rentang waktu praktikum tersebut (dari awal sampai selesai),
-                // asisten memiliki jadwal kuliah pribadi di tabel AssistantSchedule
-                $bentrokKuliah = AssistantSchedule::where('nama_asisten', $nama)
-                    ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                    ->where(function($query) use ($waktuMulaiPraktikum, $waktuSelesaiPraktikum) {
-                        $query->where('jam_mulai', '<', $waktuSelesaiPraktikum)
-                            ->where('jam_selesai', '>', $waktuMulaiPraktikum);
-                    })
-                    ->first();
-
-                if ($bentrokKuliah) {
-                    return back()->with('error', "Gagal! " . strtoupper($nama) . " tidak dapat ditugaskan pada mata kuliah [ {$statusBaru} ]. Jadwal tersebut bentrok dengan kuliah pribadi asisten [ Matkul: {$bentrokKuliah->mata_kuliah} ({$bentrokKuliah->jam_mulai} - {$bentrokKuliah->jam_selesai}) ] pada hari {$day}.");
-                }
-
-                // 3. Cek bentrok dengan tugas praktikum lain yang sudah diambil sebelumnya
-                if ($statusBaru !== 'RA') {
-                    $bentrokTugasLain = Schedule::whereHas('assistantSchedule', function($q) use ($nama) {
-                            $q->where('nama_asisten', $nama);
-                        })
-                        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                        ->where('matkul', '!=', 'RA')
-                        ->where('matkul', '!=', $statusBaru)
-                        ->where(function($query) use ($waktuMulaiPraktikum, $waktuSelesaiPraktikum) {
-                            $query->where('jam_mulai', '<', $waktuSelesaiPraktikum)
-                                  ->where('jam_selesai', '>', $waktuMulaiPraktikum);
-                        })
-                        ->first();
-
-                    if ($bentrokTugasLain) {
-                        $jamB = substr($bentrokTugasLain->jam_mulai, 0, 5);
-                        $jamS = substr($bentrokTugasLain->jam_selesai, 0, 5);
-                        return back()->with('error', "Gagal! " . strtoupper($nama) . " sudah ditugaskan mengajar praktikum lain [ Matkul: {$bentrokTugasLain->matkul} ({$jamB} - {$jamS}) ] di waktu yang bersamaan.");
-                    }
-                }
-            }
-        }
-        // --- END OF PHASE 1 ---
-
-        
-        DB::beginTransaction();
+                $raBlocks = [];
+                $currentBlock = null;
 
                 foreach ($slots as $jamMulai => $status) {
                     if ($status === 'RA') {
@@ -553,12 +475,6 @@ public function updateMatrixRA(Request $request)
                     }
                 }
             }
-
-            DB::commit(); 
-            return back()->with('success', ' Penugasan asisten relasional berhasil disinkronkan.');
-        } catch (\Exception $e) {
-            DB::rollBack(); 
-            return back()->with('error', 'Waduh gagal Bre: ' . $e->getMessage());
         }
 
         DB::commit(); 

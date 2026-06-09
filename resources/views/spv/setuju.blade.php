@@ -127,7 +127,6 @@
                             </select>
                         </form>
                     </td>
-
                     {{-- Dokumen PDF --}}
                     <td class="px-4 py-4 text-center">
                         @if($b->dokumen)
