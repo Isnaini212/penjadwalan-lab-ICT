@@ -83,135 +83,142 @@
                     </thead>
                     <tbody>
                         @foreach($timeSlots as $slot)
-                            <tr class="transition hover:bg-slate-50/50">
-                                {{-- Kolom Jam --}}
-                                <td class="border border-slate-200 bg-slate-50 p-2.5 font-extrabold text-slate-700 tracking-wider">
-                                    {{ $slot['label'] }}
-                                </td>
+    <tr class="transition hover:bg-slate-50/50">
+        {{-- Kolom Jam --}}
+        <td class="border border-slate-200 bg-slate-50 p-2.5 font-extrabold text-slate-700 tracking-wider">
+            {{ $slot['label'] }}
+        </td>
 
-                                @foreach($dayNames as $day)
-                                    @if(strtolower($day) === 'jumat' && ($slot['start'] === '11:35' || $slot['start'] === '12:30'))
-                                        <td class="border border-slate-200 bg-blue-600 p-2.5 text-[11px] font-black uppercase text-white tracking-widest shadow-inner">
-                                            SHOLAT JUMAT / BREAK
-                                        </td>
-                                    @else
-                                        @php
-                                            $dayLower = strtolower($day);
-                                            $timeKey  = $slot['start'];
-                                            $dropdownMatkul = $coursesBySlot[$dayLower][$timeKey] ?? [];
+        @foreach($dayNames as $day)
+            @php
+                $dayLower = strtolower($day);
+                $timeKey  = $slot['start'];
+                $dropdownMatkul = $coursesBySlot[$dayLower][$timeKey] ?? [];
 
-                                            // 1. Jadwal Kuliah Dia Sendiri
-                                            $kelasKuliah = $weeklyClasses->first(function($item) use ($day, $slot) {
-                                                if (strtolower($item->hari) !== strtolower($day)) return false;
-                                                $itemStart = substr($item->jam_mulai, 0, 5);
-                                                $itemEnd   = substr($item->jam_selesai, 0, 5);
-                                                return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
-                                            });
+                // 1. Jadwal Kuliah Dia Sendiri
+                $kelasKuliah = $weeklyClasses->first(function($item) use ($day, $slot) {
+                    if (strtolower($item->hari) !== strtolower($day)) return false;
+                    $itemStart = substr($item->jam_mulai, 0, 5);
+                    $itemEnd   = substr($item->jam_selesai, 0, 5);
+                    return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
+                });
 
-                                            // 2. Jadwal Dia Ditugaskan (Asisten / RA)
-                                            $jadwalKalender = $assistantAllSchedules->first(function($item) use ($day, $slot) {
-                                                if (strtolower($item->hari) !== strtolower($day)) return false;
-                                                $itemStart = substr($item->jam_mulai, 0, 5);
-                                                $itemEnd   = substr($item->jam_selesai, 0, 5);
-                                                return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
-                                            });
+                // 2. Jadwal Dia Ditugaskan (Asisten / RA)
+                $jadwalKalender = $assistantAllSchedules->first(function($item) use ($day, $slot) {
+                    if (strtolower($item->hari) !== strtolower($day)) return false;
+                    $itemStart = substr($item->jam_mulai, 0, 5);
+                    $itemEnd   = substr($item->jam_selesai, 0, 5);
+                    return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
+                });
 
-                                            $statusAwal = 'KOSONG';
-                                            $namaMatkulAktif = '';
-                                            $isStartHour = false;
-                                            $isTengahSesi = false;
-                                            
-                                            if ($jadwalKalender) {
-                                                $isStartHour = (substr($jadwalKalender->jam_mulai, 0, 5) === $slot['start']);
-                                                $isTengahSesi = !$isStartHour;
-                                                $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
-                                                $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
-                                                $namaMatkulAktif = trim($jadwalKalender->matkul);
-                                            } elseif ($kelasKuliah) {
-                                                $isStartHour = (substr($kelasKuliah->jam_mulai, 0, 5) === $slot['start']);
-                                                $isTengahSesi = !$isStartHour;
-                                                $statusAwal = 'KULIAH_SENDIRI';
-                                                $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
-                                            }
-                                        @endphp
+                $statusAwal = 'KOSONG';
+                $namaMatkulAktif = '';
+                $isStartHour = false;
+                $isTengahSesi = false;
+                
+                if ($jadwalKalender) {
+                    $itemStart = substr($jadwalKalender->jam_mulai, 0, 5);
+                    
+                    // Cek apakah class ini bermula di dalam kotak slot ini
+                    $isStartHour = ($itemStart >= $slot['start'] && $itemStart < $slot['end']);
+                    $isTengahSesi = !$isStartHour;
+                    
+                    $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
+                    $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
+                    $namaMatkulAktif = trim($jadwalKalender->matkul);
+                } elseif ($kelasKuliah) {
+                    $itemStart = substr($kelasKuliah->jam_mulai, 0, 5);
+                    
+                    $isStartHour = ($itemStart >= $slot['start'] && $itemStart < $slot['end']);
+                    $isTengahSesi = !$isStartHour;
+                    
+                    $statusAwal = 'KULIAH_SENDIRI';
+                    $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
+                }
+            @endphp
 
-                                        @if($isTengahSesi)
-                                            {{-- TENGAH SESI TERKUNCI --}}
-                                            @php
-                                                $bgColor = ($statusAwal === 'RA') ? 'bg-yellow-200' : (($statusAwal === 'KULIAH_SENDIRI') ? 'bg-red-300' : 'bg-sky-500');
-                                                $textColor = ($statusAwal === 'RA') ? 'text-yellow-800' : (($statusAwal === 'KULIAH_SENDIRI') ? 'text-red-900' : 'text-white');
-                                                $prefixLabel = ($statusAwal === 'RA') ? 'RA' : '';
-                                            @endphp
-                                            <td class="border border-slate-200 p-2 text-[10px] font-bold opacity-80 cursor-not-allowed {{ $bgColor }} {{ $textColor }}">
-                                                {{ $prefixLabel }}{{ $prefixLabel ? ': ' : '' }}{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}
-                                            </td>
-                                        @else
-                                            {{-- KONDISI NORMAL: AWAL SESI / KOSONG --}}
-                                            <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
+            @if($isTengahSesi)
+    {{-- TENGAH SESI TERKUNCI --}}
+    @php
+        $bgColor = ($statusAwal === 'RA') ? 'bg-yellow-200' : (($statusAwal === 'KULIAH_SENDIRI') ? 'bg-red-300' : 'bg-sky-500');
+        $textColor = ($statusAwal === 'RA') ? 'text-yellow-800' : (($statusAwal === 'KULIAH_SENDIRI') ? 'text-red-900' : 'text-white');
+        $prefixLabel = ($statusAwal === 'RA') ? 'RA' : '';
+    @endphp
+    <td class="border border-slate-200 p-2 text-[10px] font-bold opacity-80 cursor-not-allowed {{ $bgColor }} {{ $textColor }}">
+        
+        {{-- 🌟 TAMBAHAN WAJIB BIAR RANTAI BLOK DATABASE GAK PUTUS --}}
+        <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
+        <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
 
-                                            @if($statusAwal === 'KULIAH_SENDIRI')
-                                                {{-- ⛔ SIBUK KULIAH PRIBADI --}}
-                                                <td class="border border-slate-200 bg-red-300 p-1">
-                                                    <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="KULIAH_SENDIRI">
-                                                    <select disabled class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-red-900 outline-none cursor-not-allowed">
-                                                        <option>{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}</option>
-                                                    </select>
-                                                </td>
+        {{ $prefixLabel }}{{ $prefixLabel ? ': ' : '' }}{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}
+    </td>
+@else
+    {{-- Sisa kodingan normal form lu yang lain ada di bawah ini... --}}
+                {{-- KONDISI NORMAL: AWAL SESI / KOSONG --}}
+                <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
 
-                                            @elseif($statusAwal === 'RA')
-                                                {{-- ⚠️ JAGA RA OFFICE --}}
-                                                <td class="border border-slate-200 bg-yellow-200 p-1 transition-colors duration-300">
-                                                    <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[12px] font-black text-yellow-800 outline-none cursor-pointer">
-                                                        <option value="RA" selected>📌 RA</option>
-                                                        <option value="KOSONG" class="bg-white text-red-500 font-normal">⚪ Kosongkan</option>
-                                                        @foreach(array_unique($dropdownMatkul) as $m)
-                                                            @php $mClean = trim($m); @endphp
-                                                            @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG') @continue @endif
-                                                            <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">🔬 {{ strtoupper($mClean) }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
+                @if($statusAwal === 'KULIAH_SENDIRI')
+                    {{-- ⛔ SIBUK KULIAH PRIBADI --}}
+                    <td class="border border-slate-200 bg-red-300 p-1">
+                        <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="KULIAH_SENDIRI">
+                        <select disabled class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-red-900 outline-none cursor-not-allowed">
+                            <option>{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}</option>
+                        </select>
+                    </td>
 
-                                            @elseif($statusAwal === 'ASISTEN_LAB')
-                                                {{-- 🔬 ASISTEN PRAKTIKUM --}}
-                                                <td class="border border-slate-200 bg-sky-500 p-1 transition-colors duration-300">
-                                                    <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-white outline-none cursor-pointer">
-                                                        <option value="{{ $namaMatkulAktif }}" selected class="bg-white text-slate-800">
-                                                            🔬 {{ strtoupper($namaMatkulAktif) }}
-                                                        </option>
-                                                        @foreach(array_unique($dropdownMatkul) as $m)
-                                                            @php $mClean = trim($m); @endphp
-                                                            @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG' || strtolower($mClean) === strtolower($namaMatkulAktif)) 
-                                                                @continue 
-                                                            @endif
-                                                            <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">
-                                                                🔬 {{ strtoupper($mClean) }}
-                                                            </option>
-                                                        @endforeach
-                                                        <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold">📌 Jaga RA</option>
-                                                        <option value="KOSONG" class="bg-white text-red-500 font-normal">⚪ Lepas Tugas</option>
-                                                    </select>
-                                                </td>
+                @elseif($statusAwal === 'RA')
+                    {{-- ⚠️ JAGA RA OFFICE --}}
+                    <td class="border border-slate-200 bg-yellow-200 p-1 transition-colors duration-300">
+                        <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[12px] font-black text-yellow-800 outline-none cursor-pointer">
+                            <option value="RA" selected>📌 RA</option>
+                            <option value="KOSONG" class="bg-white text-red-500 font-normal">⚪ Kosongkan</option>
+                            @foreach(array_unique($dropdownMatkul) as $m)
+                                @php $mClean = trim($m); @endphp
+                                @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG') @continue @endif
+                                <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">🔬 {{ strtoupper($mClean) }}</option>
+                            @endforeach
+                        </select>
+                    </td>
 
-                                            @else
-                                                {{-- ⚪ SLOT KOSONG --}}
-                                                <td class="border border-slate-200 bg-white p-1 transition-colors duration-300">
-                                                    <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[12px] font-bold text-slate-400 outline-none cursor-pointer hover:text-slate-600">
-                                                        <option value="KOSONG" selected>---</option>
-                                                        <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold">📌 Jaga RA</option>
-                                                        @foreach(array_unique($dropdownMatkul) as $m)
-                                                            @php $mClean = trim($m); @endphp
-                                                            @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG') @continue @endif
-                                                            <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">🔬 {{ strtoupper($mClean) }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
-                                            @endif
-                                        @endif
-                                    @endif
-                                @endforeach
-                            </tr>
-                        @endforeach
+                @elseif($statusAwal === 'ASISTEN_LAB')
+                    {{-- 🔬 ASISTEN PRAKTIKUM --}}
+                    <td class="border border-slate-200 bg-sky-500 p-1 transition-colors duration-300">
+                        <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-white outline-none cursor-pointer">
+                            <option value="{{ $namaMatkulAktif }}" selected class="bg-white text-slate-800">
+                                🔬 {{ strtoupper($namaMatkulAktif) }}
+                            </option>
+                            @foreach(array_unique($dropdownMatkul) as $m)
+                                @php $mClean = trim($m); @endphp
+                                @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG' || strtolower($mClean) === strtolower($namaMatkulAktif)) 
+                                    @continue 
+                                @endif
+                                <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">
+                                    🔬 {{ strtoupper($mClean) }}
+                                </option>
+                            @endforeach
+                            <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold">📌 Jaga RA</option>
+                            <option value="KOSONG" class="bg-white text-red-500 font-normal">⚪ Lepas Tugas</option>
+                        </select>
+                    </td>
+
+                @else
+                    {{-- ⚪ SLOT KOSONG --}}
+                    <td class="border border-slate-200 bg-white p-1 transition-colors duration-300">
+                        <select name="cells[{{ $day }}][{{ $slot['start'] }}]" onchange="gantiWarnaSilent(this)" class="w-full appearance-none bg-transparent text-center text-[12px] font-bold text-slate-400 outline-none cursor-pointer hover:text-slate-600">
+                            <option value="KOSONG" selected>---</option>
+                            <option value="RA" class="bg-yellow-200 text-yellow-800 font-bold">📌 Jaga RA</option>
+                            @foreach(array_unique($dropdownMatkul) as $m)
+                                @php $mClean = trim($m); @endphp
+                                @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG') @continue @endif
+                                <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">🔬 {{ strtoupper($mClean) }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                @endif
+            @endif
+        @endforeach
+    </tr>
+@endforeach
                     </tbody>
                 </table>
             </div>

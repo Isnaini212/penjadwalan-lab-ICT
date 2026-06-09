@@ -9,103 +9,115 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class JadwalController extends Controller
 {
 
+public function minggu(){
+    $minDate = Schedule::min('tanggal');
+        $maxDate = Schedule::max('tanggal');
 
+        if (!$minDate || !$maxDate) {
+            $startPeriode = Carbon::now()->startOfWeek(Carbon::MONDAY);
+            $endPeriode   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+        } else {
+            $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
+            $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
+        }
 
- public function minggu(Request $request)
-{
-    // 🌟 SAKLAR MODE TAMPILAN: Ubah jadi false kalau mau pakai Date Now (Harian)
-    // Nanti bisa lu hubungkan ke database, contoh: $isWeeklyMode = SystemSetting::first()->is_weekly;
-    $isWeeklyMode = true; 
+        $listMinggu  = [];
+        $current     = $startPeriode->copy();
+        $index       = 1;
+        $today       = Carbon::now()->toDateString();
+        $defaultWeek = 1;
 
-    $labs = \App\Models\Lab::all();
+        while ($current->lessThanOrEqualTo($endPeriode)) {
+            $senin  = $current->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+            $minggu = $current->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
 
-    // ==============================================================
-    // ⬇️ LOGIKA MODE HARIAN (DATE NOW) ⬇️
-    // ==============================================================
-    if (!$isWeeklyMode) {
-        $filterDate = $request->query('filter_date', now()->toDateString());
-        
-        $schedules = \App\Models\Schedule::with(['lab', 'assistantSchedule'])
-            ->whereDate('tanggal', $filterDate)
-            ->whereHas('lab', function($query) {
-                $query->where('nama_lab', '!=', 'RUANG ASISTEN')
-                      ->where('nama_lab', '!=', 'RA');
+            $listMinggu[] = [
+                'id_minggu' => $index,
+                'label'     => 'Minggu ' . $index,
+                'start'     => $senin,
+                'end'       => $minggu,
+            ];
+
+            if ($today >= $senin && $today <= $minggu) {
+                $defaultWeek = $index;
+            }
+
+            $current->addWeek();
+            $index++;
+        }
+
+        return view('mingguan.perminggu', compact('listMinggu', 'defaultWeek'));
+}
+
+public function cetakMinggu(Request $request)
+    {
+        $request->validate([
+            'week' => 'required|integer'
+        ]);
+
+        $minDate = Schedule::min('tanggal');
+        $maxDate = Schedule::max('tanggal');
+
+        if (!$minDate || !$maxDate) {
+            return back()->with('error', 'Jadwal kosong, tidak ada yang bisa dicetak.');
+        }
+
+        $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
+        $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
+
+        $listMinggu  = [];
+        $current     = $startPeriode->copy();
+        $index       = 1;
+
+        while ($current->lessThanOrEqualTo($endPeriode)) {
+            $listMinggu[$index] = [
+                'label' => 'Minggu ' . $index,
+                'start' => $current->copy()->startOfWeek(Carbon::MONDAY)->toDateString(),
+                'end'   => $current->copy()->endOfWeek(Carbon::SUNDAY)->toDateString(),
+            ];
+            $current->addWeek();
+            $index++;
+        }
+
+        $mingguDipilih = (int) $request->query('week');
+        $activeRange   = $listMinggu[$mingguDipilih] ?? null;
+
+        if (!$activeRange) {
+            return abort(404, 'Minggu perkuliahan tidak ditemukan.');
+        }
+
+        // Ambil data murni langsung dari database berdasarkan parameter minggu terpilih
+        $schedules = Schedule::with(['lab', 'assistantSchedule'])
+            ->whereDate('tanggal', '>=', $activeRange['start'])
+            ->whereDate('tanggal', '<=', $activeRange['end'])
+            ->whereHas('lab', function ($query) {
+                $query->whereNotIn('nama_lab', ['RUANG RA', 'RA','RUANG ASISTEN']);
             })
+            ->orderBy('tanggal', 'asc')
             ->orderBy('jam_mulai', 'asc')
             ->get();
 
-        return view('perminggu', compact('schedules', 'filterDate', 'labs', 'isWeeklyMode'));
-    }
+        $namaFile = 'Jadwal_Lab_ICT_Minggu_' . $mingguDipilih . '.pdf';
 
-    // ==============================================================
-    // ⬇️ LOGIKA MODE MINGGUAN (DROPDOWN) ⬇️
-    // ==============================================================
-    $minDate = \App\Models\Schedule::min('tanggal');
-    $maxDate = \App\Models\Schedule::max('tanggal');
+        // Lempar data ke file view khusus layout PDF cetak
+        $pdf = Pdf::loadView('mingguan.cetak', [
+            'schedules'   => $schedules,
+            'activeRange' => $activeRange,
+            'minggu'      => $mingguDipilih
+        ])->setPaper('a4', 'landscape'); // Kita set landscape biar tabel rapi kesamping
 
-    if (!$minDate || !$maxDate) {
-        $startPeriode = \Carbon\Carbon::now()->startOfWeek(\Carbon\Carbon::MONDAY);
-        $endPeriode = \Carbon\Carbon::now()->endOfWeek(\Carbon\Carbon::SUNDAY);
-    } else {
-        $startPeriode = \Carbon\Carbon::parse($minDate)->startOfWeek(\Carbon\Carbon::MONDAY);
-        $endPeriode = \Carbon\Carbon::parse($maxDate)->endOfWeek(\Carbon\Carbon::SUNDAY);
-    }
-
-    $listMinggu = [];
-    $current = $startPeriode->copy();
-    $index = 1;
-    $defaultWeek = 1;
-    $today = \Carbon\Carbon::now()->toDateString();
-
-    while ($current->lessThanOrEqualTo($endPeriode)) {
-        $senin = $current->copy()->toDateString();
-        $sabtu = $current->copy()->addDays(5)->toDateString();
-
-        $listMinggu[] = [
-            'id_minggu' => $index,
-            'label'     => "Minggu " . $index,
-            'start'     => $senin,
-            'end'       => $sabtu,
-        ];
-
-        if ($today >= $senin && $today <= $sabtu) {
-            $defaultWeek = $index;
-        }
-
-        $current->addWeek();
-        $index++;
-    }
-
-    $mingguDipilih = $request->query('week', $defaultWeek);
-    $arrayIndex = (int)$mingguDipilih - 1;
-    $activeRange = isset($listMinggu[$arrayIndex]) ? $listMinggu[$arrayIndex] : $listMinggu[0];
-
-    $schedules = \App\Models\Schedule::with(['lab', 'assistantSchedule'])
-        ->whereBetween('tanggal', [$activeRange['start'], $activeRange['end']])
-        ->whereHas('lab', function($query) {
-            $query->where('nama_lab', '!=', 'RUANG ASISTEN')
-                  ->where('nama_lab', '!=', 'RA');
-        })
-        ->orderBy('tanggal', 'asc')
-        ->orderBy('jam_mulai', 'asc')
-        ->get();
-
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'schedules'    => $schedules,
-            'active_range' => $activeRange
-        ]);
-    }
-
-    return view('perminggu', compact('schedules', 'listMinggu', 'mingguDipilih', 'activeRange', 'labs', 'isWeeklyMode'));
+        return $pdf->stream($namaFile); // .stream() agar PDF terbuka di tab baru, ganti .download() jika ingin langsung terunduh
 }
 
- public function welcome(Request $request)
+
+public function welcome(Request $request)
+
     {
 
 
@@ -114,8 +126,10 @@ class JadwalController extends Controller
         $schedules = Schedule::with(['lab', 'assistantSchedule'])
                          ->whereDate('tanggal', $filterDate)
                          ->whereHas('lab', function($query) {
-                             $query->where('nama_lab', '!=', 'RUANG ASISTEN')
-                                   ->where('nama_lab', '!=', 'RA');
+                             $query->where('nama_lab', '!=', 'RUANG RA')
+                                   ->where('nama_lab', '!=', 'RA')
+                                   ->where('nama_lab', '!=', 'RUANG ASISTEN');
+                                   
                          })
                          ->orderBy('jam_mulai', 'asc')
                          ->get();
@@ -127,9 +141,10 @@ class JadwalController extends Controller
         }
 
         return view('welcome', compact('schedules', 'filterDate', 'labs'));
-    }
+}
 
-        public function dashboard(Request $request) 
+
+public function dashboard(Request $request) 
 {
     $filterDate = $request->query('filter_date', now()->toDateString());
     $search = $request->query('search');
@@ -193,8 +208,10 @@ public function manajemenJadwal(Request $request) {
 
     return view('spv.jadwal', compact('schedules', 'labs','filterDate','conflicts'));
 }
-    public function store(Request $request)
-    {
+
+
+public function store(Request $request)
+{
         $request->validate([
             'tanggal'   => 'required|date',
             'id_lab'    => 'nullable',
@@ -230,7 +247,7 @@ public function manajemenJadwal(Request $request) {
         ]);
 
         return back()->with('success', 'Jadwal berhasil ditambahkan!');
-    }
+}
 
 
     public function destroy($id)
@@ -310,13 +327,13 @@ public function manajemenJadwal(Request $request) {
     return redirect()->back()
         ->with('success', 'Jadwal berhasil diperbarui!');
 }
-    public function clearSchedule()
+    public function bersihin()
     {
         Schedule::truncate();
         return back()->with('success', 'Wusss! Semua jadwal tetap berhasil disapu bersih.');
     }
 
-   public function importExcel(Request $request) 
+     public function importExcel(Request $request) 
     {
         $request->validate([
             'start_date' => 'required|date',
@@ -341,15 +358,33 @@ public function manajemenJadwal(Request $request) {
                 $dosen     = $row[9] ?? '';
                 $asisten   = isset($row[10]) ? trim($row[10]) : '';
 
-                if (str_contains(strtoupper($ruangRaw), 'LAB')) {
-                    preg_match('/LAB\s?\d+/i', strtoupper($ruangRaw), $matches);
-                    $namaLab = $matches[0] ?? 'LAB TBD';
 
+                if (str_contains(strtoupper($ruangRaw), 'LAB')) {
+    
+                    // Hanya ambil angka jika ada kata "LAB" langsung diikuti angka (boleh pakai spasi)
+                    if (preg_match('/LAB\s*(\d+)/i', $ruangRaw, $matches)) {
+                        $angkaLab = $matches[1]; 
+                    } else {
+                        continue; // Jika formatnya bukan "LAB [angka]" (seperti LAB SK 2), lewati baris ini
+                    }
+
+                    // Format angka agar menjadi 2 digit sesuai Seeder (contoh: "2" menjadi "02")
+                    $angkaFormat = str_pad($angkaLab, 2, '0', STR_PAD_LEFT);
+                    $namaLabDicari = "Lab " . $angkaFormat; 
+
+                    // Cari ke database, pastikan Lab tersebut terdaftar di Seeder
+                    $labObj = Lab::where('nama_lab', $namaLabDicari)->first();
+
+                    // JIKA TIDAK ADA DI DATABASE (SEEDER), JANGAN IMPORT & SKIP BARIS INI
+                    if (!$labObj) {
+                        continue; 
+                    }
+
+                    // Pecah jam kuliah (Sama seperti kode lama kamu)
                     $jamSplit = explode('-', $jamStr);
                     $jamMulai = trim($jamSplit[0]);
                     $jamSelesai = isset($jamSplit[1]) ? trim($jamSplit[1]) : '00:00';
-
-                    $labObj = Lab::firstOrCreate(['nama_lab' => strtoupper($namaLab)], ['kapasitas' => 40, 'fasilitas' => '-']);
+    
                     
                     $id_asisten = null;
                     if (!empty($asisten) && strtoupper($asisten) !== 'TBD') {
@@ -389,20 +424,19 @@ public function manajemenJadwal(Request $request) {
         return back()->with('success', " Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
     }
 
-    public function bersihin()
-{
-    
-    Schedule::truncate(); 
 
-    
-    return redirect()->back()->with('success', 'Semua data jadwal laboratorium berhasil dikosongkan!');
-}
 
-    
 
-   
 
- 
 
-   
-}
+
+
+
+
+
+
+
+
+
+
+    }

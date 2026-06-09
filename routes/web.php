@@ -13,7 +13,7 @@ use App\Http\Controllers\AkunController;
 
 Route::get('/', [JadwalController::class, 'welcome']);
 Route::get('/minggu', [JadwalController::class, 'minggu']);
-
+Route::get('/minggu/cetak', [JadwalController::class, 'cetakMinggu'])->name('cetak');
 
 
 

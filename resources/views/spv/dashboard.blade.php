@@ -131,68 +131,136 @@
 
        
         <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
-            <div class="mb-5 flex items-center gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
-                    <i class="fa-solid fa-user-group text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-base font-extrabold text-slate-900">Status Petugas Asisten</h2>
-                    <p class="text-sm text-slate-500">Daftar seluruh asisten yang menjaga laboratorium hari ini</p>
-                </div>
-            </div>
+    <div class="mb-5 flex items-center gap-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+            <i class="fa-solid fa-user-group text-xl"></i>
+        </div>
+        <div>
+            <h2 class="text-base font-extrabold text-slate-900">Status Petugas Asisten</h2>
+            <p class="text-sm text-slate-500">Daftar seluruh asisten yang menjaga laboratorium hari ini</p>
+        </div>
+    </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-[760px] w-full text-left text-xs">
-                    <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                        <tr>
-                            <th class="px-4 py-4">Nama Asisten</th>
-                            <th class="px-4 py-4">Menjaga Lab</th>
-                            <th class="px-4 py-4">Waktu Tugas</th>
-                            <th class="px-4 py-4">Mata Kuliah Kelolaan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @php
-                            $assignedSchedules = $daySchedules->filter(function($item) {
-                                return !empty($item->id_asisten);
-                            })->sortBy('jam_mulai');
-                        @endphp
+    <div class="overflow-x-auto">
+        <table class="min-w-[760px] w-full text-left text-xs">
+            <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                <tr>
+                    <th class="px-4 py-4">Nama Asisten</th>
+                    <th class="px-4 py-4">Menjaga Lab</th>
+                    <th class="px-4 py-4">Waktu Tugas</th>
+                    <th class="px-4 py-4">Mata Kuliah Kelolaan</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @php
+                    // 1. Ambil semua jadwal hari ini yang sudah ada asistennya
+                    $rawSchedules = $daySchedules->filter(function($item) {
+                        return !empty($item->id_asisten);
+                    });
+
+                    // 2. Grouping berdasarkan ID Asisten untuk mencari jam berurutan per orang
+                    $groupedByAssistant = $rawSchedules->groupBy('id_asisten');
+                    $mergedSchedules = collect();
+
+                    foreach ($groupedByAssistant as $asistenId => $slots) {
+                        // Urutkan slot waktu milik asisten ini dari yang paling pagi
+                        $sortedSlots = $slots->sortBy('jam_mulai')->values();
                         
-                        @forelse($assignedSchedules as $s)
-                            @php
-                                $namaAsisten = $s->assistantSchedule->nama_asisten ?? $s->assistantSchedule->nama ?? 'Asisten';
-                                $inisial = strtoupper(substr(trim($namaAsisten), 0, 1));
-                                $namaLab = $s->lab->nama_lab ?? $s->id_lab;
-                            @endphp
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-4 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-sky-700 text-xs font-extrabold text-white">
-                                            {{ $inisial }}
-                                        </span>
-                                        <span class="font-semibold text-slate-700">{{ $namaAsisten }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-4">
-                                    <span class="rounded-md bg-sky-100 px-3 py-1 text-xs font-extrabold text-sky-700">
-                                        {{ $namaLab }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-4 font-mono text-slate-700">
-                                    {{ date('H:i', strtotime($s->jam_mulai)) }} - {{ date('H:i', strtotime($s->jam_selesai)) }}
-                                </td>
-                                <td class="px-4 py-4 italic text-slate-600">{{ $s->matkul }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-4 py-6 text-center text-sm font-bold text-slate-400">
-                                    Tidak ada asisten yang terjadwal bertugas hari ini.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        if ($sortedSlots->isEmpty()) continue;
+
+                        // Set cetakan blok sesi pertama untuk asisten ini
+                        $currentBlock = [
+                            'assistantSchedule' => $sortedSlots[0]->assistantSchedule,
+                            'jam_mulai'         => $sortedSlots[0]->jam_mulai,
+                            'jam_selesai'       => $sortedSlots[0]->jam_selesai,
+                            'matkul_list'       => [trim($sortedSlots[0]->matkul)],
+                            'labs_list'         => [$sortedSlots[0]->lab->nama_lab ?? $sortedSlots[0]->id_lab]
+                        ];
+
+                        // Bandingkan sesi pertama dengan sesi-sesi berikutnya
+                        for ($i = 1; $i < $sortedSlots->count(); $i++) {
+                            $nextSlot = $sortedSlots[$i];
+                            
+                            $currentEnd = date('H:i', strtotime($currentBlock['jam_selesai']));
+                            $nextStart  = date('H:i', strtotime($nextSlot->jam_mulai));
+
+                            // SYARAT MUTLAK: Jika jam selesai sesi ini SAMA DENGAN jam mulai sesi berikutnya (Berurutan)
+                            if ($currentEnd === $nextStart) {
+                                // Perpanjang jam selesai blok saat ini
+                                $currentBlock['jam_selesai'] = $nextSlot->jam_selesai;
+                                
+                                // Gabungkan nama matkul (jika berbeda) ke array agar tidak duplikat teks
+                                $matkulTrimmed = trim($nextSlot->matkul);
+                                if (!in_array($matkulTrimmed, $currentBlock['matkul_list'])) {
+                                    $currentBlock['matkul_list'][] = $matkulTrimmed;
+                                }
+                                
+                                // Gabungkan nama lab (jika dalam shift beruntun dia pindah lab)
+                                $labName = $nextSlot->lab->nama_lab ?? $nextSlot->id_lab;
+                                if (!in_array($labName, $currentBlock['labs_list'])) {
+                                    $currentBlock['labs_list'][] = $labName;
+                                }
+                            } else {
+                                // JIKA ADA JEDA: Simpan sesi sebelumnya sebagai baris mandiri, lalu buka lembaran sesi baru
+                                $mergedSchedules->push((object)$currentBlock);
+                                
+                                $currentBlock = [
+                                    'assistantSchedule' => $nextSlot->assistantSchedule,
+                                    'jam_mulai'         => $nextSlot->jam_mulai,
+                                    'jam_selesai'       => $nextSlot->jam_selesai,
+                                    'matkul_list'       => [trim($nextSlot->matkul)],
+                                    'labs_list'         => [$nextSlot->lab->nama_lab ?? $nextSlot->id_lab]
+                                ];
+                            }
+                        }
+                        // Amankan sisa blok terakhir milik asisten terpilih
+                        $mergedSchedules->push((object)$currentBlock);
+                    }
+
+                    // 3. Kembalikan urutan tampilan baris tabel secara kronologis (Berdasarkan Jam Mulai Terpagi)
+                    $finalSchedules = $mergedSchedules->sortBy('jam_mulai');
+                @endphp
+                
+                @forelse($finalSchedules as $s)
+                    @php
+                        $namaAsisten = $s->assistantSchedule->nama_asisten ?? $s->assistantSchedule->nama ?? 'Asisten';
+                        $inisial     = strtoupper(substr(trim($namaAsisten), 0, 1));
+                        
+                        // Satukan nama lab & matkul yang sudah berhasil dikompresi menggunakan koma
+                        $namaLab     = implode(', ', $s->labs_list);
+                        $daftarMatkul = implode(', ', $s->matkul_list);
+                    @endphp
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
+                                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-sky-700 text-xs font-extrabold text-white">
+                                    {{ $inisial }}
+                                </span>
+                                <span class="font-semibold text-slate-700">{{ $namaAsisten }}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4">
+                            <span class="rounded-md bg-sky-100 px-3 py-1 text-xs font-extrabold text-sky-700">
+                                {{ $namaLab }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 font-mono text-slate-700">
+                            {{ date('H:i', strtotime($s->jam_mulai)) }} - {{ date('H:i', strtotime($s->jam_selesai)) }}
+                        </td>
+                        <td class="px-4 py-4 italic text-slate-600">
+                            {{ $daftarMatkul }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-4 py-6 text-center text-sm font-bold text-slate-400">
+                            Tidak ada asisten yang terjadwal bertugas hari ini.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</section>
     </div>
 @endsection

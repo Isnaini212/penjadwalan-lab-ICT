@@ -97,21 +97,33 @@
                     <td class="px-4 py-4">
                         <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}" method="POST">
                             @csrf @method('PATCH')
-                            <select name="lab_id" onchange="this.form.submit()" class="h-10 w-44 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
+                            <select name="lab_id" onchange="this.form.submit()" class="h-10 w-48 rounded-xl border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
 
-                                @if($b->current_lab === 'TBD')
-                                    <option value="" selected disabled class="text-red-500">Pilih Lab (Wajib)</option>
+                                @if($b->current_lab === 'TBD' || empty($b->current_id_lab))
+                                    <option value="" selected disabled class="font-bold text-red-500">
+                                        -- Pilih Lab (Wajib) --
+                                    </option>
                                 @endif
 
                                 @foreach($b->lab_options as $opt)
                                     @php
-                                        // Pengecekan agar lab yang sedang dipilih saat ini terpilih di dropdown
+                                        // Pengecekan agar lab yang sedang dipilih saat ini langsung aktif
                                         $isSelected = ($b->current_id_lab == $opt['id_lab'] || $b->current_lab == $opt['nama_lab']);
                                     @endphp
-                                    <option value="{{ $opt['id_lab'] }}" {{ $isSelected ? 'selected' : '' }} {{ $opt['is_busy'] ? 'disabled' : '' }}>
-                                        {{ $opt['nama_lab'] }} {{ $opt['is_busy'] ? '🔒 (Penuh)' : '' }}
-                                    </option>
+
+                                    @if($opt['is_busy'])
+                                        {{-- JIKA LAB KEPAKE: Kunci dan warnai merah --}}
+                                        <option value="" disabled class="bg-red-50 font-bold text-red-500">
+                                            ❌ {{ $opt['nama_lab'] }} (Kepakai)
+                                        </option>
+                                    @else
+                                        {{-- JIKA LAB KOSONG: Biarkan bisa dipilih dan warnai hijau --}}
+                                        <option value="{{ $opt['id_lab'] }}" {{ $isSelected ? 'selected' : '' }} class="font-bold text-emerald-700">
+                                            ✅ {{ $opt['nama_lab'] }} (Tersedia)
+                                        </option>
+                                    @endif
                                 @endforeach
+                                
                             </select>
                         </form>
                     </td>

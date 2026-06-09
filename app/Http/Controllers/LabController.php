@@ -32,7 +32,7 @@ class LabController extends Controller
 
 
         Lab::create([
-            'nama_lab'     =>  ucwords(strtolower($request->nama_lab)),
+            'nama_lab'     =>  strtoupper(trim($request->nama_lab)),
             'kapasitas'     => $request->kapasitas,
             'fasilitas'     => $request->fasilitas,
         ]);
@@ -61,7 +61,7 @@ class LabController extends Controller
          ], $messages);
 
           $labs->update([
-            'nama_lab'     =>  ucwords(strtolower($request->nama_lab)) ?? $labs->nama_lab,
+            'nama_lab'     =>  strtoupper($request->nama_lab),
             'kapasitas'     => $request->kapasitas ?? $labs->kapasitas,
             'fasilitas'   =>  $request->fasilitas ?? $labs->fasilitas,
         ]);
