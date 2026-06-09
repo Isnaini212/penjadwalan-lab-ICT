@@ -116,20 +116,11 @@
                 <option value="ra">Jaga RA Saja</option>
             </select>
 
-            <select id="filterDay" class="h-11 rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
-                <option value="">Semua Hari</option>
-                @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $h)
-                    <option value="{{ $h }}">{{ $h }}</option>
-                @endforeach
-            </select>
-
             <select id="filterLab" class="h-11 rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
                 <option value="">Semua Lab / Ruangan</option>
-                <option value="RA">RUANG RA</option>
-                @for($i=1; $i<=11; $i++)
-                    @php $formatLab = 'LAB ' . sprintf('%02d', $i); @endphp
-                    <option value="{{ $formatLab }}">{{ $formatLab }}</option>
-                @endfor
+                @foreach($labs->sortBy('nama_lab') as $lab)
+                    <option value="{{ $lab->nama_lab }}">{{ strtoupper($lab->nama_lab) }}</option>
+                @endforeach
             </select>
         </div>
     </div>
@@ -185,7 +176,7 @@
             <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Cek Jadwal Tanggal:</label>
             <input type="date" name="filter_date" value="{{ request('filter_date', now()->toDateString()) }}" onchange="this.form.submit()" class="h-9 rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-500">
             @if(request('filter_date'))
-                <a href="{{ route('spv.jadwal') }}" class="text-xs font-bold text-red-500 hover:underline">[Reset Filter Hari]</a>
+                <a href="{{ route('spv.jadwal') }}" class="text-xs font-bold text-red-500 hover:underline">[Reset Filter Tanggal]</a>
             @endif
         </form>
     </div>
@@ -232,47 +223,42 @@
                         </td>
 
                         <td class="px-4 py-3.5">
-    <select name="id_lab" class="h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-        @foreach($s->getLabStatuses() as $lab)
-            @php
-                $labJadwalSaatIni = $s->id_lab;
-                $labDalamLoop = $lab['id_lab'];
-                $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
+                            <select name="id_lab" class="h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                                @foreach($s->getLabStatuses() as $lab)
+                                    @php
+                                        $labJadwalSaatIni = $s->id_lab;
+                                        $labDalamLoop = $lab['id_lab'];
+                                        $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
 
-                // Cek apakah ruangan saat ini adalah Ruang RA
-                $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
-            @endphp
+                                        $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
+                                    @endphp
 
-            @if($apakahLabSendiri)
-                <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
-                    {{ $lab['nama_lab'] }} (Aktif)
-                </option>
-            {{-- Jika lab biasa penuh dan bukan Ruang RA, maka kunci aksesnya --}}
-            @elseif($lab['status'] === 'busy' && !$isRuangRa)
-                <option value="" disabled class="text-red-500 bg-red-50 cursor-not-allowed">
-                    {{ $lab['nama_lab'] }} (Dipakai)
-                </option>
-            {{-- Jika Ruang RA, biarkan tetap terbuka dan bisa dipilih walaupun berstatus busy --}}
-            @else
-                <option value="{{ $lab['id_lab'] }}" class="text-slate-700">
-                    {{ $lab['nama_lab'] }} {{ $isRuangRa && $lab['status'] === 'busy' ? '(Tersedia)' : '' }}
-                </option>
-            @endif
-        @endforeach
-    </select>
-</td>
+                                    @if($apakahLabSendiri)
+                                        <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
+                                            {{ $lab['nama_lab'] }} (Aktif)
+                                        </option>
+                                    @elseif($lab['status'] === 'busy' && !$isRuangRa)
+                                        <option value="" disabled class="text-red-500 bg-red-50 cursor-not-allowed">
+                                            {{ $lab['nama_lab'] }} (Dipakai)
+                                        </option>
+                                    @else
+                                        <option value="{{ $lab['id_lab'] }}" class="text-slate-700">
+                                            {{ $lab['nama_lab'] }} {{ $isRuangRa && $lab['status'] === 'busy' ? '(Tersedia)' : '' }}
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </td>
 
                         <td class="px-4 py-3.5">
-    <div class="flex items-center gap-1.5 font-mono">
-        <!-- Input Jam Mulai -->
-        <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            <div class="flex items-center gap-1.5 font-mono">
+                                <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
 
-        <span class="text-slate-400 font-bold text-xs">-</span>
+                                <span class="text-slate-400 font-bold text-xs">-</span>
 
-        <!-- Input Jam Selesai -->
-        <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-    </div>
-</td>
+                                <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            </div>
+                        </td>
 
                         <td class="px-4 py-3.5">
                             <input type="text" name="matkul" value="{{ $s->matkul }}" class="h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
@@ -314,7 +300,7 @@
                                                 document.getElementById('scope-field-{{ $s->id_jadwal }}').value = 'all';
                                                 document.getElementById('update-form-{{ $s->id_jadwal }}').submit();
                                             }
-                                         Sunda">
+                                        ">
                                     <i class="fas fa-layer-group text-xs"></i>
                                 </button>
 
@@ -345,7 +331,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const filterDay = document.getElementById('filterDay');
     const filterLab = document.getElementById('filterLab');
     const filterType = document.getElementById('filterType');
     const limitSelect = document.querySelector('.limitSelect');
@@ -358,35 +343,31 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fungsi Konversi Waktu Menit Strict 24 Jam
     function hitungTotalMenit(timeStr) {
         if (!timeStr) return 0;
-        // Bersihkan spasi atau embel-embel AM/PM liar jika tidak sengaja ter-render oleh browser device tertentu
         let cleanTime = timeStr.replace(/[^\d:]/g, '').trim();
         const parts = cleanTime.split(':');
         return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
     }
 
     function jalankanLiveFiltering() {
-        const selectedDay = filterDay.value;
         const selectedLab = filterLab.value;
         const selectedType = filterType.value;
         const limit = parseInt(limitSelect.value, 10);
 
         let filteredRows = rows.filter(tr => {
-            const hariAttribute = tr.getAttribute('data-hari');
             const labSelect = tr.cells[1].querySelector('select');
             let labName = labSelect ? labSelect.options[labSelect.selectedIndex].text : '';
             labName = labName.replace(/[🟢|🔒]/g, '').replace('(Aktif)', '').replace('(Dipakai)', '').trim();
 
-            const matchDay = !selectedDay || hariAttribute === selectedDay;
             const matchLab = !selectedLab || labName.toUpperCase().includes(selectedLab.toUpperCase());
 
             let matchType = true;
             if (selectedType === 'praktikum') {
-                matchType = !labName.toUpperCase().includes('RA');
+                matchType = !labName.toUpperCase().includes('RUANG ASISTEN');
             } else if (selectedType === 'ra') {
-                matchType = labName.toUpperCase().includes('RA');
+                matchType = labName.toUpperCase().includes('RUANG ASISTEN');
             }
 
-            return matchDay && matchLab && matchType;
+            return matchLab && matchType;
         });
 
         if (filteredRows.length === 0) {
@@ -430,7 +411,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('btnNextPage').addEventListener('click', () => { currentPage++; jalankanLiveFiltering(); });
     }
 
-    filterDay.addEventListener('change', () => { currentPage = 1; jalankanLiveFiltering(); });
     filterLab.addEventListener('change', () => { currentPage = 1; jalankanLiveFiltering(); });
     filterType.addEventListener('change', () => { currentPage = 1; jalankanLiveFiltering(); });
     limitSelect.addEventListener('change', () => { currentPage = 1; jalankanLiveFiltering(); });
@@ -440,7 +420,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // SAKLAR CETAK PDF DENGAN FORMAT AMAN 24 JAM
     document.getElementById('btnCetakPDF')?.addEventListener('click', function() {
         const activeType = filterType.value;
-        const selectedDay = filterDay.value;
         const selectedLab = filterLab.value;
 
         const rawEntries = [];
@@ -453,19 +432,18 @@ document.addEventListener("DOMContentLoaded", function () {
             let labName = labSelect ? labSelect.options[labSelect.selectedIndex].text : '';
             labName = labName.replace(/[🟢|🔒]/g, '').replace('(Aktif)', '').replace('(Dipakai)', '').trim();
 
-            const matchDay = !selectedDay || hariAttribute === selectedDay;
             const matchLab = !selectedLab || labName.toUpperCase().includes(selectedLab.toUpperCase());
             let matchType = true;
-            if (activeType === 'praktikum') matchType = !labName.toUpperCase().includes('RA');
-            if (activeType === 'ra') matchType = labName.toUpperCase().includes('RA');
+            if (activeType === 'praktikum') matchType = !labName.toUpperCase().includes('RUANG ASISTEN');
+            if (activeType === 'ra') matchType = labName.toUpperCase().includes('RUANG ASISTEN');
 
-            if (matchDay && matchLab && matchType) {
-                const jamInputs = tr.cells[2].querySelectorAll('input[type="time"]');
+            if (matchLab && matchType) {
+                // 🌟 FIX PDF: Cari class "time-formatter" karena tipe inputnya sekarang "text" bukan "time"
+                const jamInputs = tr.cells[2].querySelectorAll('.time-formatter');
                 const asistenSelect = tr.cells[5].querySelector('select');
                 let asistenName = asistenSelect ? asistenSelect.options[asistenSelect.selectedIndex].text : '-';
                 asistenName = asistenName.replace(/[⚠️|🔒]/g, '').replace('-- Pilih Asisten --', '-').trim();
 
-                // Bersihkan teks string jam agar konsisten 5 karakter HH:MM format 24 jam
                 let jMulaiClean = jamInputs[0].value.substring(0, 5);
                 let jSelesaiClean = jamInputs[1].value.substring(0, 5);
 
@@ -590,7 +568,6 @@ function triggerAutoSubmit() {
         form.submit();
     }
 }
-
 </script>
 @endsection
 </body>

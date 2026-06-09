@@ -9,14 +9,115 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class JadwalController extends Controller
 {
 
+public function minggu(){
+    $minDate = Schedule::min('tanggal');
+        $maxDate = Schedule::max('tanggal');
+
+        if (!$minDate || !$maxDate) {
+            $startPeriode = Carbon::now()->startOfWeek(Carbon::MONDAY);
+            $endPeriode   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+        } else {
+            $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
+            $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
+        }
+
+        $listMinggu  = [];
+        $current     = $startPeriode->copy();
+        $index       = 1;
+        $today       = Carbon::now()->toDateString();
+        $defaultWeek = 1;
+
+        while ($current->lessThanOrEqualTo($endPeriode)) {
+            $senin  = $current->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+            $minggu = $current->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+            $listMinggu[] = [
+                'id_minggu' => $index,
+                'label'     => 'Minggu ' . $index,
+                'start'     => $senin,
+                'end'       => $minggu,
+            ];
+
+            if ($today >= $senin && $today <= $minggu) {
+                $defaultWeek = $index;
+            }
+
+            $current->addWeek();
+            $index++;
+        }
+
+        return view('mingguan.perminggu', compact('listMinggu', 'defaultWeek'));
+}
+
+public function cetakMinggu(Request $request)
+    {
+        $request->validate([
+            'week' => 'required|integer'
+        ]);
+
+        $minDate = Schedule::min('tanggal');
+        $maxDate = Schedule::max('tanggal');
+
+        if (!$minDate || !$maxDate) {
+            return back()->with('error', 'Jadwal kosong, tidak ada yang bisa dicetak.');
+        }
+
+        $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
+        $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
+
+        $listMinggu  = [];
+        $current     = $startPeriode->copy();
+        $index       = 1;
+
+        while ($current->lessThanOrEqualTo($endPeriode)) {
+            $listMinggu[$index] = [
+                'label' => 'Minggu ' . $index,
+                'start' => $current->copy()->startOfWeek(Carbon::MONDAY)->toDateString(),
+                'end'   => $current->copy()->endOfWeek(Carbon::SUNDAY)->toDateString(),
+            ];
+            $current->addWeek();
+            $index++;
+        }
+
+        $mingguDipilih = (int) $request->query('week');
+        $activeRange   = $listMinggu[$mingguDipilih] ?? null;
+
+        if (!$activeRange) {
+            return abort(404, 'Minggu perkuliahan tidak ditemukan.');
+        }
+
+        // Ambil data murni langsung dari database berdasarkan parameter minggu terpilih
+        $schedules = Schedule::with(['lab', 'assistantSchedule'])
+            ->whereDate('tanggal', '>=', $activeRange['start'])
+            ->whereDate('tanggal', '<=', $activeRange['end'])
+            ->whereHas('lab', function ($query) {
+                $query->whereNotIn('nama_lab', ['RUANG RA', 'RA','RUANG ASISTEN']);
+            })
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        $namaFile = 'Jadwal_Lab_ICT_Minggu_' . $mingguDipilih . '.pdf';
+
+        // Lempar data ke file view khusus layout PDF cetak
+        $pdf = Pdf::loadView('mingguan.cetak', [
+            'schedules'   => $schedules,
+            'activeRange' => $activeRange,
+            'minggu'      => $mingguDipilih
+        ])->setPaper('a4', 'landscape'); // Kita set landscape biar tabel rapi kesamping
+
+        return $pdf->stream($namaFile); // .stream() agar PDF terbuka di tab baru, ganti .download() jika ingin langsung terunduh
+}
 
 
-    public function welcome(Request $request)
+public function welcome(Request $request)
+
     {
 
 
@@ -39,9 +140,10 @@ class JadwalController extends Controller
         }
 
         return view('welcome', compact('schedules', 'filterDate', 'labs'));
-    }
+}
 
-        public function dashboard(Request $request) 
+
+public function dashboard(Request $request) 
 {
     $filterDate = $request->query('filter_date', now()->toDateString());
     $search = $request->query('search');
@@ -105,8 +207,10 @@ public function manajemenJadwal(Request $request) {
 
     return view('spv.jadwal', compact('schedules', 'labs','filterDate','conflicts'));
 }
-    public function store(Request $request)
-    {
+
+
+public function store(Request $request)
+{
         $request->validate([
             'tanggal'   => 'required|date',
             'id_lab'    => 'nullable',
@@ -142,7 +246,7 @@ public function manajemenJadwal(Request $request) {
         ]);
 
         return back()->with('success', 'Jadwal berhasil ditambahkan!');
-    }
+}
 
 
     public function destroy($id)
@@ -222,13 +326,13 @@ public function manajemenJadwal(Request $request) {
     return redirect()->back()
         ->with('success', 'Jadwal berhasil diperbarui!');
 }
-    public function clearSchedule()
+    public function bersihin()
     {
         Schedule::truncate();
         return back()->with('success', 'Wusss! Semua jadwal tetap berhasil disapu bersih.');
     }
 
-   public function importExcel(Request $request) 
+     public function importExcel(Request $request) 
     {
         $request->validate([
             'start_date' => 'required|date',
@@ -319,20 +423,19 @@ public function manajemenJadwal(Request $request) {
         return back()->with('success', " Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
     }
 
-    public function bersihin()
-{
-    
-    Schedule::truncate(); 
 
-    
-    return redirect()->back()->with('success', 'Semua data jadwal laboratorium berhasil dikosongkan!');
-}
 
-    
 
-   
 
- 
 
-   
-}
+
+
+
+
+
+
+
+
+
+
+    }

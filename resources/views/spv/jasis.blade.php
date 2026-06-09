@@ -83,71 +83,72 @@
                     </thead>
                     <tbody>
                         @foreach($timeSlots as $slot)
-                            <tr class="transition hover:bg-slate-50/50">
-                                {{-- Kolom Jam --}}
-                                <td class="border border-slate-200 bg-slate-50 p-2.5 font-extrabold text-slate-700 tracking-wider">
-                                    {{ $slot['label'] }}
-                                </td>
+    <tr class="transition hover:bg-slate-50/50">
+        {{-- Kolom Jam --}}
+        <td class="border border-slate-200 bg-slate-50 p-2.5 font-extrabold text-slate-700 tracking-wider">
+            {{ $slot['label'] }}
+        </td>
 
-                                @foreach($dayNames as $day)
-                                    @if(strtolower($day) === 'jumat' && ($slot['start'] === '11:35' || $slot['start'] === '12:30'))
-                                        <td class="border border-slate-200 bg-blue-600 p-2.5 text-[11px] font-black uppercase text-white tracking-widest shadow-inner">
-                                            SHOLAT JUMAT / BREAK
-                                        </td>
-                                    @else
-                                        @php
-                                            $dayLower = strtolower($day);
-                                            $timeKey  = $slot['start'];
-                                            $dropdownMatkul = $coursesBySlot[$dayLower][$timeKey] ?? [];
+        @foreach($dayNames as $day)
+            @php
+                $dayLower = strtolower($day);
+                $timeKey  = $slot['start'];
+                $dropdownMatkul = $coursesBySlot[$dayLower][$timeKey] ?? [];
 
-                                            // 1. Jadwal Kuliah Dia Sendiri
-                                            $kelasKuliah = $weeklyClasses->first(function($item) use ($day, $slot) {
-                                                if (strtolower($item->hari) !== strtolower($day)) return false;
-                                                $itemStart = substr($item->jam_mulai, 0, 5);
-                                                $itemEnd   = substr($item->jam_selesai, 0, 5);
-                                                return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
-                                            });
+                // 1. Jadwal Kuliah Dia Sendiri
+                $kelasKuliah = $weeklyClasses->first(function($item) use ($day, $slot) {
+                    if (strtolower($item->hari) !== strtolower($day)) return false;
+                    $itemStart = substr($item->jam_mulai, 0, 5);
+                    $itemEnd   = substr($item->jam_selesai, 0, 5);
+                    return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
+                });
 
-                                            // 2. Jadwal Dia Ditugaskan (Asisten / RA)
-                                            $jadwalKalender = $assistantAllSchedules->first(function($item) use ($day, $slot) {
-                                                if (strtolower($item->hari) !== strtolower($day)) return false;
-                                                $itemStart = substr($item->jam_mulai, 0, 5);
-                                                $itemEnd   = substr($item->jam_selesai, 0, 5);
-                                                return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
-                                            });
+                // 2. Jadwal Dia Ditugaskan (Asisten / RA)
+                $jadwalKalender = $assistantAllSchedules->first(function($item) use ($day, $slot) {
+                    if (strtolower($item->hari) !== strtolower($day)) return false;
+                    $itemStart = substr($item->jam_mulai, 0, 5);
+                    $itemEnd   = substr($item->jam_selesai, 0, 5);
+                    return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
+                });
 
-                                            $statusAwal = 'KOSONG';
-                                            $namaMatkulAktif = '';
-                                            $isStartHour = false;
-                                            $isTengahSesi = false;
-                                            
-                                            if ($jadwalKalender) {
-                                                $isStartHour = (substr($jadwalKalender->jam_mulai, 0, 5) === $slot['start']);
-                                                $isTengahSesi = !$isStartHour;
-                                                $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
-                                                $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
-                                                $namaMatkulAktif = trim($jadwalKalender->matkul);
-                                            } elseif ($kelasKuliah) {
-                                                $isStartHour = (substr($kelasKuliah->jam_mulai, 0, 5) === $slot['start']);
-                                                $isTengahSesi = !$isStartHour;
-                                                $statusAwal = 'KULIAH_SENDIRI';
-                                                $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
-                                            }
-                                        @endphp
+                $statusAwal = 'KOSONG';
+                $namaMatkulAktif = '';
+                $isStartHour = false;
+                $isTengahSesi = false;
+                
+                if ($jadwalKalender) {
+                    $itemStart = substr($jadwalKalender->jam_mulai, 0, 5);
+                    
+                    // Cek apakah class ini bermula di dalam kotak slot ini
+                    $isStartHour = ($itemStart >= $slot['start'] && $itemStart < $slot['end']);
+                    $isTengahSesi = !$isStartHour;
+                    
+                    $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
+                    $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
+                    $namaMatkulAktif = trim($jadwalKalender->matkul);
+                } elseif ($kelasKuliah) {
+                    $itemStart = substr($kelasKuliah->jam_mulai, 0, 5);
+                    
+                    $isStartHour = ($itemStart >= $slot['start'] && $itemStart < $slot['end']);
+                    $isTengahSesi = !$isStartHour;
+                    
+                    $statusAwal = 'KULIAH_SENDIRI';
+                    $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
+                }
+            @endphp
 
-                                        @if($isTengahSesi)
-                                            {{-- TENGAH SESI TERKUNCI --}}
-                                            @php
-                                                $bgColor = ($statusAwal === 'RA') ? 'bg-yellow-200' : (($statusAwal === 'KULIAH_SENDIRI') ? 'bg-red-300' : 'bg-sky-500');
-                                                $textColor = ($statusAwal === 'RA') ? 'text-yellow-800' : (($statusAwal === 'KULIAH_SENDIRI') ? 'text-red-900' : 'text-white');
-                                                $prefixLabel = ($statusAwal === 'RA') ? 'RA' : '';
-                                            @endphp
-                                            <td class="border border-slate-200 p-2 text-[10px] font-bold opacity-80 cursor-not-allowed {{ $bgColor }} {{ $textColor }}">
-                                                {{ $prefixLabel }}{{ $prefixLabel ? ': ' : '' }}{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}
-                                            </td>
-                                        @else
-                                            {{-- KONDISI NORMAL: AWAL SESI / KOSONG --}}
-                                            <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
+            @if($isTengahSesi)
+    {{-- TENGAH SESI TERKUNCI --}}
+    @php
+        $bgColor = ($statusAwal === 'RA') ? 'bg-yellow-200' : (($statusAwal === 'KULIAH_SENDIRI') ? 'bg-red-300' : 'bg-sky-500');
+        $textColor = ($statusAwal === 'RA') ? 'text-yellow-800' : (($statusAwal === 'KULIAH_SENDIRI') ? 'text-red-900' : 'text-white');
+        $prefixLabel = ($statusAwal === 'RA') ? 'RA' : '';
+    @endphp
+    <td class="border border-slate-200 p-2 text-[10px] font-bold opacity-80 cursor-not-allowed {{ $bgColor }} {{ $textColor }}">
+        
+        {{-- 🌟 TAMBAHAN WAJIB BIAR RANTAI BLOK DATABASE GAK PUTUS --}}
+        <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
+        <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
 
                                             @if($statusAwal === 'KULIAH_SENDIRI')
                                                 {{--  SIBUK KULIAH PRIBADI --}}

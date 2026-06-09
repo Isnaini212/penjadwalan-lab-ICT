@@ -26,7 +26,7 @@ class DosenController extends Controller
         $mulai = $request->jam_mulai;
         $sks = $request->sks;
 
-        $jamSelesai = Carbon::createFromFormat('H:i', $mulai)->addMinutes($sks * 50)->format('H:i');
+        $jamSelesai = Carbon::createFromFormat('H:i', $mulai)->addMinutes($sks * 53.3334)->format('H:i');
 
         Carbon::setLocale('id');
         $hari = Carbon::parse($tanggal)->translatedFormat('l');
@@ -87,7 +87,7 @@ public function store(Request $request)
 
     
     
-    $total_menit = $request->sks * 50; 
+    $total_menit = $request->sks * 53.3334; 
     $jam_selesai_otomatis = Carbon::createFromFormat('H:i', $request->jam_mulai)
                                   ->addMinutes($total_menit)
                                   ->format('H:i');

@@ -24,7 +24,11 @@
                 </div>
             </div>
 
-            <div class="flex gap-3">
+    <div class="flex gap-3">
+    <div class="flex gap-3">
+    <a href="minggu"class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+        Cetak Mingguan</a>
+    </div>
     @auth
         {{-- LOGIC: Kalau udah login, arahin sesuai Jabatannya (Role) --}}
         @if(auth()->user()->role === 'spv')
@@ -55,8 +59,9 @@
             Login Sistem
         </a>
     @endauth
-</div>
+        </div>
     </nav>
+
 
     <main class="mx-auto max-w-7xl px-5 pb-12 pt-14 lg:px-8">
         {{-- HERO SECTION --}}
@@ -132,117 +137,176 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
-                        @forelse($schedules ?? [] as $s)
-                            {{-- Data attributes dipertahankan agar fungsi filter javascript tidak mati --}}
-                            <tr class="schedule-row transition hover:bg-blue-50/70"
-                                data-date="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}"
-                                data-lab="{{ $s->lab->nama_lab ?? '' }}">
+    @forelse($schedules ?? [] as $s)
+        {{-- Data attributes dipertahankan agar fungsi filter javascript tidak mati --}}
+        <tr class="schedule-row transition hover:bg-blue-50/70"
+            data-date="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}"
+            data-lab="{{ $s->lab->nama_lab ?? '' }}">
 
-                                <td class="px-6 py-5 text-center text-sm font-extrabold uppercase tracking-wide text-slate-700">
-                                    <strong>{{ $s->matkul }}</strong>
-                                </td>
-                                <td class="px-6 py-5 text-center">
-                                    <span class="time-text block text-base font-extrabold text-blue-700">{{ date('H:i', strtotime($s->jam_mulai)) }} - {{ date('H:i', strtotime($s->jam_selesai)) }}</span>
-                                    <small class="mt-1 block text-xs font-semibold text-slate-500">{{ $s->hari }}, {{ date('d M Y', strtotime($s->tanggal)) }}</small>
-                                </td>
-                                <td class="px-6 py-5 text-center text-sm font-extrabold text-slate-700">{{ $s->lab->nama_lab ?? 'Lab Tidak Ditemukan' }}</td>
-                                <td class="px-6 py-5 text-center text-sm font-medium text-slate-600">{{ $s->dosen }}</td>
-                                <td class="px-6 py-5 text-center text-sm font-semibold italic text-slate-600">{{ $s->assistantSchedule->nama_asisten ?? '-' }}</td>
-                            </tr>
-                        @empty
-                            <tr id="emptyState">
-                                <td colspan="5" class="px-6 py-12 text-center text-sm font-semibold text-slate-500">
-                                    Tidak ada jadwal kuliah praktikum pada tanggal ini.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+            {{-- Kolom 1: Mata Kuliah --}}
+            <td class="px-6 py-5 text-center text-sm font-extrabold uppercase tracking-wide text-slate-700">
+                <strong>{{ $s->matkul }}</strong>
+            </td>
+
+            {{-- Kolom 2: Sesi Waktu & Hari Tanggal --}}
+            <td class="px-6 py-5 text-center">
+                <span class="time-text block text-base font-extrabold text-blue-700">
+                    {{ date('H:i', strtotime($s->jam_mulai)) }} - {{ date('H:i', strtotime($s->jam_selesai)) }}
+                </span>
+                <small class="mt-1 block text-xs font-semibold text-slate-500">
+                    {{ $s->hari }}, {{ date('d M Y', strtotime($s->tanggal)) }}
+                </small>
+            </td>
+
+            {{-- 🌟 Kolom 3: Nama Lab (Bisa Diklik Link ke Foto + Subtext) --}}
+            <td class="px-6 py-5 text-center">
+                @if($s->lab)
+                    {{-- 
+                      Mengarahkan ke folder public/images/labs/nama-lab.jpg 
+                      Fungsi Str::slug() otomatis mengubah "LAB 01" menjadi "lab-01"
+                    --}}
+                    <a href="{{ asset('images/labs/' . \Illuminate\Support\Str::slug($s->lab->nama_lab) . '.jpg') }}" 
+                       target="_blank" 
+                       class="group inline-flex flex-col items-center outline-none">
+                        
+                        {{-- Badge Nama Lab --}}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-black border border-indigo-100 transition duration-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 shadow-sm">
+                            <i class="fas fa-search-plus mr-1 text-[10px] opacity-70 group-hover:text-white"></i> 
+                            {{ $s->lab->nama_lab }}
+                        </span>
+                        
+                        {{-- Teks Lokasi di Bawah --}}
+                        <span class="text-[10px] text-slate-400 font-bold mt-1.5 tracking-tight transition duration-200 group-hover:text-indigo-600 block">
+                            *Klik untuk mengetahui lokasi lab
+                        </span>
+                    </a>
+                @else
+                    <span class="text-xs text-slate-400 font-medium bg-slate-50 px-2.5 py-1 rounded border border-slate-200">
+                        Lab Tidak Ditemukan
+                    </span>
+                @endif
+            </td>
+
+            {{-- Kolom 4: Dosen Pengampu --}}
+            <td class="px-6 py-5 text-center text-sm font-medium text-slate-600">
+                {{ $s->dosen }}
+            </td>
+
+            {{-- Kolom 5: Asisten Praktikum --}}
+            <td class="px-6 py-5 text-center text-sm font-semibold italic text-slate-600">
+                {{ $s->assistantSchedule->nama_asisten ?? '-' }}
+            </td>
+        </tr>
+    @empty
+        <tr id="emptyState">
+            <td colspan="5" class="px-6 py-12 text-center text-sm font-semibold text-slate-500">
+                Tidak ada jadwal kuliah praktikum pada tanggal ini.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
                 </table>
             </div>
         </section>
     </main>
 
     {{-- LOGIKA CORE JAVASCRIPT (SANGAT PENTING - JANGAN DIHAPUS) --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInput');
-            const filterDate = document.getElementById('filterDate');
-            const filterLab = document.getElementById('filterLab');
-            const filterSession = document.getElementById('filterSession');
-            const rows = document.querySelectorAll('.schedule-row');
-            const rowCountInfo = document.getElementById('rowCountInfo');
-            const emptyState = document.getElementById('emptyState');
+   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const filterDate = document.getElementById('filterDate');
+        const filterLab = document.getElementById('filterLab');
+        const filterSession = document.getElementById('filterSession');
+        const rows = document.querySelectorAll('.schedule-row');
+        const rowCountInfo = document.getElementById('rowCountInfo');
+        const emptyState = document.getElementById('emptyState');
 
-            function filterTable() {
-                let count = 0;
-                const searchVal = searchInput.value.toLowerCase();
-                const labVal = filterLab.value;
-                const sessionVal = filterSession.value;
+        function filterTable() {
+            let count = 0;
+            const searchVal = searchInput.value.toLowerCase();
+            const labVal = filterLab.value;
+            const sessionVal = filterSession.value;
 
-                rows.forEach(row => {
-                    const rLab = row.getAttribute('data-lab');
-                    const timeText = row.querySelector('.time-text').innerText.split(' - ')[0].trim();
-                    const textContent = row.innerText.toLowerCase();
+            rows.forEach(row => {
+                const rLab = row.getAttribute('data-lab');
+                const timeText = row.querySelector('.time-text').innerText.split(' - ')[0].trim();
+                const textContent = row.innerText.toLowerCase();
 
-                    const matchSearch = searchVal === '' || textContent.includes(searchVal);
-                    const matchLab = labVal === '' || rLab === labVal;
+                const matchSearch = searchVal === '' || textContent.includes(searchVal);
+                const matchLab = labVal === '' || rLab === labVal;
 
-                    let matchSession = true;
-                    if (sessionVal === "pagi") matchSession = (timeText >= "07:00" && timeText < "12:20");
-                    else if (sessionVal === "siang") matchSession = (timeText >= "12:20" && timeText < "16:05");
-                    else if (sessionVal === "sore") matchSession = (timeText >= "16:05" && timeText < "18:30");
-                    else if (sessionVal === "malam") matchSession = (timeText >= "18:30" && timeText <= "22:00");
+                let matchSession = true;
+                if (sessionVal === "pagi") matchSession = (timeText >= "07:00" && timeText < "12:20");
+                else if (sessionVal === "siang") matchSession = (timeText >= "12:20" && timeText < "16:05");
+                else if (sessionVal === "sore") matchSession = (timeText >= "16:05" && timeText < "18:30");
+                else if (sessionVal === "malam") matchSession = (timeText >= "18:30" && timeText <= "22:00");
 
-                    if (matchSearch && matchLab && matchSession) {
-                        row.style.display = '';
-                        count++;
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-
-                rowCountInfo.innerText = `Menampilkan ${count} jadwal praktikum.`;
-
-                if(emptyState) {
-                    emptyState.style.display = count === 0 ? '' : 'none';
+                if (matchSearch && matchLab && matchSession) {
+                    row.style.display = '';
+                    count++;
+                } else {
+                    row.style.display = 'none';
                 }
+            });
+
+            rowCountInfo.innerText = `Menampilkan ${count} jadwal praktikum.`;
+
+            if(emptyState) {
+                emptyState.style.display = count === 0 ? '' : 'none';
             }
+        }
 
-            // Event listener filter instan pendukung koding temanmu
-            searchInput.addEventListener('input', filterTable);
-            filterLab.addEventListener('change', filterTable);
-            filterSession.addEventListener('change', filterTable);
+        // Event listener filter instan pendukung koding temanmu
+        searchInput.addEventListener('input', filterTable);
+        filterLab.addEventListener('change', filterTable);
+        filterSession.addEventListener('change', filterTable);
 
-            // Filter Tanggal (Reload Halaman via Query string parameter)
-            filterDate.addEventListener('change', function() {
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Memuat data tanggal baru...</td></tr>';
-                window.location.href = window.location.pathname + '?filter_date=' + this.value;
-            });
-
-            // Jalankan filter pertama kali saat halaman dimuat
-            filterTable();
-
-            // Mesin Cetak PDF
-            document.getElementById('downloadPdfBtn').addEventListener('click', function() {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('landscape');
-
-                doc.setFontSize(16);
-                doc.text('Jadwal Laboratorium ICT', 14, 20);
-                doc.setFontSize(10);
-                doc.text(`Tanggal: ${filterDate.value || '-'} | Filter Ruang: ${filterLab.value || 'Semua'}`, 14, 26);
-
-                doc.autoTable({
-                    html: '#scheduleTable',
-                    startY: 32,
-                    theme: 'grid',
-                    styles: { fontSize: 9, halign: 'center' }
-                });
-
-                doc.save(`Jadwal_Lab_ICT_${filterDate.value}.pdf`);
-            });
+        // Filter Tanggal (Reload Halaman via Query string parameter)
+        filterDate.addEventListener('change', function() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Memuat data tanggal baru...</td></tr>';
+            window.location.href = window.location.pathname + '?filter_date=' + this.value;
         });
-    </script>
+
+        // Jalankan filter pertama kali saat halaman dimuat
+        filterTable();
+
+        // Mesin Cetak PDF
+        document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            doc.setFontSize(16);
+            doc.text('Jadwal Laboratorium ICT', 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Tanggal: ${filterDate.value || '-'} | Filter Ruang: ${filterLab.value || 'Semua'}`, 14, 26);
+
+            doc.autoTable({
+                html: '#scheduleTable',
+                startY: 32,
+                theme: 'grid',
+                styles: { fontSize: 9, halign: 'center' },
+                // 🌟 LOGIK SAKTI NYA DI SINI, BRE:
+                didParseCell: function(data) {
+                    // Pastikan kita cuma memanipulasi baris data body, bukan header tabel
+                    if (data.section === 'body') {
+                        // jsPDF membaca teks di dalam cell sebagai array per baris baru
+                        if (Array.isArray(data.cell.text)) {
+                            data.cell.text = data.cell.text.map(function(line) {
+                                // Buang teks bintang pembantu lokasi lab-nya
+                                return line.replace('*Klik untuk mengetahui lokasi lab', '').trim();
+                            }).filter(function(line) {
+                                // Singkirkan baris kosong sisa hapusan biar teks murni lab gak turun ke bawah
+                                return line !== ''; 
+                            });
+                        }
+                    }
+                }
+            });
+
+            doc.save(`Jadwal_Lab_ICT_${filterDate.value}.pdf`);
+        });
+    });
+</script>
 </body>
 </html>
