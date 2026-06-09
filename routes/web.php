@@ -94,8 +94,12 @@ Route::prefix('dosen')->group(function () {
     Route::get('/booking', [DosenController::class, 'index'])->name('dosen.booking.index');
     Route::post('/booking/store', [DosenController::class, 'store'])->name('dosen.booking.store');
     Route::post('/booking/check-labs', [DosenController::class, 'checkAvailableLabs'])->name('dosen.booking.check_labs');
-}); 
+}); });
 
+Route::middleware(['auth', 'role:asisten'])->group(function () {
+    Route::get('/asisten/jadwal', [AsistenController::class, 'inputMatrix'])->name('asisten.jadwal');
+    Route::post('/asisten/simpan-jadwal', [AsistenController::class, 'storsis'])->name('asisten.jadwal.store');
+    Route::delete('/asisten/jadwal/{id}', [AsistenController::class, 'hapusJadwal'])->name('asisten.jadwal.delete');
 });
 
 require __DIR__.'/auth.php';

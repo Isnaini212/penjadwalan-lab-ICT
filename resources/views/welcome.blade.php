@@ -44,7 +44,7 @@
                 Portal Dosen
             </a>
         @elseif(auth()->user()->role === 'asisten')
-            <a href="{{ route('') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
+            <a href="{{ route('asisten.jadwal') }}" class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-700/20 transition hover:bg-slate-800">
                 Jadwal Asisten
             </a>
         @else

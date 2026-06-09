@@ -1,350 +1,460 @@
-<<<<<<< HEAD
-@extends('layouts.app') {{-- Sesuaikan dengan layout asisten lu --}}
-
-@section('title', 'Input Jadwal Kuliah Pribadi')
-
-@section('content')
-<div class="mb-10 rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40">
-    
-    {{-- Header Section --}}
-    <div class="mb-8 border-b border-slate-100 pb-5">
-        <h3 class="text-xl font-extrabold text-slate-900 md:text-2xl">
-            <i class="fas fa-user-graduate mr-2 text-indigo-500"></i> Form Input Jadwal Kuliah Asisten
-        </h3>
-        <p class="mt-2 text-sm font-medium text-slate-500">
-            Silakan isi kotak di bawah dengan <b>Nama Mata Kuliah</b> Anda. Biarkan kosong (---) pada jam yang Anda sedang <b>Free / Tidak Ada Kuliah</b>.
-        </p>
-    </div>
-
-    @if(session('success'))
-        <div class="mb-6 rounded-xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 border border-emerald-200 flex items-center gap-3 shadow-sm">
-            <i class="fas fa-check-circle text-emerald-500 text-xl"></i> {{ session('success') }}
-        </div>
-    @endif
-
-    <form action="{{ route('simput') }}" method="POST">
-        @csrf
-
-        {{-- Input Nama Asisten --}}
-        <div class="mb-8 w-full md:max-w-md">
-            <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                Nama Lengkap Asisten <span class="text-red-500">*</span>
-            </label>
-            <div class="relative">
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                    <i class="fas fa-user text-sm"></i>
-                </div>
-                <input type="text" name="nama_asisten" required placeholder="Contoh: Budi Santoso" 
-                       class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-11 pr-4 text-sm font-bold text-slate-800 shadow-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
-            </div>
-        </div>
-
-        {{-- Data Time Slots Setup --}}
-        @php
-            $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            $timeSlots = [
-                ['start' => '08:00', 'end' => '08:50', 'label' => '08:00 - 08:50'],
-                ['start' => '08:55', 'end' => '09:45', 'label' => '08:55 - 09:45'],
-                ['start' => '09:50', 'end' => '10:40', 'label' => '09:50 - 10:40'],
-                ['start' => '10:45', 'end' => '11:35', 'label' => '10:45 - 11:35'],
-                ['start' => '12:30', 'end' => '13:20', 'label' => '12:30 - 13:20'],
-                ['start' => '13:25', 'end' => '14:15', 'label' => '13:25 - 14:15'],
-                ['start' => '14:20', 'end' => '15:10', 'label' => '14:20 - 15:10'],
-                ['start' => '15:15', 'end' => '16:05', 'label' => '15:15 - 16:05'],
-                ['start' => '16:10', 'end' => '17:00', 'label' => '16:10 - 17:00'],
-                ['start' => '18:00', 'end' => '18:50', 'label' => '18:00 - 18:50'],
-                ['start' => '18:55', 'end' => '19:45', 'label' => '18:55 - 19:45'],
-                ['start' => '19:50', 'end' => '20:40', 'label' => '19:50 - 20:40'],
-                ['start' => '20:45', 'end' => '21:35', 'label' => '20:45 - 21:35'],
-            ];
-        @endphp
-
-        {{-- Tabel Matrix Interaktif --}}
-        <div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm custom-scrollbar">
-            <table class="w-full min-w-[1000px] border-collapse text-center font-sans text-[12px]">
-                <thead>
-                    <tr class="bg-slate-800 text-white">
-                        <th class="border border-slate-700 bg-slate-900 p-3.5 font-extrabold w-[130px] tracking-wider uppercase text-xs">Waktu</th>
-                        @foreach($dayNames as $day)
-                            <th class="border border-slate-700 p-3.5 font-black tracking-wide uppercase w-[150px]">
-                                {{ $day }}
-                            </th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($timeSlots as $slot)
-                        <tr class="transition hover:bg-slate-50">
-                            {{-- Kolom Waktu --}}
-                            <td class="border border-slate-200 bg-slate-50 p-2 font-extrabold text-slate-600 tracking-wider">
-                                {{ $slot['label'] }}
-                            </td>
-
-                            {{-- Looping Kotak Input Matkul --}}
-                            @foreach($dayNames as $day)
-                                @if(strtolower($day) === 'jumat' && in_array($slot['start'], ['11:35', '12:30']))
-                                    <td class="border border-slate-200 bg-slate-200 p-2 text-[11px] font-black uppercase text-slate-500 tracking-widest shadow-inner">
-                                        SHOLAT JUMAT / BREAK
-                                    </td>
-                                @else
-                                    <td class="border border-slate-200 bg-white p-1 transition-colors duration-300 relative group">
-                                        <input type="text" 
-                                               name="matrix[{{ $day }}][{{ $slot['start'] }}]" 
-                                               placeholder="--- Kosong ---" 
-                                               oninput="warnainKotak(this)"
-                                               class="w-full bg-transparent text-center text-[12px] font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-normal outline-none py-2 px-1 focus:bg-indigo-50 focus:text-indigo-700 rounded transition">
-                                    </td>
-                                @endif
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Tombol Submit --}}
-        <div class="mt-8 flex justify-end">
-            <button type="submit" id="btn-submit-jadwal" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-3.5 text-sm font-black text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 hover:-translate-y-0.5 focus:ring-4 focus:ring-indigo-600/20">
-                <i class="fas fa-paper-plane"></i> Kirim Jadwal Kuliah Saya
-            </button>
-        </div>
-    </form>
-</div>
-
-{{-- Skrip Interaktif: Otomatis ganti warna kalau asisten ngetik di kotak --}}
-<script>
-function warnainKotak(inputEl) {
-    const tdParent = inputEl.parentElement;
-    
-    if (inputEl.value.trim() !== '') {
-        // Kalau diketik, kotaknya jadi merah muda (Tanda Sibuk)
-        tdParent.classList.remove('bg-white');
-        tdParent.classList.add('bg-red-100');
-        inputEl.classList.add('text-red-800', 'font-black');
-    } else {
-        // Kalau kosong, balik jadi putih
-        tdParent.classList.remove('bg-red-100');
-        tdParent.classList.add('bg-white');
-        inputEl.classList.remove('text-red-800', 'font-black');
-    }
-}
-
-document.getElementById('btn-submit-jadwal')?.closest('form').addEventListener('submit', function() {
-    const btn = document.getElementById('btn-submit-jadwal');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Jadwal...';
-    btn.classList.add('opacity-70', 'pointer-events-none');
-});
-</script>
-@endsection
-=======
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Manual Jadwal Asisten</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Input Jadwal Kuliah Asisten</title>
+    
+    {{-- ⚡ MENGGUNAKAN TAILWIND & FONTAWESOME SEPERTI LAYOUT UTAMA --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased">
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100 font-sans text-slate-800 antialiased p-4 md:p-8">
 
-    {{-- Navbar --}}
-    <nav class="sticky top-0 z-50 border-b border-slate-200 bg-white/80 py-4 backdrop-blur-md shadow-sm">
-        <div class="container mx-auto px-6 flex items-center justify-between max-w-7xl">
-            <div class="flex items-center gap-3 font-black text-emerald-600 text-xl tracking-tight">
-                <i class="fas fa-clipboard-list text-2xl"></i>
-                <span>PORTAL ASISTEN</span>
-            </div>
+<div class="max-w-4xl margin-0 auto mx-auto space-y-6">
+
+    <div class="flex items-center gap-3 sm:gap-4 bg-white/80 backdrop-blur p-4 sm:p-5 rounded-2xl border border-white shadow-xl shadow-blue-950/5">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 border-2 border-blue-600 flex items-center justify-center text-base sm:text-lg font-black text-blue-600 flex-shrink-0">
+            {{ strtoupper(substr(auth()->user()->name ?? auth()->user()->nama ?? 'AS', 0, 2)) }}
         </div>
-    </nav>
-
-    <main class="container mx-auto px-4 py-10 max-w-7xl">
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/40 overflow-hidden">
+        
+        <div class="flex-1 min-w-0">
+            <h1 id="nama-asisten-heading" class="text-sm font-extrabold text-slate-900 tracking-tight sm:text-lg truncate">
+                {{ auth()->user()->name ?? auth()->user()->nama ?? '' }}
+            </h1>
+            <p class="text-[10px] sm:text-xs font-semibold text-slate-500 mt-0.5 truncate">Semester aktif 2025/2026</p>
+        </div>
+        
+        <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
             
-            {{-- Header Card --}}
-            <div class="border-b border-slate-100 bg-slate-50 px-6 py-5">
-                <h3 class="text-lg font-extrabold text-slate-900">
-                    <i class="fas fa-calendar-plus mr-2 text-emerald-500"></i> Tambah Jadwal Manual
-                </h3>
-                <p class="mt-1 text-sm font-medium text-slate-500">
-                    Masukkan jadwal kesibukan kuliah Anda baris demi baris.
-                </p>
-            </div>
-
-            {{-- Pesan Notifikasi --}}
-            @if(session('success'))
-                <div class="m-6 rounded-xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 border border-emerald-200">
-                    <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-                </div>
-            @endif
-
-            {{-- FORM UTAMA (Ditaruh di luar tabel biar HTML valid) --}}
-            <form action="{{ route('simput') }}" method="POST" id="form-quick-add">
+            <a href="{{ url('/profile') }}" class="flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 transition shadow-sm" title="Edit Profil">
+                <i class="fas fa-user-edit"></i> 
+                <span class="hidden sm:inline">Profil</span>
+            </a>
+            
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
+                <button type="submit" class="flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 text-xs font-bold bg-red-50 text-red-600 border border-red-100 rounded-full hover:bg-red-100 hover:text-red-700 transition shadow-sm" title="Keluar Sistem">
+                    <i class="fas fa-sign-out-alt"></i> 
+                    <span class="hidden sm:inline">Logout</span>
+                </button>
             </form>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-slate-800 text-white font-extrabold uppercase tracking-wider text-xs">
-                        <tr>
-                            <th class="px-6 py-4">Nama Asisten</th>
-                            <th class="px-4 py-4">Hari</th>
-                            <th class="px-4 py-4">Waktu (Mulai - Selesai)</th>
-                            <th class="px-4 py-4 w-full">Mata Kuliah</th>
-                            <th class="px-6 py-4 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        
-                        {{-- ========================================================== --}}
-                        {{-- 1. BARIS INPUT MANUAL (Quick Add) - Selalu di Paling Atas --}}
-                        {{-- ========================================================== --}}
-                        <tr class="bg-emerald-50/60 transition border-b-2 border-emerald-200">
-                            
-                            {{-- Nama Asisten --}}
-                            <td class="px-6 py-4">
-                                @php
-                                    $namaDicari = request('nama_asisten', session('last_asisten', '')); 
-                                    $hariDicari = request('hari', session('last_hari', ''));
-                                @endphp
-
-                                @if($namaDicari)
-                                    <input type="hidden" name="nama_asisten" value="{{ $namaDicari }}" form="form-quick-add">
-                                    <div class="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-2 text-xs font-bold text-blue-700 border border-blue-200">
-                                        <i class="fas fa-lock text-[10px]"></i> {{ strtoupper($namaDicari) }}
-                                    </div>
-                                    <a href="{{ url()->current() }}" class="ml-2 text-xs font-bold text-red-500 hover:underline">Ganti</a>
-                                @else
-                                    <select name="nama_asisten" form="form-quick-add" class="h-10 w-48 rounded-lg border border-emerald-300 bg-white px-3 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" required>
-                                        
-                                    </select>
-                                @endif
-                            </td>
-
-                            {{-- Hari --}}
-                            <td class="px-4 py-4">
-                                <select name="hari" form="form-quick-add" class="h-10 w-32 rounded-lg border border-emerald-300 bg-white px-3 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" required>
-                                    @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
-                                        <option value="{{ $h }}" {{ $hariDicari == $h ? 'selected' : '' }}>{{ $h }}</option>
-                                    @endforeach
-                                </select>
-                            </td>
-
-                            {{-- Jam Mulai & SKS --}}
-                            <td class="px-4 py-4">
-                                <div class="flex items-center gap-2">
-                                    <input type="text" name="jam_mulai" form="form-quick-add" placeholder="08:00" maxlength="5" 
-                                           class="time-formatter h-10 w-28 rounded-lg border border-emerald-300 bg-white px-2 text-center font-bold tracking-widest font-mono text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" required>
-                                    
-                                    <span class="text-emerald-500 font-black">+</span>
-                                    
-                                    <select name="sks" form="form-quick-add" class="h-10 w-24 rounded-lg border border-emerald-300 bg-white px-2 font-bold text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" required>
-                                        <option value="1">1 SKS</option>
-                                        <option value="2">2 SKS</option>
-                                        <option value="3">3 SKS</option>
-                                        <option value="4">4 SKS</option>
-                                    </select>
-                                </div>
-                            </td>
-
-                            {{-- Mata Kuliah --}}
-                            <td class="px-4 py-4">
-                                <input type="text" name="mata_kuliah" form="form-quick-add" placeholder="Ketik nama matkul..." class="h-10 w-full min-w-[200px] rounded-lg border border-emerald-300 bg-white px-4 font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" required>
-                            </td>
-
-                            {{-- Tombol Submit --}}
-                            <td class="px-6 py-4 text-right">
-                                <button type="submit" form="form-quick-add" class="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700 hover:-translate-y-0.5">
-                                    <i class="fas fa-plus"></i> Tambah
-                                </button>
-                            </td>
-                        </tr>
-
-                        {{-- ========================================================== --}}
-                        {{-- 2. OUTPUT DATA YANG SUDAH DI-INPUT --}}
-                        {{-- ========================================================== --}}
-                        @forelse($jadwalTersimpan ?? [] as $jadwal)
-                            <tr class="bg-white hover:bg-slate-50 transition">
-                                <td class="px-6 py-3.5 font-bold text-slate-700">
-                                    {{ strtoupper($jadwal->nama_asisten) }}
-                                </td>
-                                <td class="px-4 py-3.5 font-semibold text-slate-600">
-                                    {{ $jadwal->hari }}
-                                </td>
-                                <td class="px-4 py-3.5 font-mono font-bold text-indigo-600 tracking-widest">
-                                    {{ substr($jadwal->jam_mulai, 0, 5) }} - {{ substr($jadwal->jam_selesai, 0, 5) }}
-                                </td>
-                                <td class="px-4 py-3.5 font-bold text-slate-800">
-                                    {{ $jadwal->mata_kuliah }}
-                                </td>
-                                <td class="px-6 py-3.5 text-right">
-                                    {{-- Form Hapus Per Baris --}}
-                                    <form action="{{ route('asisten.schedule.delete', $jadwal->id ?? $jadwal->id_asisten) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus jadwal ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-red-50 px-3 text-xs font-bold text-red-600 transition hover:bg-red-500 hover:text-white">
-                                            <i class="fas fa-trash-alt"></i> Hapus
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-12 text-center">
-                                    <div class="flex flex-col items-center justify-center text-slate-400">
-                                        <i class="fas fa-folder-open text-4xl mb-3 text-slate-300"></i>
-                                        <span class="font-bold">Belum ada jadwal yang diinput.</span>
-                                        <span class="text-xs font-medium mt-1">Silakan tambahkan jadwal pada form hijau di atas.</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                        
-                    </tbody>
-                </table>
-            </div>
         </div>
-    </main>
-</body>
-<script>
-// MESIN AUTO-FORMAT JAM (Anti AM/PM Device)
-document.addEventListener('input', function (e) {
-    if (e.target.classList.contains('time-formatter')) {
-        let inputVal = e.target.value.replace(/\D/g, ''); 
-        if (inputVal.length > 4) inputVal = inputVal.substring(0, 4);
-        
-        let formatted = inputVal;
-        if (inputVal.length > 2) {
-            formatted = inputVal.substring(0, 2) + ':' + inputVal.substring(2, 4);
-        }
-        e.target.value = formatted;
-    }
-});
+    </div>
 
-// VALIDASI MAX 23:59 SAAT PINDAH KOLOM
-document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('time-formatter')) {
-        let val = e.target.value;
-        if (val.length === 5) {
-            let parts = val.split(':');
-            let hours = parseInt(parts[0], 10);
-            let mins = parseInt(parts[1], 10);
-            
-            if (hours > 23) hours = 23;
-            if (mins > 59) mins = 59;
-            if (isNaN(hours)) hours = 0;
-            if (isNaN(mins)) mins = 0;
-            
-            let hrStr = hours < 10 ? '0' + hours : hours;
-            let mnStr = mins < 10 ? '0' + mins : mins;
-            
-            e.target.value = hrStr + ':' + mnStr;
-        } else if (val.length > 0 && val.length < 5) {
-            alert('Format jam kurang lengkap, Bre! Ketik 4 angka, contoh: 0800');
-            e.target.value = '';
+    <div class="hidden items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-2xl shadow-sm shadow-red-950/5" id="main-banner">
+        <i class="fas fa-exclamation-triangle text-red-500 text-base animate-pulse"></i>
+        <span>Ada jadwal yang bentrok. Perbaiki sebelum menyimpan.</span>
+    </div>
+
+    <div id="days-container" class="space-y-4"></div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl shadow-blue-950/5">
+        <div class="text-sm font-semibold text-slate-500">
+            Total: <span id="total-matkul" class="text-slate-900 font-black">0</span> matkul di <span id="total-hari" class="text-slate-900 font-black">0</span> hari
+        </div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button class="flex-1 sm:flex-none px-4 py-2 text-sm font-bold border border-slate-200 text-slate-600 bg-white rounded-xl hover:bg-slate-50 transition" onclick="resetAll()">
+                Reset
+            </button>
+            <button class="flex-1 sm:flex-none px-5 py-2 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 disabled:opacity-40 disabled:pointer-events-none transition flex items-center justify-center gap-2" id="btn-submit" onclick="handleSubmit()" disabled>
+                <i class="fas fa-save"></i> Simpan Jadwal
+            </button>
+        </div>
+    </div>
+
+    <div class="{{ $savedSchedulesFlat->count() > 0 ? '' : 'hidden' }} bg-white border border-slate-200 rounded-2xl p-5 shadow-xl shadow-blue-950/5" id="result-preview">
+        <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2 mb-4">
+            <i class="fas fa-calendar-check text-emerald-500 text-base"></i> Jadwal Kuliah Saya yang Terdaftar
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead>
+                    <tr class="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="pb-3 pt-1 px-3">Hari</th>
+                        <th class="pb-3 pt-1 px-3">Mata Kuliah</th>
+                        <th class="pb-3 pt-1 px-3">Waktu WIB</th>
+                    </tr>
+                </thead>
+                <tbody id="result-tbody" class="divide-y divide-slate-50 font-medium text-slate-700">
+                    {{-- 🟢 CETAKAN BLADE LANGSUNG DARI SQL PAS REFRESH/LOAD HALAMAN --}}
+                    @foreach($savedSchedulesFlat as $sch)
+                        <tr class="hover:bg-slate-50/50 transition">
+                            <td class="py-3 px-3">
+                                <span class="inline-block text-xs font-black px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                                    {{ $sch->hari }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 font-bold text-slate-800">{{ $sch->mata_kuliah }}</td>
+                            <td class="py-3 px-3 font-mono text-xs tracking-wider font-bold text-indigo-600">
+                                {{ date('H:i', strtotime($sch->jam_mulai)) }} – {{ date('H:i', strtotime($sch->jam_selesai)) }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<div class="fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-2xl font-bold text-sm text-white transform translate-y-8 opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2" id="toast"></div>
+
+<script>
+  const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+  const SKS_OPTS = ['1 SKS', '2 SKS', '3 SKS', '4 SKS'];
+
+  // Initialize State Awal
+  let state = {
+    'Senin': [], 'Selasa': [], 'Rabu': [], 'Kamis': [], 'Jumat': []
+  };
+
+  // 🌟 AMBIL JADWAL LAMA DARI SQL
+  @if(isset($existingSchedules))
+    @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $d)
+      @if(isset($existingSchedules[$d]))
+        @foreach($existingSchedules[$d] as $sch)
+          @php
+              $fullName = $sch->mata_kuliah;
+              $sksText = '2 SKS';
+              if (preg_match('/(.*)\s\((\d+)\sSKS\)/i', $fullName, $matches)) {
+                  $matkulName = trim($matches[1]);
+                  $sksText = $matches[2] . ' SKS';
+              } else {
+                  $matkulName = $fullName;
+              }
+          @endphp
+          state['{{ $d }}'].push({
+            id: '_' + Math.random().toString(36).slice(2, 9),
+            name: '{!! addslashes($matkulName) !!}',
+            start: '{{ substr($sch->jam_mulai, 0, 5) }}',
+            end: '{{ substr($sch->jam_selesai, 0, 5) }}',
+            sks: '{{ $sksText }}'
+          });
+        @endforeach
+      @endif
+    @endforeach
+  @endif
+
+  function makeId() { return '_' + Math.random().toString(36).slice(2, 9); }
+
+  function toMin(t) {
+    if (!t) return -1;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+ function hitungJamSelesai(jamMulai, sksText) {
+    // 🌟 PROTEKSI: Jika jam mulai belum lengkap 5 karakter (HH:MM), langsung stop
+    if (!jamMulai || jamMulai.length < 5) return '';
+    
+    const sksTotal = parseInt(sksText) || 2;
+    
+    // 🌟 SELESAI: Ubah pengali jadi 52.5 menit murni sesuai aturan kampus lu
+    const tambahanMenit = sksTotal * 52.5;
+    
+    const [h, m] = jamMulai.split(':').map(Number);
+    
+    // 🌟 SAKTI: Gunakan Math.round() agar hasil desimal .5 dibulatkan ke menit bulat terdekat
+    let totalMenit = Math.round(h * 60 + m + tambahanMenit);
+    
+    let endH = Math.floor(totalMenit / 60) % 24;
+    let endM = totalMenit % 60;
+    
+    return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+}
+
+  function getConflicts(day) {
+    const rows = state[day].filter(r => r.start && r.end && toMin(r.start) < toMin(r.end));
+    const bad = new Set();
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = i + 1; j < rows.length; j++) {
+        const a = rows[i], b = rows[j];
+        if (toMin(a.start) < toMin(b.end) && toMin(a.end) > toMin(b.start)) {
+          bad.add(a.id);
+          bad.add(b.id);
         }
+      }
     }
-});
+    return bad;
+  }
+
+  function hasAnyConflict() { return DAYS.some(d => getConflicts(d).size > 0); }
+  function totalCount() { return DAYS.reduce((s, d) => s + state[d].length, 0); }
+  function totalDays() { return DAYS.filter(d => state[d].length > 0).length; }
+
+  function render() {
+    const container = document.getElementById('days-container');
+    container.innerHTML = '';
+
+    DAYS.forEach(day => {
+      const rows = state[day];
+      const conflicts = getConflicts(day);
+      const hasConflict = conflicts.size > 0;
+      const hasRows = rows.length > 0;
+
+      const block = document.createElement('div');
+      block.className = `bg-white border ${hasConflict ? 'border-red-300 ring-4 ring-red-500/5' : 'border-slate-200'} rounded-2xl shadow-md shadow-slate-200/50 overflow-hidden transition-all duration-200`;
+      block.dataset.day = day;
+
+      block.innerHTML = `
+        <div class="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-100">
+          <div class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full ${hasConflict ? 'bg-red-500 animate-pulse' : (hasRows ? 'bg-blue-600' : 'bg-slate-300')}"></div>
+            ${day}
+          </div>
+          ${hasRows ? `<span class="text-xs font-bold px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-full">${rows.length} Matkul</span>` : ''}
+        </div>
+      `;
+
+      if (hasRows) {
+        const labels = document.createElement('div');
+        labels.className = "hidden md:grid grid-cols-12 gap-3 px-5 pt-3 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider";
+        labels.innerHTML = `
+          <div class="col-span-4">Nama Mata Kuliah</div>
+          <div class="col-span-2 text-center">Jam Mulai</div>
+          <div class="col-span-2 text-center">SKS</div>
+          <div class="col-span-3 text-center">Jam Selesai (Auto)</div>
+          <div class="col-span-1"></div>
+        `;
+        block.appendChild(labels);
+      }
+
+      const rowsDiv = document.createElement('div');
+      rowsDiv.className = "p-4 space-y-3";
+
+      if (!hasRows) {
+        rowsDiv.innerHTML = `
+          <div class="text-xs font-semibold text-slate-400 text-center py-4 flex items-center justify-center gap-2">
+            <i class="far fa-calendar-minus text-sm"></i> Belum ada matkul — klik tombol di bawah untuk menambah
+          </div>`;
+      } else {
+        rows.forEach(row => {
+          const isConflict = conflicts.has(row.id);
+          const div = document.createElement('div');
+          div.className = "grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-slate-50/50 p-3 md:p-0 rounded-xl border border-slate-100 md:border-0 md:bg-transparent";
+          div.dataset.id = row.id;
+          
+          div.innerHTML = `
+            <div class="col-span-1 md:col-span-4">
+              <label class="block md:hidden text-[10px] font-bold text-slate-400 uppercase mb-1">Nama Matkul</label>
+              <input type="text" data-field="name" placeholder="Cth: Pemrograman Python" value="${escHtml(row.name)}" class="h-10 w-full rounded-xl border ${isConflict ? 'border-red-400 bg-red-50/30' : 'border-slate-200'} bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition" />
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+              <label class="block md:hidden text-[10px] font-bold text-slate-400 uppercase mb-1">Jam Mulai</label>
+              <input 
+                type="text" 
+                data-field="start" 
+                placeholder="00:00" 
+                maxlength="5" 
+                value="${row.start || ''}" 
+                class="time-formatter h-10 w-full text-center rounded-xl border ${isConflict ? 'border-red-400 bg-red-50/30' : 'border-slate-200'} bg-white px-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition tracking-widest font-mono" 
+              />
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+              <label class="block md:hidden text-[10px] font-bold text-slate-400 uppercase mb-1">SKS</label>
+              <select data-field="sks" class="h-10 w-full text-center rounded-xl border ${isConflict ? 'border-red-400 bg-red-50/30' : 'border-slate-200'} bg-white px-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer transition">
+                ${SKS_OPTS.map(s => `<option${s === row.sks ? ' selected' : ''}>${s}</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="col-span-1 md:col-span-3">
+              <label class="block md:hidden text-[10px] font-bold text-slate-400 uppercase mb-1">Jam Selesai (Auto)</label>
+              <div class="h-10 w-full rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center text-sm font-mono font-black text-slate-500 tracking-wider select-none">
+                 <i class="far fa-clock text-xs mr-1.5 opacity-60"></i> ${row.end || '--:--'}
+              </div>
+            </div>
+
+            <div class="col-span-1 md:col-span-1 text-right md:text-center mt-2 md:mt-0">
+              <button class="btn-del w-10 h-10 md:w-9 md:h-9 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl flex items-center justify-center transition mx-auto md:ml-auto" title="Hapus baris">
+                <i class="fas fa-trash-alt text-xs"></i>
+              </button>
+            </div>
+          `;
+
+          div.querySelectorAll('input, select').forEach(el => {
+            const handler = () => {
+              let targetVal = el.value;
+              let currentId = row.id;
+              let currentField = el.dataset.field;
+              
+              if (currentField === 'start') {
+                let num = targetVal.replace(/\D/g, '');
+                if (num.length > 2) {
+                  let hh = num.slice(0, 2);
+                  let mm = num.slice(2, 4);
+                  if (parseInt(hh) > 23) hh = '23';
+                  if (mm.length === 2 && parseInt(mm) > 59) mm = '59';
+                  num = hh + ':' + mm;
+                } else if (num.length === 2) {
+                  if (parseInt(num) > 23) num = '23';
+                }
+                el.value = num;
+                targetVal = num;
+              }
+
+              const targetRow = state[day].find(r => r.id === currentId);
+              if (targetRow) {
+                  targetRow[currentField] = targetVal;
+                  if (targetRow.start && targetRow.start.length === 5) {
+                      targetRow.end = hitungJamSelesai(targetRow.start, targetRow.sks);
+                  } else {
+                      targetRow.end = ''; 
+                  }
+              }
+              
+              updateFooter();
+              triggerSilentConflictCheck(day);
+            };
+            
+            el.addEventListener('change', handler);
+            el.addEventListener('input', handler);
+          });
+
+          div.querySelector('.btn-del').addEventListener('click', () => { delRow(day, row.id); });
+          rowsDiv.appendChild(div);
+        });
+      }
+
+      block.appendChild(rowsDiv);
+
+      const cm = document.createElement('div');
+      cm.className = `conflict-msg text-xs font-bold text-red-600 px-5 py-2.5 bg-red-50 border-t border-red-100 items-center gap-2 ${hasConflict ? 'flex' : 'hidden'}`;
+      cm.innerHTML = `<i class="fas fa-exclamation-circle text-red-500"></i> Ada jadwal yang waktunya bertabrakan di hari ${day}`;
+      block.appendChild(cm);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = "w-[calc(100%-40px)] mx-5 mb-4 py-2 text-xs font-bold text-blue-600 bg-white border border-dashed border-blue-200 rounded-xl hover:bg-blue-50/50 hover:border-blue-500 transition flex items-center justify-center gap-1.5";
+      addBtn.innerHTML = `<i class="fas fa-plus-circle text-[10px]"></i> Tambah matkul di hari ${day}`;
+      addBtn.addEventListener('click', () => addRow(day));
+      block.appendChild(addBtn);
+
+      container.appendChild(block);
+    });
+
+    updateFooter();
+  }
+
+  function triggerSilentConflictCheck(day) {
+    const block = document.querySelector(`[data-day="${day}"]`);
+    if (!block) return;
+    
+    const conflicts = getConflicts(day);
+    const isConflict = conflicts.size > 0;
+    
+    block.classList.toggle('border-red-300', isConflict);
+    block.classList.toggle('ring-4', isConflict);
+    block.classList.toggle('ring-red-500/5', isConflict);
+    
+    block.querySelectorAll('.matkul-row-container').forEach(rowEl => {
+      const rid = rowEl.dataset.id;
+      rowEl.querySelectorAll('input, select').forEach(el => {
+        el.classList.toggle('border-red-400', conflicts.has(rid));
+        el.classList.toggle('bg-red-50/30', conflicts.has(rid));
+      });
+    });
+    
+    const cm = block.querySelector('.conflict-msg');
+    if (cm) {
+        cm.classList.toggle('flex', isConflict);
+        cm.classList.toggle('hidden', !isConflict);
+    }
+    
+    state[day].forEach(row => {
+        const rowEl = block.querySelector(`[data-id="${row.id}"]`);
+        if (rowEl) {
+            const displayDiv = rowEl.querySelector('.col-span-3 div');
+            if (displayDiv) displayDiv.innerHTML = `<i class="far fa-clock text-xs mr-1.5 opacity-60"></i> ${row.end || '--:--'}`;
+        }
+    });
+  }
+
+  function updateFooter() {
+    document.getElementById('total-matkul').textContent = totalCount();
+    document.getElementById('total-hari').textContent = totalDays();
+    const conflict = hasAnyConflict();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = totalCount() === 0 || conflict;
+    const banner = document.getElementById('main-banner');
+    banner.classList.toggle('flex', conflict);
+    banner.classList.toggle('hidden', !conflict);
+  }
+
+  function addRow(day) { state[day].push({ id: makeId(), name: '', start: '', end: '', sks: '2 SKS' }); render(); }
+  function delRow(day, id) { state[day] = state[day].filter(r => r.id !== id); render(); }
+  function resetAll() { DAYS.forEach(d => { state[d] = []; }); document.getElementById('result-preview').classList.add('hidden'); render(); }
+
+  async function handleSubmit() {
+    if (hasAnyConflict() || totalCount() === 0) return;
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Menyimpan...';
+
+    try {
+      const response = await fetch('/asisten/simpan-jadwal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ jadwal: state })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        const tbody = document.getElementById('result-tbody');
+        tbody.innerHTML = ''; 
+
+        DAYS.forEach(day => {
+          state[day].forEach((row, i) => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50/50 transition";
+            const namaMatkulFormatDB = `${row.name.toUpperCase()} (${row.sks})`;
+            tr.innerHTML = `
+              <td class="py-3 px-3"><span class="inline-block text-xs font-black px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">${day}</span></td>
+              <td class="py-3 px-3 font-bold text-slate-800">${escHtml(namaMatkulFormatDB)}</td>
+              <td class="py-3 px-3 font-mono text-xs tracking-wider font-bold text-indigo-600">${row.start} – ${row.end}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+
+        document.getElementById('result-preview').classList.remove('hidden');
+        document.getElementById('result-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showToast('✅ ' + result.message, 'success');
+      } else {
+        showToast('❌ Gagal: ' + (result.message || 'Terjadi kesalahan server'), 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      showToast('❌ Terjadi kesalahan jaringan server!', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save mr-1.5"></i> Simpan Jadwal';
+    }
+  }
+
+  function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = "fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-2xl font-bold text-sm text-white transition-all duration-300 z-50 flex items-center gap-2 translate-y-0 opacity-100";
+    if (type === 'success') toast.classList.add('bg-emerald-500');
+    else toast.classList.add('bg-red-500');
+    setTimeout(() => { toast.classList.add('translate-y-8', 'opacity-0', 'pointer-events-none'); }, 3500);
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  render();
 </script>
+</body>
 </html>
->>>>>>> 574c1955332e32a2f334accb1cf984c901d88e6f
