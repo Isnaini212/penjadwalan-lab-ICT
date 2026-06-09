@@ -44,9 +44,13 @@ class AuthenticatedSessionController extends Controller
 
         } elseif ($user->role === 'dosen') {
             // Dosen langsung ke halaman booking dosen (Sesuaikan nama route di web.php lu ya!)
-            return redirect()->route('dosen.booking.index');}
+            return redirect()->route('dosen.booking.index');
 
-        return redirect()->route('/');
+        } elseif ($user->role === 'asisten') {
+            return redirect()->route('asisten.jadwal');
+        }
+
+        return redirect('/');
     }
 
     /**

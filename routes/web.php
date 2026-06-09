@@ -98,4 +98,10 @@ Route::prefix('dosen')->group(function () {
 
 });
 
+Route::middleware(['auth', 'role:asisten'])->group(function () {
+    Route::get('/asisten/jadwal', [AsistenController::class, 'inputMatrix'])->name('asisten.jadwal');
+    Route::post('/asisten/jadwal', [AsistenController::class, 'storsis'])->name('asisten.jadwal.store');
+    Route::delete('/asisten/jadwal/{id}', [AsistenController::class, 'hapusJadwal'])->name('asisten.jadwal.delete');
+});
+
 require __DIR__.'/auth.php';

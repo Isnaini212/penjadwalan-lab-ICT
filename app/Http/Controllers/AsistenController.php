@@ -2,113 +2,107 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AssistantSchedule;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Lab;
 use App\Models\Schedule;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AsistenController extends Controller
 {
-    
-    public function jadwalAsisten(Request $request) 
+    public function jadwalAsisten(Request $request)
     {
         $semuaAsisten = AssistantSchedule::select('nama_asisten')->distinct()->get();
-        
+
         $namaDicari = $request->query('nama');
         $hariDicari = $request->query('hari');
 
         if ($namaDicari || $hariDicari) {
             $query = AssistantSchedule::query();
-            
-            if ($namaDicari) { $query->where('nama_asisten', $namaDicari); }
-            if ($hariDicari) { $query->where('hari', $hariDicari); }
-            
+
+            if ($namaDicari) {
+                $query->where('nama_asisten', $namaDicari);
+            }
+
+            if ($hariDicari) {
+                $query->where('hari', $hariDicari);
+            }
+
             $asistenSchedules = $query->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
-                                      ->orderBy('jam_mulai', 'asc')
-                                      ->get();
+                ->orderBy('jam_mulai', 'asc')
+                ->get();
         } else {
-            $asistenSchedules = collect([]); 
+            $asistenSchedules = collect([]);
         }
 
         return view('spv.asisten', compact('semuaAsisten', 'asistenSchedules', 'namaDicari', 'hariDicari'));
-        }
+    }
 
-
-    
     public function storeAsisten(Request $request)
     {
         $request->validate([
             'nama_asisten' => 'required|string',
-            'hari'         => 'required|string',
-            'jam_mulai'    => 'required',
-            'sks'          => 'required|numeric', 
-            'mata_kuliah'  => 'required|string',
+            'hari' => 'required|string',
+            'jam_mulai' => 'required',
+            'sks' => 'required|numeric',
+            'mata_kuliah' => 'required|string',
         ]);
 
         $menit = $request->sks * 50;
-        $jam_selesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
+        $jamSelesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
 
         AssistantSchedule::create([
             'nama_asisten' => $request->nama_asisten,
-            'hari'         => $request->hari,
-            'jam_mulai'    => $request->jam_mulai,
-            'jam_selesai'  => $jam_selesai,
-            'mata_kuliah'  => $request->mata_kuliah,
+            'hari' => $request->hari,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $jamSelesai,
+            'mata_kuliah' => $request->mata_kuliah,
         ]);
 
         return back()->with('success', 'Jadwal mata kuliah baru berhasil ditambahkan!');
     }
 
-
-    
     public function updateAsisten(Request $request, $id)
     {
-    
-    $request->validate([
-        'nama_asisten' => 'required|string|max:255',
-        'hari'         => 'required|string',
-        'jam_mulai'    => 'required',
-        'jam_selesai'  => 'required',
-        'mata_kuliah'  => 'required|string|max:255',
-    ]);
+        $request->validate([
+            'nama_asisten' => 'required|string|max:255',
+            'hari' => 'required|string',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'mata_kuliah' => 'required|string|max:255',
+        ]);
 
-    
-    $jadwal = AssistantSchedule::where('id_asisten', $id)->first();
+        $jadwal = AssistantSchedule::where('id_asisten', $id)->first();
 
-    
-    if (!$jadwal) {
-        return back()->with('error', 'Gagal! Data jadwal asisten tidak ditemukan.');
+        if (!$jadwal) {
+            return back()->with('error', 'Gagal! Data jadwal asisten tidak ditemukan.');
+        }
+
+        $jadwal->nama_asisten = $request->nama_asisten;
+        $jadwal->hari = $request->hari;
+        $jadwal->jam_mulai = $request->jam_mulai;
+        $jadwal->jam_selesai = $request->jam_selesai;
+        $jadwal->mata_kuliah = $request->mata_kuliah;
+        $jadwal->save();
+
+        return back()->with('success', 'Jadwal asisten berhasil diperbarui secara permanen!');
     }
 
-    
-    $jadwal->nama_asisten = $request->nama_asisten;
-    $jadwal->hari         = $request->hari;
-    $jadwal->jam_mulai    = $request->jam_mulai;
-    $jadwal->jam_selesai  = $request->jam_selesai;
-    $jadwal->mata_kuliah  = $request->mata_kuliah;
-
-    
-    $jadwal->save();
-
-    
-    return back()->with('success', 'Jadwal asisten berhasil diperbarui secara permanen!');
-    }
-   
     public function destroyAsisten($id)
     {
         $asisten = AssistantSchedule::findOrFail($id);
         $asisten->delete();
+
         return back()->with('success', 'Jadwal asisten berhasil dihapus!');
     }
-    public function importAsistenExcel(Request $request) 
+
+    public function importAsistenExcel(Request $request)
     {
         $request->validate([
-            'file_asisten' => 'required|mimes:xlsx,xls,csv|max:5120'
+            'file_asisten' => 'required|mimes:xlsx,xls,csv|max:5120',
         ]);
 
         $sheets = Excel::toArray([], $request->file('file_asisten'));
@@ -118,7 +112,7 @@ class AsistenController extends Controller
             $currentAssistant = 'TBD';
             $pendingSchedules = [];
 
-            $flushSchedule = function($hari) use (&$pendingSchedules, &$count) {
+            $flushSchedule = function ($hari) use (&$pendingSchedules, &$count) {
                 if (isset($pendingSchedules[$hari])) {
                     AssistantSchedule::create($pendingSchedules[$hari]);
                     $count++;
@@ -127,13 +121,16 @@ class AsistenController extends Controller
             };
 
             foreach ($rows as $row) {
-                if (empty(array_filter($row))) continue; 
+                if (empty(array_filter($row))) {
+                    continue;
+                }
 
                 $seninIndex = array_search('Senin', $row);
                 if ($seninIndex !== false) {
                     foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $h) {
                         $flushSchedule($h);
                     }
+
                     $currentAssistant = !empty($row[0]) ? $row[0] : (!empty($row[1]) ? $row[1] : 'TBD');
                     continue;
                 }
@@ -146,7 +143,7 @@ class AsistenController extends Controller
                     }
                 }
 
-                if ($jamColumn != '') {
+                if ($jamColumn !== '') {
                     $jamRaw = explode('-', $jamColumn);
                     $jamMulai = str_replace('.', ':', trim($jamRaw[0]));
                     $jamSelesai = str_replace('.', ':', trim($jamRaw[1]));
@@ -156,26 +153,28 @@ class AsistenController extends Controller
                         3 => 'Selasa',
                         4 => 'Rabu',
                         5 => 'Kamis',
-                        6 => 'Jumat'
+                        6 => 'Jumat',
                     ];
 
                     foreach ($hariMap as $colIndex => $namaHari) {
                         $matkul = isset($row[$colIndex]) ? trim($row[$colIndex]) : '';
 
                         if ($matkul !== '') {
-                            if (isset($pendingSchedules[$namaHari]) && 
-                                $pendingSchedules[$namaHari]['mata_kuliah'] === $matkul && 
-                                $pendingSchedules[$namaHari]['nama_asisten'] === trim($currentAssistant)) {
+                            if (
+                                isset($pendingSchedules[$namaHari]) &&
+                                $pendingSchedules[$namaHari]['mata_kuliah'] === $matkul &&
+                                $pendingSchedules[$namaHari]['nama_asisten'] === trim($currentAssistant)
+                            ) {
                                 $pendingSchedules[$namaHari]['jam_selesai'] = $jamSelesai;
                             } else {
                                 $flushSchedule($namaHari);
-                                
+
                                 $pendingSchedules[$namaHari] = [
                                     'nama_asisten' => trim($currentAssistant),
-                                    'hari'         => $namaHari,
-                                    'jam_mulai'    => $jamMulai,
-                                    'jam_selesai'  => $jamSelesai,
-                                    'mata_kuliah'  => $matkul,
+                                    'hari' => $namaHari,
+                                    'jam_mulai' => $jamMulai,
+                                    'jam_selesai' => $jamSelesai,
+                                    'mata_kuliah' => $matkul,
                                 ];
                             }
                         } else {
@@ -184,7 +183,7 @@ class AsistenController extends Controller
                     }
                 }
             }
-            
+
             foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $h) {
                 $flushSchedule($h);
             }
@@ -200,508 +199,412 @@ class AsistenController extends Controller
     public function getDetailAsisten(Request $request)
     {
         $nama = $request->query('nama');
-        if (!$nama) return response()->json([]);
-        return response()->json(AssistantSchedule::where('nama_asisten', $nama)->orderBy('hari', 'asc')->get());
+
+        if (!$nama) {
+            return response()->json([]);
+        }
+
+        return response()->json(
+            AssistantSchedule::where('nama_asisten', $nama)->orderBy('hari', 'asc')->get()
+        );
     }
+
     public function clearAsistenSchedule()
     {
-    \App\Models\AssistantSchedule::all()->each->delete();
+        AssistantSchedule::all()->each->delete();
 
-    return back()->with('success', ' Wusss! Semua data jadwal asisten berhasil dihapus beserta jadwal praktikum terkait.');
+        return back()->with('success', 'Semua data jadwal asisten berhasil dihapus beserta jadwal praktikum terkait.');
     }
 
+    public function manajemenasisten(Request $request)
+    {
+        $timeSlots = $this->matrixTimeSlots();
+        $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
+        $ruangRAObj = Lab::firstOrCreate(
+            ['nama_lab' => 'RUANG ASISTEN'],
+            ['kapasitas' => 0, 'fasilitas' => '-']
+        );
 
-    
+        $coursesBySlot = [];
+        $allSchedules = Schedule::where('id_lab', '!=', $ruangRAObj->id_lab)->get();
 
-        public function manajemenasisten(Request $request)
-{
-    // 🌟 FORMAT SAKTI: Semua jeda pas 5 menit, jam asli lu gak ada yang kehapus!
-    $timeSlots = [
-        ['start' => '08:00', 'end' => '08:50', 'label' => '08.00-08.50'],
-        ['start' => '08:55', 'end' => '09:45', 'label' => '08.55-09.45'],
-        ['start' => '09:50', 'end' => '10:40', 'label' => '09.50-10.40'],
-        ['start' => '10:45', 'end' => '11:35', 'label' => '10.45-11.35'],
-        ['start' => '11:40', 'end' => '12:25', 'label' => '11.40-12.25'], // ✨ PENENGAH SIANG
-        ['start' => '12:30', 'end' => '13:20', 'label' => '12.30-13.20'], 
-        ['start' => '13:25', 'end' => '14:15', 'label' => '13.25-14.15'],
-        ['start' => '14:20', 'end' => '15:10', 'label' => '14.20-15.10'],
-        ['start' => '15:15', 'end' => '16:05', 'label' => '15.15-16.05'],
-        ['start' => '16:10', 'end' => '17:00', 'label' => '16.10-17.00'],
-        ['start' => '17:05', 'end' => '17:55', 'label' => '17.05-17.55'], // ✨ PENENGAH SORE
-        ['start' => '18:00', 'end' => '18:50', 'label' => '18.00-18.50'],
-        ['start' => '18:55', 'end' => '19:45', 'label' => '18.55-19.45'],
-        ['start' => '19:50', 'end' => '20:40', 'label' => '19.50-20.40'],
-        ['start' => '20:45', 'end' => '21:35', 'label' => '20.45-21.35'],
-    ];
+        foreach ($allSchedules as $s) {
+            $dayLower = strtolower($s->hari);
+            $itemStart = substr($s->jam_mulai, 0, 5);
+            $itemEnd = substr($s->jam_selesai, 0, 5);
 
-    $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-
-    $ruangRAObj = \App\Models\Lab::firstOrCreate(
-        ['nama_lab' => 'RUANG ASISTEN'], 
-        ['kapasitas' => 0, 'fasilitas' => '-']
-    );
-
-    $coursesBySlot = [];
-    $allSchedules = \App\Models\Schedule::where('id_lab', '!=', $ruangRAObj->id_lab)->get();
-
-    foreach ($allSchedules as $s) {
-        $dayLower  = strtolower($s->hari);
-        $itemStart = substr($s->jam_mulai, 0, 5);
-        $itemEnd   = substr($s->jam_selesai, 0, 5);
-
-        foreach ($timeSlots as $ts) {
-            if ($itemStart < $ts['end'] && $itemEnd > $ts['start']) {
-                $coursesBySlot[$dayLower][$ts['start']][] = $s->matkul;
+            foreach ($timeSlots as $ts) {
+                if ($itemStart < $ts['end'] && $itemEnd > $ts['start']) {
+                    $coursesBySlot[$dayLower][$ts['start']][] = $s->matkul;
+                }
             }
         }
-    }
 
-    $all_asisten = \App\Models\AssistantSchedule::distinct()
-        ->whereNotNull('nama_asisten')
-        ->where('nama_asisten', '!=', '')
-        ->pluck('nama_asisten')
-        ->toArray();
-
-    $selectedAsisten = $request->query('view_asisten');
-
-    $weeklyClasses = collect();
-    $assistantAllSchedules = collect();
-
-    if ($selectedAsisten) {
-        $weeklyClasses = \App\Models\AssistantSchedule::where('nama_asisten', $selectedAsisten)
-            ->where('mata_kuliah', '!=', '-')
-            ->where('mata_kuliah', '!=', '')
-            ->get();
-
-        $allAsistenIds = \App\Models\AssistantSchedule::where('nama_asisten', $selectedAsisten)
-            ->pluck('id_asisten')
+        $all_asisten = AssistantSchedule::distinct()
+            ->whereNotNull('nama_asisten')
+            ->where('nama_asisten', '!=', '')
+            ->pluck('nama_asisten')
             ->toArray();
 
-        $assistantAllSchedules = \App\Models\Schedule::with('lab')
-            ->whereIn('id_asisten', $allAsistenIds)
-            ->get();
-    }
+        $selectedAsisten = $request->query('view_asisten');
 
-    return view('spv.jasis', compact(
-        'timeSlots',
-        'dayNames',
-        'coursesBySlot',
-        'all_asisten',
-        'selectedAsisten',
-        'weeklyClasses',
-        'assistantAllSchedules'
-    ));
-}
+        $weeklyClasses = collect();
+        $assistantAllSchedules = collect();
 
+        if ($selectedAsisten) {
+            $weeklyClasses = AssistantSchedule::where('nama_asisten', $selectedAsisten)
+                ->where('mata_kuliah', '!=', '-')
+                ->where('mata_kuliah', '!=', '')
+                ->get();
 
-public function updateMatrixRA(Request $request)
-{
-    $request->validate([
-        'nama_asisten' => 'required|string',
-        'cells'        => 'array',
-        'old_cells'    => 'array'
-    ]);
+            $allAsistenIds = AssistantSchedule::where('nama_asisten', $selectedAsisten)
+                ->pluck('id_asisten')
+                ->toArray();
 
-    $nama = $request->nama_asisten;
-    $cells = $request->input('cells', []);
-    $oldCells = $request->input('old_cells', []);
-
-    // 🌟 SAMAKAN DENGAN GET: Masukkan penengah waktu
-    $slotEnds = [
-        '08:00' => '08:50', '08:55' => '09:45', '09:50' => '10:40', '10:45' => '11:35',
-        '11:40' => '12:25', // ✨ PENENGAH SIANG
-        '12:30' => '13:20', '13:25' => '14:15', '14:20' => '15:10', '15:15' => '16:05',
-        '16:10' => '17:00', 
-        '17:05' => '17:55', // ✨ PENENGAH SORE
-        '18:00' => '18:50', '18:55' => '19:45', '19:50' => '20:40', '20:45' => '21:35'
-    ];
-
-    DB::beginTransaction();
-
-    try {
-        $asistenObj = AssistantSchedule::firstOrCreate(
-            ['nama_asisten' => $nama], 
-            ['hari' => '-', 'jam_mulai' => '00:00', 'jam_selesai' => '00:00', 'mata_kuliah' => '-']
-        );
-        $ruangRAObj = Lab::firstOrCreate(['nama_lab' => 'RUANG ASISTEN'], ['kapasitas' => 0, 'fasilitas' => '-']);
-
-        $allAsistenIds = AssistantSchedule::where('nama_asisten', $nama)->pluck('id_asisten')->toArray();
-
-        foreach ($cells as $day => $slots) {
-            $raChanged = false; 
-            ksort($slots); 
-
-            foreach ($slots as $jamMulai => $statusBaru) {
-                $statusLama = $oldCells[$day][$jamMulai] ?? 'KOSONG';
-
-                if ($statusBaru === $statusLama || $statusLama === 'KULIAH_SENDIRI' || $statusBaru === 'KULIAH_SENDIRI') {
-                    continue;
-                }
-
-                if ($statusLama === 'RA' || $statusBaru === 'RA') {
-                    $raChanged = true;
-                }
-
-                // ==========================================
-                // PROSES MATKUL PRAKTIKUM LAB 
-                // ==========================================
-                if ($statusLama !== 'KOSONG' && $statusLama !== 'RA') {
-                    Schedule::whereIn('id_asisten', $allAsistenIds)
-                        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                        ->where('matkul', $statusLama)
-                        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                        ->update(['id_asisten' => null]);
-                }
-
-                if ($statusBaru !== 'KOSONG' && $statusBaru !== 'RA') {
-                    $targetMatkul = Schedule::where('matkul', $statusBaru)
-                        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                        ->first();
-
-                    if ($targetMatkul) {
-    $timeStart = substr($targetMatkul->jam_mulai, 0, 5);
-    $timeEnd   = substr($targetMatkul->jam_selesai, 0, 5);
-
-    $bentrokKuliahLab = AssistantSchedule::where('nama_asisten', $nama)
-        ->where('mata_kuliah', '!=', '-')
-        ->where('mata_kuliah', '!=', '')
-        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-        ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
-        ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
-        ->exists();
-
-    if ($bentrokKuliahLab) {
-        throw new \Exception("Gagal! Durasi praktikum {$statusBaru} BENTROK dengan jadwal kuliah asisten.");
-    }
-
-    $bentrokJagaLab = Schedule::whereIn('id_asisten', $allAsistenIds)
-        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-        ->where('matkul', '!=', $statusBaru)
-        ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
-        ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
-        ->first();
-
-    if ($bentrokJagaLab) {
-        $matkulBentrok = $bentrokJagaLab->matkul;
-        $jamBentrok    = substr($bentrokJagaLab->jam_mulai, 0, 5) . '-' . substr($bentrokJagaLab->jam_selesai, 0, 5);
-        throw new \Exception("Gagal! {$statusBaru} TABRAKAN dengan {$matkulBentrok} ({$jamBentrok}) di hari yang sama.");
-    }
-
-    Schedule::where('matkul', $statusBaru)
-        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-        ->update(['id_asisten' => $asistenObj->id_asisten]);
-}
-                }
-            }
-
-            // ==========================================
-            // PROSES GABUNG & SIMPAN RA KE DATABASE
-            // ==========================================
-            if ($raChanged) {
-                Schedule::whereIn('id_asisten', $allAsistenIds)
-                    ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                    ->where('id_lab', $ruangRAObj->id_lab)
-                    ->delete();
-
-        // --- PHASE 1: VALIDASI DETEKSI BENTROK SEBENARNYA (DURASI PENUH) ---
-        foreach ($cells as $day => $slots) {
-            foreach ($slots as $jamMulai => $statusBaru) {
-                $statusLama = $oldCells[$day][$jamMulai] ?? 'KOSONG';
-
-                // Kita hanya memeriksa slot tempat Supervisor *memulai klik/pilih* matkul baru
-                if ($statusBaru === $statusLama || $statusBaru === 'KOSONG' || $statusBaru === 'KULIAH_SENDIRI') {
-                    continue;
-                }
-
-                // 1. Cari durasi asli (jam_mulai sampai jam_selesai) dari mata kuliah praktikum tersebut
-                // Kita ambil dari database Schedule berdasarkan nama matkul dan harinya
-                $infoPraktikum = Schedule::where('matkul', $statusBaru)
-                    ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                    ->first();
-
-                if ($infoPraktikum) {
-                    // Gunakan jam kerja asli praktikum tersebut (Misal: Mulai 08:00, Selesai 10:40 karena 3 SKS)
-                    $waktuMulaiPraktikum = substr($infoPraktikum->jam_mulai, 0, 5);
-                    $waktuSelesaiPraktikum = substr($infoPraktikum->jam_selesai, 0, 5);
-                } else {
-                    // Fallback jika berupa RA atau data tidak ketemu, gunakan range default slot itu sendiri
-                    $waktuMulaiPraktikum = $jamMulai;
-                    $waktuSelesaiPraktikum = $slotEnds[$jamMulai] ?? '00:00';
-                }
-
-                // 2. Cek apakah di sepanjang rentang waktu praktikum tersebut (dari awal sampai selesai),
-                // asisten memiliki jadwal kuliah pribadi di tabel AssistantSchedule
-                $bentrokKuliah = AssistantSchedule::where('nama_asisten', $nama)
-                    ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                    ->where(function($query) use ($waktuMulaiPraktikum, $waktuSelesaiPraktikum) {
-                        $query->where('jam_mulai', '<', $waktuSelesaiPraktikum)
-                            ->where('jam_selesai', '>', $waktuMulaiPraktikum);
-                    })
-                    ->first();
-
-                if ($bentrokKuliah) {
-                    return back()->with('error', "Gagal! " . strtoupper($nama) . " tidak dapat ditugaskan pada mata kuliah [ {$statusBaru} ]. Jadwal tersebut bentrok dengan kuliah pribadi asisten [ Matkul: {$bentrokKuliah->mata_kuliah} ({$bentrokKuliah->jam_mulai} - {$bentrokKuliah->jam_selesai}) ] pada hari {$day}.");
-                }
-
-                // 3. Cek bentrok dengan tugas praktikum lain yang sudah diambil sebelumnya
-                if ($statusBaru !== 'RA') {
-                    $bentrokTugasLain = Schedule::whereHas('assistantSchedule', function($q) use ($nama) {
-                            $q->where('nama_asisten', $nama);
-                        })
-                        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                        ->where('matkul', '!=', 'RA')
-                        ->where('matkul', '!=', $statusBaru)
-                        ->where(function($query) use ($waktuMulaiPraktikum, $waktuSelesaiPraktikum) {
-                            $query->where('jam_mulai', '<', $waktuSelesaiPraktikum)
-                                  ->where('jam_selesai', '>', $waktuMulaiPraktikum);
-                        })
-                        ->first();
-
-                    if ($bentrokTugasLain) {
-                        $jamB = substr($bentrokTugasLain->jam_mulai, 0, 5);
-                        $jamS = substr($bentrokTugasLain->jam_selesai, 0, 5);
-                        return back()->with('error', "Gagal! " . strtoupper($nama) . " sudah ditugaskan mengajar praktikum lain [ Matkul: {$bentrokTugasLain->matkul} ({$jamB} - {$jamS}) ] di waktu yang bersamaan.");
-                    }
-                }
-            }
+            $assistantAllSchedules = Schedule::with('lab')
+                ->whereIn('id_asisten', $allAsistenIds)
+                ->get();
         }
-        // --- END OF PHASE 1 ---
 
-        
+        return view('spv.jasis', compact(
+            'timeSlots',
+            'dayNames',
+            'coursesBySlot',
+            'all_asisten',
+            'selectedAsisten',
+            'weeklyClasses',
+            'assistantAllSchedules'
+        ));
+    }
+
+    public function updateMatrixRA(Request $request)
+    {
+        $request->validate([
+            'nama_asisten' => 'required|string',
+            'cells' => 'array',
+            'old_cells' => 'array',
+        ]);
+
+        $nama = $request->nama_asisten;
+        $cells = $request->input('cells', []);
+        $oldCells = $request->input('old_cells', []);
+        $slotEnds = collect($this->matrixTimeSlots())->pluck('end', 'start')->toArray();
+
         DB::beginTransaction();
 
-                foreach ($slots as $jamMulai => $status) {
-                    if ($status === 'RA') {
-                        $jamSelesai = $slotEnds[$jamMulai];
+        try {
+            $asistenObj = AssistantSchedule::firstOrCreate(
+                ['nama_asisten' => $nama],
+                ['hari' => '-', 'jam_mulai' => '00:00', 'jam_selesai' => '00:00', 'mata_kuliah' => '-']
+            );
 
-                        if (!$currentBlock) {
-                            $currentBlock = ['start' => $jamMulai, 'end' => $jamSelesai];
-                        } else {
-                            $currEndTs = strtotime($currentBlock['end']);
-                            $nextStartTs = strtotime($jamMulai);
-                            $diffMinutes = round(($nextStartTs - $currEndTs) / 60);
+            $ruangRAObj = Lab::firstOrCreate(
+                ['nama_lab' => 'RUANG ASISTEN'],
+                ['kapasitas' => 0, 'fasilitas' => '-']
+            );
 
-                            // 🔥 JIKA JEDA <= 5 MENIT, OTOMATIS GABUNG JADI SATU BARIS PANJANG
-                            if ($diffMinutes <= 5) {
-                                $currentBlock['end'] = $jamSelesai;
-                            } else {
-                                $raBlocks[] = $currentBlock;
-                                $currentBlock = ['start' => $jamMulai, 'end' => $jamSelesai];
-                            }
+            $allAsistenIds = AssistantSchedule::where('nama_asisten', $nama)->pluck('id_asisten')->toArray();
+
+            foreach ($cells as $day => $slots) {
+                ksort($slots);
+                $raChanged = false;
+
+                foreach ($slots as $jamMulai => $statusBaru) {
+                    $statusLama = $oldCells[$day][$jamMulai] ?? 'KOSONG';
+
+                    if ($statusBaru === $statusLama || $statusLama === 'KULIAH_SENDIRI' || $statusBaru === 'KULIAH_SENDIRI') {
+                        continue;
+                    }
+
+                    if ($statusLama === 'RA' || $statusBaru === 'RA') {
+                        $raChanged = true;
+                    }
+
+                    if ($statusLama !== 'KOSONG' && $statusLama !== 'RA') {
+                        Schedule::whereIn('id_asisten', $allAsistenIds)
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->where('matkul', $statusLama)
+                            ->where('id_lab', '!=', $ruangRAObj->id_lab)
+                            ->update(['id_asisten' => null]);
+                    }
+
+                    if ($statusBaru !== 'KOSONG' && $statusBaru !== 'RA') {
+                        $targetMatkul = Schedule::where('matkul', $statusBaru)
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->where('id_lab', '!=', $ruangRAObj->id_lab)
+                            ->first();
+
+                        if (!$targetMatkul) {
+                            continue;
                         }
-                    } else {
-                        if ($currentBlock) {
-                            $raBlocks[] = $currentBlock;
-                            $currentBlock = null;
+
+                        $timeStart = substr($targetMatkul->jam_mulai, 0, 5);
+                        $timeEnd = substr($targetMatkul->jam_selesai, 0, 5);
+
+                        $bentrokKuliahLab = AssistantSchedule::where('nama_asisten', $nama)
+                            ->where('mata_kuliah', '!=', '-')
+                            ->where('mata_kuliah', '!=', '')
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
+                            ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
+                            ->exists();
+
+                        if ($bentrokKuliahLab) {
+                            throw new \Exception("Gagal! Durasi praktikum {$statusBaru} bentrok dengan jadwal kuliah asisten.");
                         }
+
+                        $bentrokJagaLab = Schedule::whereIn('id_asisten', $allAsistenIds)
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->where('id_lab', '!=', $ruangRAObj->id_lab)
+                            ->where('matkul', '!=', $statusBaru)
+                            ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
+                            ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
+                            ->first();
+
+                        if ($bentrokJagaLab) {
+                            $matkulBentrok = $bentrokJagaLab->matkul;
+                            $jamBentrok = substr($bentrokJagaLab->jam_mulai, 0, 5) . '-' . substr($bentrokJagaLab->jam_selesai, 0, 5);
+                            throw new \Exception("Gagal! {$statusBaru} tabrakan dengan {$matkulBentrok} ({$jamBentrok}) di hari yang sama.");
+                        }
+
+                        Schedule::where('matkul', $statusBaru)
+                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                            ->where('id_lab', '!=', $ruangRAObj->id_lab)
+                            ->update(['id_asisten' => $asistenObj->id_asisten]);
                     }
                 }
-                if ($currentBlock) {
-                    $raBlocks[] = $currentBlock;
-                }
 
-                $period = CarbonPeriod::create(Carbon::now(), Carbon::now()->addMonths(6));
-
-                foreach ($raBlocks as $block) {
-                    $bStart = $block['start'];
-                    $bEnd = $block['end'];
-
-                    $isBusyInLab = Schedule::whereIn('id_asisten', $allAsistenIds)
-                        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                        ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                        ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
-                        ->whereRaw('LEFT(jam_selesai, 5) > ?', [$bStart])
-                        ->exists();
-
-                    if ($isBusyInLab) {
-                        throw new \Exception("Jam {$bStart}-{$bEnd} tidak bisa diisi RA karena asisten sedang mengajar LAB!");
-                    }
-
-                    $bentrokKuliahRA = AssistantSchedule::where('nama_asisten', $nama)
-                        ->where('mata_kuliah', '!=', '-')
-                        ->where('mata_kuliah', '!=', '')
-                        ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                        ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
-                        ->whereRaw('LEFT(jam_selesai, 5) > ?', [$bStart])
-                        ->exists();
-
-                    if ($bentrokKuliahRA) {
-                        throw new \Exception("Gagal menugaskan RA di jam {$bStart}-{$bEnd}! BENTROK dengan jam kuliah asisten.");
-                    }
-
-                    $durationMins = round((strtotime($bEnd) - strtotime($bStart)) / 60);
-                    $calculatedSks = max(1, round($durationMins / 50));
-
-                    foreach ($period as $date) {
-                        if (strtolower($date->locale('id')->translatedFormat('l')) === strtolower($day)) {
-                            Schedule::create([
-                                'tanggal'     => $date->format('Y-m-d'),
-                                'hari'        => $day,
-                                'id_lab'      => $ruangRAObj->id_lab,
-                                'id_asisten'  => $asistenObj->id_asisten,
-                                'jam_mulai'   => $bStart,
-                                'jam_selesai' => $bEnd,
-                                'matkul'      => 'RA',
-                                'sks'         => $calculatedSks,
-                                'dosen'       => '-',
-                            ]);
-                        }
-                    }
+                if ($raChanged) {
+                    $this->syncRaBlocks($slots, $slotEnds, $day, $allAsistenIds, $ruangRAObj, $asistenObj);
                 }
             }
 
-            DB::commit(); 
-            return back()->with('success', ' Penugasan asisten relasional berhasil disinkronkan.');
+            DB::commit();
+            return back()->with('success', 'Penugasan asisten relasional berhasil disinkronkan.');
         } catch (\Exception $e) {
-            DB::rollBack(); 
+            DB::rollBack();
             return back()->with('error', 'Waduh gagal Bre: ' . $e->getMessage());
         }
-
-        DB::commit(); 
-        return back()->with('success', '💾 Penugasan asisten relasional berhasil disinkronkan.');
-    } catch (\Exception $e) {
-        DB::rollBack(); 
-        return back()->with('error', 'Waduh gagal Bre: ' . $e->getMessage());
     }
-}
-    
-   
+
     public function inputMatrix()
     {
-        
-        return view('asisten.input');
+        $namaAsisten = auth()->user()->name;
+        $jadwalTersimpan = AssistantSchedule::where('nama_asisten', $namaAsisten)
+            ->where('mata_kuliah', '!=', '-')
+            ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+            ->orderBy('jam_mulai')
+            ->get();
+
+        return view('asisten.input', compact('namaAsisten', 'jadwalTersimpan'));
     }
 
-    
     public function storsis(Request $request)
     {
-      $request->validate([
-            'nama_asisten' => 'required|string',
-            'hari'         => 'required|string',
-            'jam_mulai'    => 'required|string|size:5',
-            'sks'          => 'required|integer',
-            'mata_kuliah'  => 'required|string',
+        $validated = $request->validate([
+            'jadwal' => 'required|array',
+            'jadwal.*.*.mata_kuliah' => 'nullable|string|max:255',
+            'jadwal.*.*.jam_mulai' => 'nullable|date_format:H:i',
+            'jadwal.*.*.sks' => 'nullable|integer|between:1,4',
         ]);
 
-        
-        $jamMulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
-        $totalMenit = $request->sks * 50;
-        $jamSelesai = $jamMulai->copy()->addMinutes($totalMenit)->format('H:i');
+        $namaAsisten = auth()->user()->name;
+        $rows = [];
 
-        AssistantSchedule::create([
-            'user_id'     => auth()->id(),
-            'nama_asisten' => strtoupper(trim($request->nama_asisten)),
-            'hari'         => $request->hari,
-            'jam_mulai'    => $request->jam_mulai,
-            'jam_selesai'  => $jamSelesai,
-            'mata_kuliah'  => trim($request->mata_kuliah),
-        ]);
+        foreach ($validated['jadwal'] as $hari => $items) {
+            foreach ($items as $item) {
+                $matkul = trim($item['mata_kuliah'] ?? '');
+                $jamMulaiInput = $item['jam_mulai'] ?? null;
+                $sks = (int) ($item['sks'] ?? 0);
 
-        
-        return back()
-            ->with('success', 'Jadwal ' . $request->mata_kuliah . ' berhasil ditambahkan!')
-            ->with('last_asisten', $request->nama_asisten)
-            ->with('last_hari', $request->hari);}
+                if ($matkul === '' && !$jamMulaiInput) {
+                    continue;
+                }
 
-            public function hapusJadwal($id)
+                if ($matkul === '' || !$jamMulaiInput || $sks < 1 || $sks > 4) {
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Lengkapi nama mata kuliah, jam mulai, dan SKS pada setiap baris yang diisi.');
+                }
+
+                $jamMulai = Carbon::createFromFormat('H:i', $jamMulaiInput);
+                $totalMenit = ($sks * 50) + (($sks - 1) * 5);
+                $jamSelesai = $jamMulai->copy()->addMinutes($totalMenit)->format('H:i');
+
+                foreach ($rows as $existing) {
+                    if (
+                        strtolower($existing['hari']) === strtolower($hari) &&
+                        $existing['jam_mulai'] < $jamSelesai &&
+                        $existing['jam_selesai'] > $jamMulaiInput
+                    ) {
+                        return back()
+                            ->withInput()
+                            ->with('error', "Jadwal {$matkul} bentrok dengan {$existing['mata_kuliah']} pada hari {$hari}.");
+                    }
+                }
+
+                $rows[] = [
+                    'nama_asisten' => $namaAsisten,
+                    'hari' => $hari,
+                    'jam_mulai' => $jamMulaiInput,
+                    'jam_selesai' => $jamSelesai,
+                    'mata_kuliah' => $matkul,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+
+        DB::beginTransaction();
+
+        try {
+            AssistantSchedule::where('nama_asisten', $namaAsisten)
+                ->where('mata_kuliah', '!=', '-')
+                ->delete();
+
+            if (!empty($rows)) {
+                AssistantSchedule::insert($rows);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal menyimpan jadwal: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Jadwal kuliah berhasil disimpan.');
+    }
+
+    public function hapusJadwal($id)
     {
-         
-        AssistantSchedule::where('id_asisten', $id)->delete();
+        $namaAsisten = auth()->user()->name;
+
+        AssistantSchedule::where('id_asisten', $id)
+            ->where('nama_asisten', $namaAsisten)
+            ->delete();
 
         return back()->with('success', 'Jadwal berhasil dihapus!');
     }
 
-
-public function putsen()
-    { $jadwalAsisten = AssistantSchedule::all();
-        return view('asisten.input');
+    public function putsen()
+    {
+        return $this->inputMatrix();
     }
 
-
     public function storeJadwalMatrix(Request $request)
-{
-    // 1. Validasi
-    $request->validate([
-        'nama_asisten' => 'required|string|max:255',
-        'matrix'       => 'array'
-    ]);
+    {
+        return $this->storsis($request);
+    }
 
-    $namaAsisten = $request->nama_asisten;
-    $matrixData = $request->matrix;
+    private function matrixTimeSlots(): array
+    {
+        return [
+            ['start' => '08:00', 'end' => '08:50', 'label' => '08.00-08.50'],
+            ['start' => '08:55', 'end' => '09:45', 'label' => '08.55-09.45'],
+            ['start' => '09:50', 'end' => '10:40', 'label' => '09.50-10.40'],
+            ['start' => '10:45', 'end' => '11:35', 'label' => '10.45-11.35'],
+            ['start' => '11:40', 'end' => '12:25', 'label' => '11.40-12.25'],
+            ['start' => '12:30', 'end' => '13:20', 'label' => '12.30-13.20'],
+            ['start' => '13:25', 'end' => '14:15', 'label' => '13.25-14.15'],
+            ['start' => '14:20', 'end' => '15:10', 'label' => '14.20-15.10'],
+            ['start' => '15:15', 'end' => '16:05', 'label' => '15.15-16.05'],
+            ['start' => '16:10', 'end' => '17:00', 'label' => '16.10-17.00'],
+            ['start' => '17:05', 'end' => '17:55', 'label' => '17.05-17.55'],
+            ['start' => '18:00', 'end' => '18:50', 'label' => '18.00-18.50'],
+            ['start' => '18:55', 'end' => '19:45', 'label' => '18.55-19.45'],
+            ['start' => '19:50', 'end' => '20:40', 'label' => '19.50-20.40'],
+            ['start' => '20:45', 'end' => '21:35', 'label' => '20.45-21.35'],
+        ];
+    }
 
-    // Array untuk mengambil jam selesai berdasarkan jam mulai
-    $slotEnds = [
-    '08:00' => '08:50',
-    '08:50' => '09:40',
-    '09:40' => '10:30',
-    '10:30' => '11:20',
-    '11:20' => '12:10',
-    '12:10' => '13:00',
-    '13:00' => '13:50',
-    '13:50' => '14:40',
-    '14:40' => '15:30',
-    '15:30' => '16:20',
-    '16:20' => '17:10',
-    '18:00' => '18:50',
-    '18:50' => '19:40',
-    '19:40' => '20:30',
-    '20:30' => '21:20',
-];
+    private function syncRaBlocks(array $slots, array $slotEnds, string $day, array $allAsistenIds, Lab $ruangRAObj, AssistantSchedule $asistenObj): void
+    {
+        Schedule::whereIn('id_asisten', $allAsistenIds)
+            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+            ->where('id_lab', $ruangRAObj->id_lab)
+            ->delete();
 
-    DB::beginTransaction();
+        $raBlocks = [];
+        $currentBlock = null;
 
-    try {
-        // 2. Hapus jadwal matkul lama asisten ini (Biar nggak numpuk kalau dia update)
-        AssistantSchedule::where('nama_asisten', $namaAsisten)->delete();
+        foreach ($slots as $jamMulai => $status) {
+            if ($status === 'RA') {
+                $jamSelesai = $slotEnds[$jamMulai] ?? null;
 
-        $dataToInsert = [];
-
-        // 3. Looping data array 2D dari matrix Blade
-        foreach ($matrixData as $hari => $slots) {
-            foreach ($slots as $jamMulai => $matkul) {
-                
-                // Kalau kotaknya diisi teks (nggak kosong), berarti dia lagi Kuliah
-                if (!empty(trim($matkul))) {
-                    $dataToInsert[] = [
-                        'nama_asisten' => $namaAsisten,
-                        'hari'         => $hari,
-                        'jam_mulai'    => $jamMulai,
-                        'jam_selesai'  => $slotEnds[$jamMulai] ?? '00:00',
-                        'mata_kuliah'  => trim($matkul), // Ini masukin KULIAH_SENDIRI
-                        'created_at'   => now(),
-                        'updated_at'   => now(),
-                    ];
+                if (!$jamSelesai) {
+                    continue;
                 }
+
+                if (!$currentBlock) {
+                    $currentBlock = ['start' => $jamMulai, 'end' => $jamSelesai];
+                } else {
+                    $diffMinutes = round((strtotime($jamMulai) - strtotime($currentBlock['end'])) / 60);
+
+                    if ($diffMinutes <= 5) {
+                        $currentBlock['end'] = $jamSelesai;
+                    } else {
+                        $raBlocks[] = $currentBlock;
+                        $currentBlock = ['start' => $jamMulai, 'end' => $jamSelesai];
+                    }
+                }
+            } elseif ($currentBlock) {
+                $raBlocks[] = $currentBlock;
+                $currentBlock = null;
             }
         }
 
-        // 4. Eksekusi simpan massal ke database
-        if (!empty($dataToInsert)) {
-            AssistantSchedule::insert($dataToInsert);
-        } else {
-            // Kalau semua kotak kosong, buatin 1 dummy record biar nama asistennya tetep kedaftar di DB
-            AssistantSchedule::create([
-                'nama_asisten' => $namaAsisten,
-                'hari'         => '-',
-                'jam_mulai'    => '00:00',
-                'jam_selesai'  => '00:00',
-                'mata_kuliah'  => '-'
-            ]);
+        if ($currentBlock) {
+            $raBlocks[] = $currentBlock;
         }
 
-        DB::commit();
-        return back()->with('success', 'Mantap! Jadwal kesibukan Anda berhasil disimpan.');
+        $period = CarbonPeriod::create(Carbon::now(), Carbon::now()->addMonths(6));
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Gagal menyimpan jadwal: ' . $e->getMessage());
+        foreach ($raBlocks as $block) {
+            $bStart = $block['start'];
+            $bEnd = $block['end'];
+
+            $isBusyInLab = Schedule::whereIn('id_asisten', $allAsistenIds)
+                ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                ->where('id_lab', '!=', $ruangRAObj->id_lab)
+                ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
+                ->whereRaw('LEFT(jam_selesai, 5) > ?', [$bStart])
+                ->exists();
+
+            if ($isBusyInLab) {
+                throw new \Exception("Jam {$bStart}-{$bEnd} tidak bisa diisi RA karena asisten sedang mengajar LAB.");
+            }
+
+            $bentrokKuliahRA = AssistantSchedule::where('nama_asisten', $asistenObj->nama_asisten)
+                ->where('mata_kuliah', '!=', '-')
+                ->where('mata_kuliah', '!=', '')
+                ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
+                ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
+                ->whereRaw('LEFT(jam_selesai, 5) > ?', [$bStart])
+                ->exists();
+
+            if ($bentrokKuliahRA) {
+                throw new \Exception("Gagal menugaskan RA di jam {$bStart}-{$bEnd}. Bentrok dengan jam kuliah asisten.");
+            }
+
+            $durationMins = round((strtotime($bEnd) - strtotime($bStart)) / 60);
+            $calculatedSks = max(1, round($durationMins / 50));
+
+            foreach ($period as $date) {
+                if (strtolower($date->locale('id')->translatedFormat('l')) === strtolower($day)) {
+                    Schedule::create([
+                        'tanggal' => $date->format('Y-m-d'),
+                        'hari' => $day,
+                        'id_lab' => $ruangRAObj->id_lab,
+                        'id_asisten' => $asistenObj->id_asisten,
+                        'jam_mulai' => $bStart,
+                        'jam_selesai' => $bEnd,
+                        'matkul' => 'RA',
+                        'sks' => $calculatedSks,
+                        'dosen' => '-',
+                    ]);
+                }
+            }
+        }
     }
-
-}}
-
-
-    
+}
