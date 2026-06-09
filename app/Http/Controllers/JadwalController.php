@@ -126,10 +126,9 @@ public function welcome(Request $request)
         $schedules = Schedule::with(['lab', 'assistantSchedule'])
                          ->whereDate('tanggal', $filterDate)
                          ->whereHas('lab', function($query) {
-                             $query->where('nama_lab', '!=', 'RUANG RA')
+                             $query->where('nama_lab', '!=', 'RUANG ASISTEN')
                                    ->where('nama_lab', '!=', 'RA')
-                                   ->where('nama_lab', '!=', 'RUANG ASISTEN');
-                                   
+                                   ->where('nama_lab', '!=', 'RUANG RA');
                          })
                          ->orderBy('jam_mulai', 'asc')
                          ->get();
