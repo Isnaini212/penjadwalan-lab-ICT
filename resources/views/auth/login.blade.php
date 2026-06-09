@@ -32,7 +32,7 @@
                         ⚠️ Login Gagal! Email belum terdaftar atau Password Anda salah.
                     </div>
                 @endif
-                
+
                 <form method="POST" action="{{ route('login') }}">
                 @csrf
                     {{-- INPUT EMAIL --}}
@@ -40,7 +40,7 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Email
                         </label>
-                        {{-- 🌟 LOGIC INDIKATOR INPUT: Border otomatis merah & bg merah tipis jika salah --}}
+                        {{--  LOGIC INDIKATOR INPUT: Border otomatis merah & bg merah tipis jika salah --}}
                         <input
                             type="email"
                             name="email"
@@ -59,7 +59,7 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Password
                         </label>
-                        {{-- 🌟 LOGIC INDIKATOR INPUT: Ikut memerah jika login gagal --}}
+                        {{--  LOGIC INDIKATOR INPUT: Ikut memerah jika login gagal --}}
                         <input
                             type="password"
                             name="password"
@@ -70,7 +70,7 @@
                                 {{ $message }}
                             </span>
                         @enderror
-                        
+
                         @if (Route::has('password.request'))
                             <div class="mt-2">
                                 <a href="{{ route('password.request') }}" class="text-xs font-bold text-indigo-600 hover:underline">
