@@ -73,49 +73,64 @@
                                 {{-- Kolom Hari-Hari --}}
                                 @foreach($dayNames as $day)
                                     @php
-                                        $dayLower = strtolower($day);
-                                        $timeKey  = $slot['start'];
-                                        $dropdownMatkul = $coursesBySlot[$dayLower][$timeKey] ?? [];
+    $dayLower = strtolower($day);
+    $timeKey  = $slot['start'];
+    $dropdownMatkul = $coursesBySlot[$dayLower][$timeKey] ?? [];
 
-                                        // 1. Cari Jadwal Kuliah Dia Sendiri
-                                        $kelasKuliah = $weeklyClasses->first(function($item) use ($day, $slot) {
-                                            if (strtolower($item->hari) !== strtolower($day)) return false;
-                                            $itemStart = substr($item->jam_mulai, 0, 5);
-                                            $itemEnd   = substr($item->jam_selesai, 0, 5);
-                                            return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
-                                        });
+    // 1. Cari Jadwal Kuliah Dia Sendiri
+    $kelasKuliah = $weeklyClasses->first(function($item) use ($day, $slot) {
+        if (strtolower($item->hari) !== strtolower($day)) return false;
+        $itemStart = substr($item->jam_mulai, 0, 5);
+        $itemEnd   = substr($item->jam_selesai, 0, 5);
+        return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
+    });
 
-                                        // 2. Cari Jadwal Tugas Asisten (Praktikum Lab / RA)
-                                        $jadwalKalender = $assistantAllSchedules->first(function($item) use ($day, $slot) {
-                                            if (strtolower($item->hari) !== strtolower($day)) return false;
-                                            $itemStart = substr($item->jam_mulai, 0, 5);
-                                            $itemEnd   = substr($item->jam_selesai, 0, 5);
-                                            return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
-                                        });
+    // 2. Cari Jadwal Tugas Asisten (Praktikum Lab / RA)
+    $jadwalKalender = $assistantAllSchedules->first(function($item) use ($day, $slot) {
+        if (strtolower($item->hari) !== strtolower($day)) return false;
+        $itemStart = substr($item->jam_mulai, 0, 5);
+        $itemEnd   = substr($item->jam_selesai, 0, 5);
+        return ($itemStart < $slot['end'] && $itemEnd > $slot['start']);
+    });
 
-                                        $statusAwal = 'KOSONG';
-                                        $namaMatkulAktif = '';
-                                        $isStartHour = false;
-                                        $isTengahSesi = false;
-                                        
-                                        if ($jadwalKalender) {
-                                            $itemStart = substr($jadwalKalender->jam_mulai, 0, 5);
-                                            // True jika sesi bermula di rentang kotak slot ini
-                                            $isStartHour = ($itemStart >= $slot['start'] && $itemStart < $slot['end']);
-                                            $isTengahSesi = !$isStartHour;
-                                            
-                                            $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
-                                            $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
-                                            $namaMatkulAktif = trim($jadwalKalender->matkul);
-                                        } elseif ($kelasKuliah) {
-                                            $itemStart = substr($kelasKuliah->jam_mulai, 0, 5);
-                                            $isStartHour = ($itemStart >= $slot['start'] && $itemStart < $slot['end']);
-                                            $isTengahSesi = !$isStartHour;
-                                            
-                                            $statusAwal = 'KULIAH_SENDIRI';
-                                            $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
-                                        }
-                                    @endphp
+    $statusAwal = 'KOSONG';
+    $namaMatkulAktif = '';
+    $isStartHour = false;
+    $isTengahSesi = false;
+    
+    if ($jadwalKalender) {
+        $itemStart = substr($jadwalKalender->jam_mulai, 0, 5);
+        $itemEnd   = substr($jadwalKalender->jam_selesai, 0, 5);
+        
+        // 🌟 LOGIKA BARU: Cari kotak slot pertama yang bersentuhan dengan jam matkul ini
+        $firstSlot = collect($timeSlots)->first(function($ts) use ($itemStart, $itemEnd) {
+            return ($itemStart < $ts['end'] && $itemEnd > $ts['start']);
+        });
+        
+        // Jika kotak saat ini adalah kotak pertama yang bersentuhan, munculkan Dropdown!
+        $isStartHour = $firstSlot && ($firstSlot['start'] === $slot['start']);
+        $isTengahSesi = !$isStartHour;
+        
+        $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
+        $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
+        $namaMatkulAktif = trim($jadwalKalender->matkul);
+
+    } elseif ($kelasKuliah) {
+        $itemStart = substr($kelasKuliah->jam_mulai, 0, 5);
+        $itemEnd   = substr($kelasKuliah->jam_selesai, 0, 5);
+        
+        // 🌟 LOGIKA BARU BERLAKU SAMA UNTUK KULIAH PRIBADI
+        $firstSlot = collect($timeSlots)->first(function($ts) use ($itemStart, $itemEnd) {
+            return ($itemStart < $ts['end'] && $itemEnd > $ts['start']);
+        });
+        
+        $isStartHour = $firstSlot && ($firstSlot['start'] === $slot['start']);
+        $isTengahSesi = !$isStartHour;
+        
+        $statusAwal = 'KULIAH_SENDIRI';
+        $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
+    }
+@endphp
 
                                     @if($isTengahSesi)
                                         {{-- 🔒 TENGAH SESI TERKUNCI (Ekor dari Sesi Sebelumnya) --}}
