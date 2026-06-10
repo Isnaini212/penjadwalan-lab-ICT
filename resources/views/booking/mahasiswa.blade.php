@@ -134,7 +134,7 @@
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas (Jumlah Peserta) <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="number" name="kapasitas" required placeholder="Cth: 30" value="{{ old('kapasitas') }}" 
+                            <input type="number" name="kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}" 
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-chair absolute left-4 top-3.5 text-slate-400"></i>
                         </div>

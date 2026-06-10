@@ -114,7 +114,7 @@
                                     @if($opt['is_busy'])
                                         {{-- JIKA LAB KEPAKE: Kunci dan warnai merah --}}
                                         <option value="" disabled class="bg-red-50 font-bold text-red-500">
-                                            ❌ {{ $opt['nama_lab'] }} (Kepakai)
+                                            {{ $opt['nama_lab'] }} (Kepakai)
                                         </option>
                                     @else
                                         {{-- JIKA LAB KOSONG: Biarkan bisa dipilih dan warnai hijau --}}
@@ -128,15 +128,17 @@
                         </form>
                     </td>
                     {{-- Dokumen PDF --}}
-                    <td class="px-4 py-4 text-center">
-                        @if($b->dokumen)
-                            <a href="{{ asset('storage/' . $b->dokumen) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-500 hover:text-white border border-red-200">
-                                <i class="fas fa-file-pdf"></i> Buka PDF
-                            </a>
-                        @else
-                            <span class="text-xs font-bold text-slate-300">- N/A -</span>
-                        @endif
-                    </td>
+                    {{-- Dokumen PDF --}}
+{{-- Dokumen PDF --}}
+<td class="px-4 py-4 text-center">
+    @if($b->file_surat)
+        <a href="{{ asset('surat_ormawa/' . $b->file_surat) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-500 hover:text-white border border-red-200">
+            <i class="fas fa-file-pdf"></i> Buka PDF
+        </a>
+    @else
+        <span class="text-xs font-bold text-slate-300">- N/A -</span>
+    @endif
+</td>
 
                     {{-- Aksi --}}
                     <td class="px-6 py-4">

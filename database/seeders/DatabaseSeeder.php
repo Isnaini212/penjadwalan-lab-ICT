@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'name'     => 'SPV Penjadwalan',
-            'email'    => 'son@gmail.com',
+            'email'    => 'spv@gmail.com',
             'password' => Hash::make('123'),
             'role'     => 'spv',
         ]);
