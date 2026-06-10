@@ -57,18 +57,26 @@
     <div id="days-container" class="space-y-4"></div>
 
     <div class="bg-white border border-slate-200 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl shadow-blue-950/5">
-        <div class="text-sm font-semibold text-slate-500">
-            Total: <span id="total-matkul" class="text-slate-900 font-black">0</span> matkul di <span id="total-hari" class="text-slate-900 font-black">0</span> hari
-        </div>
-        <div class="flex items-center gap-3 w-full sm:w-auto">
+    <div class="text-sm font-semibold text-slate-500">
+        Total: <span id="total-matkul" class="text-slate-900 font-black">0</span> matkul di <span id="total-hari" class="text-slate-900 font-black">0</span> hari
+    </div>
+    
+    <div class="flex items-center gap-3 w-full sm:w-auto">
+        @if(cache('lock_asisten_schedule', false))
+            {{-- Notif jika jadwal sudah dikunci oleh SPV --}}
+            <span class="text-xs font-bold text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-xl">
+                <i class="fas fa-lock mr-1"></i> Jadwal telah di-finalisasi oleh SPV. Anda hanya dapat melihat & mengunduh PDF.
+            </span>
+        @else
             <button class="flex-1 sm:flex-none px-4 py-2 text-sm font-bold border border-slate-200 text-slate-600 bg-white rounded-xl hover:bg-slate-50 transition" onclick="resetAll()">
                 Reset
             </button>
             <button class="flex-1 sm:flex-none px-5 py-2 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 disabled:opacity-40 disabled:pointer-events-none transition flex items-center justify-center gap-2" id="btn-submit" onclick="handleSubmit()" disabled>
                 <i class="fas fa-save"></i> Simpan Jadwal
             </button>
-        </div>
+        @endif
     </div>
+</div>
 
     <div class="{{ isset($savedSchedulesFlat) && $savedSchedulesFlat->count() > 0 ? '' : 'hidden' }} bg-white border border-slate-200 rounded-2xl p-5 shadow-xl shadow-blue-950/5" id="result-preview">
         <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2 mb-4">

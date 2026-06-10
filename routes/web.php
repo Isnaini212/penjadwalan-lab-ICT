@@ -51,6 +51,19 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
     Route::delete('/spv/asisten-clear', [AsistenController::class, 'clearAsistenSchedule'])->name('asisten.clear');
     Route::post('/spv/import-asisten', [AsistenController::class, 'importAsistenExcel'])->name('spv.importAsisten');
 
+    Route::post('/spv/toggle-jadwal-akses', function (\Illuminate\Http\Request $request) {
+        if ($request->status_akses === 'kunci') {
+            // Kunci jadwal asisten selama 30 hari permanen
+            cache(['lock_asisten_schedule' => true], now()->addDays(30));
+            return back()->with('success', 'Jadwal asisten berhasil di-finalisasi! Akses edit asisten resmi ditutup.');
+        } else {
+            // Hapus kunci
+            cache()->forget('lock_asisten_schedule');
+            return back()->with('success', 'Akses pengisian jadwal asisten berhasil dibuka kembali!');
+        }
+    })->name('spv.toggle_jadwal_akses');
+
+
     // MANAJEMEN ASISTEN & MATRIX
     Route::get('/spv/jasis', [AsistenController::class, 'manajemenasisten'])->name('spv.jasis'); 
     Route::post('/spv/matrix-schedule/update', [AsistenController::class, 'updateMatrixRA'])->name('schedule.matrix.update');
