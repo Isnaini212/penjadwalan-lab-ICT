@@ -28,6 +28,11 @@
         
         <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
             
+            <a href="{{ route('asisten.cetak_matriks') }}" target="_blank" class="flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full hover:bg-emerald-100 hover:text-emerald-700 transition shadow-sm" title="Cetak Matriks Jaga Lab">
+                <i class="fas fa-print"></i> 
+                <span class="hidden sm:inline">Cetak Jadwal</span>
+            </a>
+
             <a href="{{ url('/profile') }}" class="flex items-center justify-center gap-2 px-3 py-2 sm:py-1.5 text-xs font-bold bg-white text-slate-600 border border-slate-200 rounded-full hover:bg-slate-50 hover:text-blue-600 transition shadow-sm" title="Edit Profil">
                 <i class="fas fa-user-edit"></i> 
                 <span class="hidden sm:inline">Profil</span>
@@ -65,7 +70,7 @@
         </div>
     </div>
 
-    <div class="{{ $savedSchedulesFlat->count() > 0 ? '' : 'hidden' }} bg-white border border-slate-200 rounded-2xl p-5 shadow-xl shadow-blue-950/5" id="result-preview">
+    <div class="{{ isset($savedSchedulesFlat) && $savedSchedulesFlat->count() > 0 ? '' : 'hidden' }} bg-white border border-slate-200 rounded-2xl p-5 shadow-xl shadow-blue-950/5" id="result-preview">
         <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2 mb-4">
             <i class="fas fa-calendar-check text-emerald-500 text-base"></i> Jadwal Kuliah Saya yang Terdaftar
         </h2>
@@ -79,20 +84,21 @@
                     </tr>
                 </thead>
                 <tbody id="result-tbody" class="divide-y divide-slate-50 font-medium text-slate-700">
-                    {{-- 🟢 CETAKAN BLADE LANGSUNG DARI SQL PAS REFRESH/LOAD HALAMAN --}}
-                    @foreach($savedSchedulesFlat as $sch)
-                        <tr class="hover:bg-slate-50/50 transition">
-                            <td class="py-3 px-3">
-                                <span class="inline-block text-xs font-black px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                                    {{ $sch->hari }}
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 font-bold text-slate-800">{{ $sch->mata_kuliah }}</td>
-                            <td class="py-3 px-3 font-mono text-xs tracking-wider font-bold text-indigo-600">
-                                {{ date('H:i', strtotime($sch->jam_mulai)) }} – {{ date('H:i', strtotime($sch->jam_selesai)) }}
-                            </td>
-                        </tr>
-                    @endforeach
+                    @if(isset($savedSchedulesFlat))
+                        @foreach($savedSchedulesFlat as $sch)
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="py-3 px-3">
+                                    <span class="inline-block text-xs font-black px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                                        {{ $sch->hari }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 font-bold text-slate-800">{{ $sch->mata_kuliah }}</td>
+                                <td class="py-3 px-3 font-mono text-xs tracking-wider font-bold text-indigo-600">
+                                    {{ date('H:i', strtotime($sch->jam_mulai)) }} – {{ date('H:i', strtotime($sch->jam_selesai)) }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -106,12 +112,10 @@
   const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
   const SKS_OPTS = ['1 SKS', '2 SKS', '3 SKS', '4 SKS'];
 
-  // Initialize State Awal
   let state = {
     'Senin': [], 'Selasa': [], 'Rabu': [], 'Kamis': [], 'Jumat': []
   };
 
-  // 🌟 AMBIL JADWAL LAMA DARI SQL
   @if(isset($existingSchedules))
     @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $d)
       @if(isset($existingSchedules[$d]))
@@ -146,25 +150,16 @@
     return h * 60 + m;
   }
 
- function hitungJamSelesai(jamMulai, sksText) {
-    // 🌟 PROTEKSI: Jika jam mulai belum lengkap 5 karakter (HH:MM), langsung stop
+  function hitungJamSelesai(jamMulai, sksText) {
     if (!jamMulai || jamMulai.length < 5) return '';
-    
     const sksTotal = parseInt(sksText) || 2;
-    
-    // 🌟 SELESAI: Ubah pengali jadi 52.5 menit murni sesuai aturan kampus lu
-    const tambahanMenit = sksTotal * 52.5;
-    
+    const tambahanMenit = sksTotal * 50;
     const [h, m] = jamMulai.split(':').map(Number);
-    
-    // 🌟 SAKTI: Gunakan Math.round() agar hasil desimal .5 dibulatkan ke menit bulat terdekat
     let totalMenit = Math.round(h * 60 + m + tambahanMenit);
-    
     let endH = Math.floor(totalMenit / 60) % 24;
     let endM = totalMenit % 60;
-    
     return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-}
+  }
 
   function getConflicts(day) {
     const rows = state[day].filter(r => r.start && r.end && toMin(r.start) < toMin(r.end));

@@ -632,96 +632,55 @@ public function putsen()
 
     return view('asisten.form_jadwal_asisten', compact('existingSchedules', 'savedSchedulesFlat'));
 }
- private function syncRaBlocks(array $slots, array $slotEnds, string $day, array $allAsistenIds, Lab $ruangRAObj, AssistantSchedule $asistenObj): void
-    {
-        Schedule::whereIn('id_asisten', $allAsistenIds)
-            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-            ->where('id_lab', $ruangRAObj->id_lab)
-            ->delete();
 
-        $raBlocks = [];
-        $currentBlock = null;
+public function cetakMatriks() {
+        // 1. Ambil nama asisten
+        $nama = strtoupper(trim(auth()->user()->name ?? auth()->user()->nama ?? 'ASISTEN'));
 
-        foreach ($slots as $jamMulai => $status) {
-            if ($status === 'RA') {
-                $jamSelesai = $slotEnds[$jamMulai] ?? null;
+        // 2. Ambil jadwal kuliah (AssistantSchedule)
+        $weeklyClasses = \App\Models\AssistantSchedule::where('nama_asisten', $nama)
+            ->where('mata_kuliah', '!=', '-')
+            ->get();
+        
+        // 🌟 SAKTI 1: Tarik data jadwal penugasan beserta data LAB-nya
+        // Kita cari id_asisten yang nama_asisten-nya cocok dengan yang lagi login
+        $assistantAllSchedules = \App\Models\Schedule::with('lab') // Tarik relasi 'lab'
+            ->whereHas('assistantSchedule', function($query) use ($nama) {
+                $query->where('nama_asisten', $nama);
+            })
+            ->get();
 
-                if (!$jamSelesai) {
-                    continue;
-                }
+        $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        
+        // 4. Array Slot Jam
+        $timeSlotsRaw = [
+            '08:00' => '08:50', '08:55' => '09:45', '09:50' => '10:40', '10:45' => '11:35',
+            '11:40' => '12:25', 
+            '12:30' => '13:20', '13:25' => '14:15', '14:20' => '15:10', '15:15' => '16:05',
+            '16:10' => '17:00', 
+            '17:05' => '17:55', 
+            '18:00' => '18:50', '18:55' => '19:45', '19:50' => '20:40', '20:45' => '21:35'
+        ];
 
-                if (!$currentBlock) {
-                    $currentBlock = ['start' => $jamMulai, 'end' => $jamSelesai];
-                } else {
-                    $diffMinutes = round((strtotime($jamMulai) - strtotime($currentBlock['end'])) / 60);
-
-                    if ($diffMinutes <= 5) {
-                        $currentBlock['end'] = $jamSelesai;
-                    } else {
-                        $raBlocks[] = $currentBlock;
-                        $currentBlock = ['start' => $jamMulai, 'end' => $jamSelesai];
-                    }
-                }
-            } elseif ($currentBlock) {
-                $raBlocks[] = $currentBlock;
-                $currentBlock = null;
-            }
+        // 5. Format ulang jam
+        $timeSlots = [];
+        foreach ($timeSlotsRaw as $start => $end) {
+            $timeSlots[] = [
+                'start' => $start,
+                'end'   => $end,
+                'label' => $start . ' - ' . $end
+            ];
         }
 
-        if ($currentBlock) {
-            $raBlocks[] = $currentBlock;
-        }
+        // 6. Generate PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('asisten.cetak', compact('nama', 'timeSlots', 'dayNames', 'weeklyClasses', 'assistantAllSchedules'))
+                  ->setPaper('a4', 'landscape');
 
-        $period = CarbonPeriod::create(Carbon::now(), Carbon::now()->addMonths(6));
+        // 🌟 SAKTI 3: Bersihkan nama dari karakter aneh (termasuk / dan \) biar aman jadi nama file
+        $namaAman = \Illuminate\Support\Str::slug($nama, '_');
 
-        foreach ($raBlocks as $block) {
-            $bStart = $block['start'];
-            $bEnd = $block['end'];
-
-            $isBusyInLab = Schedule::whereIn('id_asisten', $allAsistenIds)
-                ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
-                ->whereRaw('LEFT(jam_selesai, 5) > ?', [$bStart])
-                ->exists();
-
-            if ($isBusyInLab) {
-                throw new \Exception("Jam {$bStart}-{$bEnd} tidak bisa diisi RA karena asisten sedang mengajar LAB.");
-            }
-
-            $bentrokKuliahRA = AssistantSchedule::where('nama_asisten', $asistenObj->nama_asisten)
-                ->where('mata_kuliah', '!=', '-')
-                ->where('mata_kuliah', '!=', '')
-                ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
-                ->whereRaw('LEFT(jam_selesai, 5) > ?', [$bStart])
-                ->exists();
-
-            if ($bentrokKuliahRA) {
-                throw new \Exception("Gagal menugaskan RA di jam {$bStart}-{$bEnd}. Bentrok dengan jam kuliah asisten.");
-            }
-
-            $durationMins = round((strtotime($bEnd) - strtotime($bStart)) / 60);
-            $calculatedSks = max(1, round($durationMins / 50));
-
-            foreach ($period as $date) {
-                if (strtolower($date->locale('id')->translatedFormat('l')) === strtolower($day)) {
-                    Schedule::create([
-                        'tanggal' => $date->format('Y-m-d'),
-                        'hari' => $day,
-                        'id_lab' => $ruangRAObj->id_lab,
-                        'id_asisten' => $asistenObj->id_asisten,
-                        'jam_mulai' => $bStart,
-                        'jam_selesai' => $bEnd,
-                        'matkul' => 'RA',
-                        'sks' => $calculatedSks,
-                        'dosen' => '-',
-                    ]);
-                }
-            }
-        }
+        return $pdf->stream('Jadwal_Kerja_' . $namaAman . '.pdf');
     }
-
 }
 
 

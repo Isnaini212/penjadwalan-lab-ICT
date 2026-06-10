@@ -100,6 +100,7 @@ Route::middleware(['auth', 'role:asisten'])->group(function () {
     Route::get('/asisten/jadwal', [AsistenController::class, 'inputMatrix'])->name('asisten.jadwal');
     Route::post('/asisten/simpan-jadwal', [AsistenController::class, 'storsis'])->name('asisten.jadwal.store');
     Route::delete('/asisten/jadwal/{id}', [AsistenController::class, 'hapusJadwal'])->name('asisten.jadwal.delete');
+    Route::get('/asisten/cetak-matriks', [\App\Http\Controllers\AsistenController::class, 'cetakMatriks'])->name('asisten.cetak_matriks');
 });
 
 require __DIR__.'/auth.php';
