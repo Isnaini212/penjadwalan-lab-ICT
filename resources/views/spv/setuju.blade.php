@@ -106,6 +106,8 @@
                                 @endif
 
                                 @foreach($b->lab_options as $opt)
+                                    @continue(! str_contains(strtoupper($opt['nama_lab']), 'LAB'))
+
                                     @php
                                         // Pengecekan agar lab yang sedang dipilih saat ini langsung aktif
                                         $isSelected = ($b->current_id_lab == $opt['id_lab'] || $b->current_lab == $opt['nama_lab']);

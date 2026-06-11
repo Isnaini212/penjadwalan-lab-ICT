@@ -147,16 +147,35 @@
                             <th class="px-6 py-4 font-extrabold border-b border-slate-100">Email Login</th>
                             <th class="px-6 py-4 font-extrabold border-b border-slate-100">Role</th>
                             <th class="px-6 py-4 font-extrabold border-b border-slate-100 text-center">Status Sandi</th>
+                            <th class="px-6 py-4 font-extrabold border-b border-slate-100 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse($users as $user)
                             <tr class="hover:bg-slate-50/50 transition">
                                 <td class="px-6 py-4">
-                                    <div class="font-bold text-sm text-slate-800">{{ $user->name }}</div>
+                                    <form id="update-user-{{ $user->id }}" action="{{ route('akun.update', $user) }}" method="POST" class="hidden">
+                                        @csrf
+                                        @method('PATCH')
+                                    </form>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value="{{ old('name', $user->name) }}"
+                                        form="update-user-{{ $user->id }}"
+                                        required
+                                        class="h-10 w-full min-w-[180px] rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                                    >
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-slate-500">{{ $user->email }}</div>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value="{{ old('email', $user->email) }}"
+                                        form="update-user-{{ $user->id }}"
+                                        required
+                                        class="h-10 w-full min-w-[210px] rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                                    >
                                 </td>
                                 <td class="px-6 py-4">
                                     @if($user->role == 'asisten')
@@ -179,10 +198,20 @@
                                         <i class="fas fa-lock text-[10px]"></i> Terlindungi
                                     </span>
                                 </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button
+                                        type="submit"
+                                        form="update-user-{{ $user->id }}"
+                                        class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
+                                    >
+                                        <i class="fas fa-save"></i>
+                                        Perbarui
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium">
+                                <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">
                                     <i class="fas fa-folder-open text-3xl mb-3 text-slate-200 block"></i>
                                     Belum ada akun yang didaftarkan.
                                 </td>

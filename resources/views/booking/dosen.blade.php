@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Dosen - Booking Lab ICT</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}"> 
-    
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/LogoICT.png" href="{{ asset('images/LogoICT.png') }}">
+
+
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -23,7 +26,7 @@
                 <i class="fas fa-chalkboard-teacher text-2xl"></i>
                 <span>LabSystem <span class="text-slate-400 font-medium">| Dosen Portal</span></span>
             </div>
-            
+
             {{-- 🌟 LOGIC: Profil User & Tombol Logout --}}
             <div class="flex items-center gap-4">
                 <div class="hidden sm:flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
@@ -41,7 +44,7 @@
     </nav>
 
     <main class="container mx-auto px-4 py-10 max-w-5xl">
-        
+
         <div class="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40">
             <div class="mb-8 border-b border-slate-100 pb-5">
                 <h2 class="text-xl font-extrabold text-slate-900 md:text-2xl">
@@ -68,12 +71,12 @@
                 @csrf
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    
+
                     {{-- 🌟 LOGIC: Nama Dosen Terkunci & Otomatis Terisi --}}
                     <div class="md:col-span-12">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Lengkap Dosen</label>
                         <div class="relative">
-                            <input type="text" name="nm_dosen" required readonly value="{{ auth()->user()->name }}" 
+                            <input type="text" name="nm_dosen" required readonly value="{{ auth()->user()->name }}"
                                    class="w-full rounded-xl border border-slate-200 bg-slate-100 py-3 px-4 pl-11 text-sm font-bold text-slate-500 outline-none cursor-not-allowed">
                             <i class="fas fa-user-tie absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
@@ -82,7 +85,7 @@
 
                     <div class="md:col-span-4">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Tanggal <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal" id="input_tanggal" required value="{{ old('tanggal') }}" 
+                        <input type="date" name="tanggal" id="input_tanggal" required value="{{ old('tanggal') }}"
                                class="trigger-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
 
@@ -123,13 +126,13 @@
 
                     <div class="md:col-span-4">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas Mahasiswa <span class="text-red-500">*</span></label>
-                        <input type="number" name="kapasitas" required placeholder="Cth: 40" 
+                        <input type="number" name="kapasitas" required placeholder="Cth: 40"
                                class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
-                    
+
                     <div class="md:col-span-8">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara / Keperluan Matkul <span class="text-red-500">*</span></label>
-                        <input type="text" name="keperluan" required placeholder="Cth: Ujian Pemrograman Web" 
+                        <input type="text" name="keperluan" required placeholder="Cth: Ujian Pemrograman Web"
                                class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
                 </div>
@@ -210,7 +213,7 @@
                 </table>
             </div>
         </div>
-        
+
         <div class="mt-8 text-center text-xs font-semibold text-slate-400 pb-10">
             &copy; {{ date('Y') }} Laboratorium Komputer ICT. All rights reserved.
         </div>
@@ -219,7 +222,7 @@
     <script>
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('time-formatter')) {
-                let inputVal = e.target.value.replace(/\D/g, ''); 
+                let inputVal = e.target.value.replace(/\D/g, '');
                 if (inputVal.length > 4) inputVal = inputVal.substring(0, 4);
                 let formatted = inputVal;
                 if (inputVal.length > 2) {
@@ -243,7 +246,7 @@
                     let hrStr = hours < 10 ? '0' + hours : hours;
                     let mnStr = mins < 10 ? '0' + mins : mins;
                     e.target.value = hrStr + ':' + mnStr;
-                    e.target.dispatchEvent(new Event('change')); 
+                    e.target.dispatchEvent(new Event('change'));
                 } else if (val.length > 0 && val.length < 5) {
                     alert('Format jam tidak valid. Ketik 4 angka (contoh: 0800)');
                     e.target.value = '';
@@ -300,9 +303,9 @@
 
                         data.labs.forEach(lab => {
                             let option = document.createElement('option');
-                            option.value = lab.id_lab; 
+                            option.value = lab.id_lab;
                             option.setAttribute('data-fasilitas', lab.fasilitas);
-                            
+
                             if (lab.is_busy) {
                                 option.disabled = true;
                                 option.textContent = `❌ ${lab.nama_lab} (Penuh/Bentrok)`;

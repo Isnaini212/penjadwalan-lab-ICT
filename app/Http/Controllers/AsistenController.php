@@ -14,39 +14,39 @@ use Carbon\CarbonPeriod;
 
 class AsistenController extends Controller
 {
-    
-    public function jadwalAsisten(Request $request) 
+
+    public function jadwalAsisten(Request $request)
     {
         $semuaAsisten = AssistantSchedule::select('nama_asisten')->distinct()->get();
-        
+
         $namaDicari = $request->query('nama');
         $hariDicari = $request->query('hari');
 
         if ($namaDicari || $hariDicari) {
             $query = AssistantSchedule::query();
-            
+
             if ($namaDicari) { $query->where('nama_asisten', $namaDicari); }
             if ($hariDicari) { $query->where('hari', $hariDicari); }
-            
+
             $asistenSchedules = $query->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
                                       ->orderBy('jam_mulai', 'asc')
                                       ->get();
         } else {
-            $asistenSchedules = collect([]); 
+            $asistenSchedules = collect([]);
         }
 
         return view('spv.asisten', compact('semuaAsisten', 'asistenSchedules', 'namaDicari', 'hariDicari'));
         }
 
 
-    
+
     public function storeAsisten(Request $request)
     {
         $request->validate([
             'nama_asisten' => 'required|string',
             'hari'         => 'required|string',
             'jam_mulai'    => 'required',
-            'sks'          => 'required|numeric', 
+            'sks'          => 'required|numeric',
             'mata_kuliah'  => 'required|string',
         ]);
 
@@ -65,10 +65,10 @@ class AsistenController extends Controller
     }
 
 
-    
+
     public function updateAsisten(Request $request, $id)
     {
-    
+
     $request->validate([
         'nama_asisten' => 'required|string|max:255',
         'hari'         => 'required|string',
@@ -77,35 +77,35 @@ class AsistenController extends Controller
         'mata_kuliah'  => 'required|string|max:255',
     ]);
 
-    
+
     $jadwal = AssistantSchedule::where('id_asisten', $id)->first();
 
-    
+
     if (!$jadwal) {
         return back()->with('error', 'Gagal! Data jadwal asisten tidak ditemukan.');
     }
 
-    
+
     $jadwal->nama_asisten = $request->nama_asisten;
     $jadwal->hari         = $request->hari;
     $jadwal->jam_mulai    = $request->jam_mulai;
     $jadwal->jam_selesai  = $request->jam_selesai;
     $jadwal->mata_kuliah  = $request->mata_kuliah;
 
-    
+
     $jadwal->save();
 
-    
+
     return back()->with('success', 'Jadwal asisten berhasil diperbarui secara permanen!');
     }
-   
+
     public function destroyAsisten($id)
     {
         $asisten = AssistantSchedule::findOrFail($id);
         $asisten->delete();
         return back()->with('success', 'Jadwal asisten berhasil dihapus!');
     }
-    public function importAsistenExcel(Request $request) 
+    public function importAsistenExcel(Request $request)
     {
         $request->validate([
             'file_asisten' => 'required|mimes:xlsx,xls,csv|max:5120'
@@ -127,7 +127,7 @@ class AsistenController extends Controller
             };
 
             foreach ($rows as $row) {
-                if (empty(array_filter($row))) continue; 
+                if (empty(array_filter($row))) continue;
 
                 $seninIndex = array_search('Senin', $row);
                 if ($seninIndex !== false) {
@@ -163,13 +163,13 @@ class AsistenController extends Controller
                         $matkul = isset($row[$colIndex]) ? trim($row[$colIndex]) : '';
 
                         if ($matkul !== '') {
-                            if (isset($pendingSchedules[$namaHari]) && 
-                                $pendingSchedules[$namaHari]['mata_kuliah'] === $matkul && 
+                            if (isset($pendingSchedules[$namaHari]) &&
+                                $pendingSchedules[$namaHari]['mata_kuliah'] === $matkul &&
                                 $pendingSchedules[$namaHari]['nama_asisten'] === trim($currentAssistant)) {
                                 $pendingSchedules[$namaHari]['jam_selesai'] = $jamSelesai;
                             } else {
                                 $flushSchedule($namaHari);
-                                
+
                                 $pendingSchedules[$namaHari] = [
                                     'nama_asisten' => trim($currentAssistant),
                                     'hari'         => $namaHari,
@@ -184,7 +184,7 @@ class AsistenController extends Controller
                     }
                 }
             }
-            
+
             foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $h) {
                 $flushSchedule($h);
             }
@@ -212,7 +212,7 @@ class AsistenController extends Controller
 
 
 
-    
+
 
       public function manajemenasisten(Request $request)
 {
@@ -223,7 +223,7 @@ class AsistenController extends Controller
         ['start' => '09:50', 'end' => '10:40', 'label' => '09.50-10.40'],
         ['start' => '10:45', 'end' => '11:35', 'label' => '10.45-11.35'],
         ['start' => '11:40', 'end' => '12:25', 'label' => '11.40-12.25'], // ✨ PENENGAH SIANG
-        ['start' => '12:30', 'end' => '13:20', 'label' => '12.30-13.20'], 
+        ['start' => '12:30', 'end' => '13:20', 'label' => '12.30-13.20'],
         ['start' => '13:25', 'end' => '14:15', 'label' => '13.25-14.15'],
         ['start' => '14:20', 'end' => '15:10', 'label' => '14.20-15.10'],
         ['start' => '15:15', 'end' => '16:05', 'label' => '15.15-16.05'],
@@ -235,10 +235,10 @@ class AsistenController extends Controller
         ['start' => '20:45', 'end' => '21:35', 'label' => '20.45-21.35'],
     ];
 
-    $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 
     $ruangRAObj = \App\Models\Lab::firstOrCreate(
-        ['nama_lab' => 'RUANG ASISTEN'], 
+        ['nama_lab' => 'RUANG ASISTEN'],
         ['kapasitas' => 0, 'fasilitas' => '-']
     );
 
@@ -312,7 +312,7 @@ public function updateMatrixRA(Request $request)
         '08:00' => '08:50', '08:55' => '09:45', '09:50' => '10:40', '10:45' => '11:35',
         '11:40' => '12:25', // ✨ PENENGAH SIANG
         '12:30' => '13:20', '13:25' => '14:15', '14:20' => '15:10', '15:15' => '16:05',
-        '16:10' => '17:00', 
+        '16:10' => '17:00',
         '17:05' => '17:55', // ✨ PENENGAH SORE
         '18:00' => '18:50', '18:55' => '19:45', '19:50' => '20:40', '20:45' => '21:35'
     ];
@@ -321,7 +321,7 @@ public function updateMatrixRA(Request $request)
 
     try {
         $asistenObj = AssistantSchedule::firstOrCreate(
-            ['nama_asisten' => $nama], 
+            ['nama_asisten' => $nama],
             ['hari' => '-', 'jam_mulai' => '00:00', 'jam_selesai' => '00:00', 'mata_kuliah' => '-']
         );
         $ruangRAObj = Lab::firstOrCreate(['nama_lab' => 'RUANG ASISTEN'], ['kapasitas' => 0, 'fasilitas' => '-']);
@@ -329,8 +329,8 @@ public function updateMatrixRA(Request $request)
         $allAsistenIds = AssistantSchedule::where('nama_asisten', $nama)->pluck('id_asisten')->toArray();
 
         foreach ($cells as $day => $slots) {
-            $raChanged = false; 
-            ksort($slots); 
+            $raChanged = false;
+            ksort($slots);
 
             // Cek perubahan RA
             foreach ($slots as $jamMulai => $statusBaru) {
@@ -437,7 +437,7 @@ public function updateMatrixRA(Request $request)
             }
 
             // ==========================================
-            // PROSES MATKUL PRAKTIKUM LAB 
+            // PROSES MATKUL PRAKTIKUM LAB
             // ==========================================
             foreach ($slots as $jamMulai => $statusBaru) {
                 $statusLama = $oldCells[$day][$jamMulai] ?? 'KOSONG';
@@ -500,15 +500,15 @@ public function updateMatrixRA(Request $request)
             }
         }
 
-        DB::commit(); 
+        DB::commit();
         return back()->with('success', '💾 Penugasan asisten relasional berhasil disinkronkan.');
     } catch (\Exception $e) {
-        DB::rollBack(); 
+        DB::rollBack();
         return back()->with('error', 'Peringatan Sistem: ' . $e->getMessage());
     }
 }
-    
-   
+
+
     public function inputMatrix()
 {
     // 1. Ambil nama user yang login & paksa kapital semua biar sinkron di DB
@@ -533,7 +533,7 @@ public function updateMatrixRA(Request $request)
     return view('asisten.input', compact('existingSchedules', 'savedSchedulesFlat'));
 }
 
-    
+
    public function storsis(Request $request)
 {
     // Validasi paket data dari AJAX Fetch
@@ -555,14 +555,14 @@ public function updateMatrixRA(Request $request)
         // 2. Looping per Hari dan per Matkul yang dikirim dari Frontend
         foreach ($jadwal as $hari => $matkuls) {
             if (!is_array($matkuls)) continue;
-            
+
             foreach ($matkuls as $item) {
                 // Pastikan baris data tidak kosong sebelum di-insert
                 if (!empty($item['name']) && !empty($item['start']) && !empty($item['end'])) {
-                    
+
                     // Format Matkul + SKS karena di DB lu gak ada kolom SKS tersendiri
                     $matkulDenganSks = strtoupper(trim($item['name'])) . ' (' . ($item['sks'] ?? '2 SKS') . ')';
-                    
+
                     \App\Models\AssistantSchedule::create([
                         'nama_asisten' => $namaUser,
                         'hari'         => $hari,
@@ -582,13 +582,13 @@ public function updateMatrixRA(Request $request)
 
         DB::commit();
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'message' => 'Jadwal kuliah berhasil disinkronkan ke database!'
         ]);
     } catch (\Exception $e) {
         DB::rollBack();
         return response()->json([
-            'success' => false, 
+            'success' => false,
             'message' => 'Gagal menyimpan data: ' . $e->getMessage()
         ], 500);
     }
@@ -641,7 +641,7 @@ public function cetakMatriks() {
         $weeklyClasses = \App\Models\AssistantSchedule::where('nama_asisten', $nama)
             ->where('mata_kuliah', '!=', '-')
             ->get();
-        
+
         // 🌟 SAKTI 1: Tarik data jadwal penugasan beserta data LAB-nya
         // Kita cari id_asisten yang nama_asisten-nya cocok dengan yang lagi login
         $assistantAllSchedules = \App\Models\Schedule::with('lab') // Tarik relasi 'lab'
@@ -650,15 +650,15 @@ public function cetakMatriks() {
             })
             ->get();
 
-        $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        
+        $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+
         // 4. Array Slot Jam
         $timeSlotsRaw = [
             '08:00' => '08:50', '08:55' => '09:45', '09:50' => '10:40', '10:45' => '11:35',
-            '11:40' => '12:25', 
+            '11:40' => '12:25',
             '12:30' => '13:20', '13:25' => '14:15', '14:20' => '15:10', '15:15' => '16:05',
-            '16:10' => '17:00', 
-            '17:05' => '17:55', 
+            '16:10' => '17:00',
+            '17:05' => '17:55',
             '18:00' => '18:50', '18:55' => '19:45', '19:50' => '20:40', '20:45' => '21:35'
         ];
 
@@ -684,4 +684,3 @@ public function cetakMatriks() {
 }
 
 
-    

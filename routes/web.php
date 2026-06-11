@@ -90,6 +90,7 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
     Route::get('/spv/akun', [AkunController::class, 'buat'])->name('akun');
     
     Route::post('/spv/akun', [AkunController::class, 'simpen'])->name('akun');
+    Route::patch('/spv/akun/{user}', [AkunController::class, 'update'])->name('akun.update');
     
 });
     Route::get('/tv', [TvController::class, 'tvSon'])->name('tv.display');

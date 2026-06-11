@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Penjadwalan Lab ICT</title>
+    <link rel="icon" type="image/LogoICT.png" href="{{ asset('images/LogoICT.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -52,7 +53,7 @@
                 Dashboard
             </a>
         @endif
-        
+
     @else
         {{-- LOGIC: Kalau BELUM login, baru munculin tombol Login ini --}}
         <a href="{{ route('login') }}" class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
@@ -161,20 +162,20 @@
             {{-- 🌟 Kolom 3: Nama Lab (Bisa Diklik Link ke Foto + Subtext) --}}
             <td class="px-6 py-5 text-center">
                 @if($s->lab)
-                    {{-- 
-                      Mengarahkan ke folder public/images/labs/nama-lab.jpg 
+                    {{--
+                      Mengarahkan ke folder public/images/labs/nama-lab.jpg
                       Fungsi Str::slug() otomatis mengubah "LAB 01" menjadi "lab-01"
                     --}}
-                    <a href="{{ asset('images/labs/' . \Illuminate\Support\Str::slug($s->lab->nama_lab) . '.jpg') }}" 
-                       target="_blank" 
+                    <a href="{{ asset('images/labs/' . \Illuminate\Support\Str::slug($s->lab->nama_lab) . '.jpg') }}"
+                       target="_blank"
                        class="group inline-flex flex-col items-center outline-none">
-                        
+
                         {{-- Badge Nama Lab --}}
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-black border border-indigo-100 transition duration-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 shadow-sm">
-                            <i class="fas fa-search-plus mr-1 text-[10px] opacity-70 group-hover:text-white"></i> 
+                            <i class="fas fa-search-plus mr-1 text-[10px] opacity-70 group-hover:text-white"></i>
                             {{ $s->lab->nama_lab }}
                         </span>
-                        
+
                         {{-- Teks Lokasi di Bawah --}}
                         <span class="text-[10px] text-slate-400 font-bold mt-1.5 tracking-tight transition duration-200 group-hover:text-indigo-600 block">
                             *Klik untuk mengetahui lokasi lab
@@ -297,7 +298,7 @@
                                 return line.replace('*Klik untuk mengetahui lokasi lab', '').trim();
                             }).filter(function(line) {
                                 // Singkirkan baris kosong sisa hapusan biar teks murni lab gak turun ke bawah
-                                return line !== ''; 
+                                return line !== '';
                             });
                         }
                     }

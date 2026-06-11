@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Ormawa - Booking Lab ICT</title>
-    
+<link rel="icon" type="image/LogoICT.png" href="{{ asset('images/LogoICT.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         .custom-scrollbar::-webkit-scrollbar { height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
@@ -23,7 +23,7 @@
                 <i class="fas fa-rocket text-2xl"></i>
                 <span>LabSystem <span class="text-slate-400 font-medium">| Ormawa Portal</span></span>
             </div>
-            
+
             {{-- 🌟 LOGIC: Profil User & Tombol Logout --}}
             <div class="flex items-center gap-4">
                 <div class="hidden sm:flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
@@ -41,10 +41,10 @@
     </nav>
 
     <main class="container mx-auto px-4 py-10 max-w-5xl">
-        
+
         {{-- CARD FORM BOOKING --}}
         <div class="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40">
-            
+
             <div class="mb-8 border-b border-slate-100 pb-5">
                 <h2 class="text-xl font-extrabold text-slate-900 md:text-2xl">
                     <i class="fas fa-file-signature mr-2 text-indigo-500"></i> Formulir Peminjaman
@@ -81,13 +81,13 @@
                 <input type="hidden" name="lab" value="Menunggu SPV">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
+
                     {{-- Nama Ormawa (Terkunci & Otomatis) --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Organisasi</label>
                         <div class="relative">
                             {{-- 🌟 LOGIC: Di-readonly dan diisi nama akunnya otomatis --}}
-                            <input type="text" name="nama_ormawa" required readonly value="{{ auth()->user()->name }}" 
+                            <input type="text" name="nama_ormawa" required readonly value="{{ auth()->user()->name }}"
                                    class="w-full rounded-xl border border-slate-200 bg-slate-100 py-3 px-4 pl-11 text-sm font-bold text-slate-500 outline-none cursor-not-allowed uppercase">
                             <i class="fas fa-users absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
@@ -98,16 +98,16 @@
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Penanggung Jawab <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="text" name="penanggung_jawab" required placeholder="Cth: Budi Santoso" value="{{ old('penanggung_jawab') }}" 
+                            <input type="text" name="penanggung_jawab" required placeholder="Cth: Budi Santoso" value="{{ old('penanggung_jawab') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-11 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-user-tie absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
                     </div>
-                    
+
                     {{-- Tanggal --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Tanggal Peminjaman <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal" required value="{{ old('tanggal') }}" 
+                        <input type="date" name="tanggal" required value="{{ old('tanggal') }}"
                                class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
 
@@ -134,17 +134,17 @@
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas (Jumlah Peserta) <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="number" name="kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}" 
+                            <input type="number" name="kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-chair absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
                     </div>
-                    
+
                     {{-- Keperluan --}}
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara & Kebutuhan Software <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="text" name="keperluan" required placeholder="Cth: Pelatihan Desain (Butuh Photoshop)" value="{{ old('keperluan') }}" 
+                            <input type="text" name="keperluan" required placeholder="Cth: Pelatihan Desain (Butuh Photoshop)" value="{{ old('keperluan') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-info-circle absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
@@ -155,7 +155,7 @@
                         <label class="mb-3 block text-sm font-extrabold text-indigo-700">
                             <i class="fas fa-file-pdf mr-2 text-red-500 text-lg"></i> Unggah Surat Peminjaman Resmi
                         </label>
-                        <input type="file" name="file_surat" accept="application/pdf" required 
+                        <input type="file" name="file_surat" accept="application/pdf" required
                                class="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-100 file:px-4 file:py-2 file:text-sm file:font-bold file:text-indigo-700 hover:file:bg-indigo-200 mx-auto max-w-sm cursor-pointer">
                         <p class="mt-2 text-xs font-semibold text-slate-400">Format wajib .PDF (Maksimal 2MB)</p>
                     </div>
@@ -171,7 +171,7 @@
 
         {{-- CARD RIWAYAT BOOKING TERBARU --}}
         <div class="mt-10 rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40">
-            
+
             <div class="mb-6 flex items-center justify-between">
                 <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                     <i class="fas fa-history text-indigo-500"></i> Riwayat Pengajuan Anda
@@ -239,7 +239,7 @@
                 </table>
             </div>
         </div>
-        
+
         {{-- Footer --}}
         <div class="mt-8 text-center text-xs font-semibold text-slate-400">
             &copy; {{ date('Y') }} Laboratorium Komputer ICT. All rights reserved.
@@ -256,7 +256,7 @@
 
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('time-formatter')) {
-                let inputVal = e.target.value.replace(/\D/g, ''); 
+                let inputVal = e.target.value.replace(/\D/g, '');
                 if (inputVal.length > 4) inputVal = inputVal.substring(0, 4);
                 let formatted = inputVal;
                 if (inputVal.length > 2) {
@@ -273,15 +273,15 @@
                     let parts = val.split(':');
                     let hours = parseInt(parts[0], 10);
                     let mins = parseInt(parts[1], 10);
-                    
+
                     if (hours > 23) hours = 23;
                     if (mins > 59) mins = 59;
                     if (isNaN(hours)) hours = 0;
                     if (isNaN(mins)) mins = 0;
-                    
+
                     let hrStr = hours < 10 ? '0' + hours : hours;
                     let mnStr = mins < 10 ? '0' + mins : mins;
-                    
+
                     e.target.value = hrStr + ':' + mnStr;
                 } else if (val.length > 0 && val.length < 5) {
                     alert('Format jam kurang lengkap! Ketik 4 angka (contoh: 0800)');

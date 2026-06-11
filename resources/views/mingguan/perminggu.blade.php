@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Jadwal Mingguan - Lab ICT</title>
+    <link rel="icon" type="image/LogoICT.png" href="{{ asset('images/LogoICT.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -24,7 +25,7 @@
 
     <main class="flex-1 flex items-center justify-center p-6">
         <div class="w-full max-w-md rounded-3xl border border-white bg-white/80 p-8 shadow-2xl shadow-blue-950/10 backdrop-blur-xl">
-            
+
             <div class="text-center mb-8">
                 <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white text-2xl shadow-lg shadow-blue-600/30 mb-4">
                     <i class="fas fa-file-pdf"></i>
@@ -33,7 +34,7 @@
                 <p class="text-sm font-medium text-slate-500 mt-1">Silakan pilih minggu perkuliahan yang ingin dicetak langsung dari database.</p>
             </div>
 
-         
+
             <form action="{{ route('cetak') }}" method="GET" target="_blank" class="space-y-6">
                 <div>
                     <label for="dropdown-minggu" class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-400">Minggu Perkuliahan</label>

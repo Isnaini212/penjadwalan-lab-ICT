@@ -7,7 +7,7 @@
 
             <div class="hidden md:block">
                 <img
-                    src="{{ asset('images/.png') }}"
+                    src="{{ asset('images/login/login.jpg') }}"
                     alt="Laboratorium ICT"
                     class="w-full h-full object-cover"
                 >
@@ -32,7 +32,7 @@
                         ⚠️ Login Gagal! Email belum terdaftar atau Password Anda salah.
                     </div>
                 @endif
-                
+
                 <form method="POST" action="{{ route('login') }}">
                 @csrf
                     {{-- INPUT EMAIL --}}
@@ -70,7 +70,7 @@
                                 {{ $message }}
                             </span>
                         @enderror
-                        
+
                         @if (Route::has('password.request'))
                             <div class="mt-2">
                                 <a href="{{ route('password.request') }}" class="text-xs font-bold text-indigo-600 hover:underline">
