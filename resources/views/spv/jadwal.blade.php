@@ -195,13 +195,14 @@
 
     <div class="overflow-hidden rounded-2xl border border-white bg-white shadow-2xl shadow-blue-950/5">
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[1100px] border-collapse text-left text-sm" id="scheduleTable">
+            <table class="w-full min-w-[1200px] border-collapse text-left text-sm" id="scheduleTable">
                 <thead class="bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider">
                     <tr>
                         <th class="px-6 py-4">Tanggal</th>
                         <th class="px-6 py-4">Lab</th>
                         <th class="px-6 py-4">Jam (Mulai - Selesai)</th>
                         <th class="px-6 py-4">Mata Kuliah</th>
+                        <th class="px-6 py-4">Kode Matkul</th>
                         <th class="px-6 py-4">Dosen</th>
                         <th class="px-6 py-4">Asisten</th>
                         <th class="px-6 py-4">Aksi</th>
@@ -262,6 +263,10 @@
 
                         <td class="px-4 py-3.5">
                             <input type="text" name="matkul" value="{{ $s->matkul }}" class="h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        </td>
+
+                        <td class="px-4 py-3.5 text-center text-xs font-black uppercase tracking-wide text-blue-700">
+                            {{ \Illuminate\Support\Str::substr($s->matkul, -4) }}
                         </td>
 
                         <td class="px-4 py-3.5">
@@ -440,7 +445,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (matchLab && matchType) {
                 // 🌟 FIX PDF: Cari class "time-formatter" karena tipe inputnya sekarang "text" bukan "time"
                 const jamInputs = tr.cells[2].querySelectorAll('.time-formatter');
-                const asistenSelect = tr.cells[5].querySelector('select');
+                const asistenSelect = tr.cells[6].querySelector('select');
                 let asistenName = asistenSelect ? asistenSelect.options[asistenSelect.selectedIndex].text : '-';
                 asistenName = asistenName.replace(/[⚠️|🔒]/g, '').replace('-- Pilih Asisten --', '-').trim();
 
@@ -455,7 +460,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     menitMulai: hitungTotalMenit(jMulaiClean),
                     menitSelesai: hitungTotalMenit(jSelesaiClean),
                     matkul: tr.cells[3].querySelector('input[type="text"]').value,
-                    dosen: tr.cells[4].querySelector('input[type="text"]').value,
+                    kodeMatkul: tr.cells[4].innerText.trim(),
+                    dosen: tr.cells[5].querySelector('input[type="text"]').value,
                     asistenName: asistenName
                 });
             }
@@ -511,10 +517,10 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             const title = activeType === 'praktikum' ? "LAPORAN MASTER JADWAL PRAKTIKUM MATA KULIAH" : "LAPORAN MASTER DATA JADWAL (MIXED DISPLAY)";
             doc.text(title, 14, 15);
-            pdfHeaders = [['Hari & Tanggal', 'Ruang Lab', 'Jam Praktikum (24 Jam)', 'Mata Kuliah', 'Dosen Pengampu', 'Asisten Jaga']];
+            pdfHeaders = [['Hari & Tanggal', 'Ruang Lab', 'Jam Praktikum (24 Jam)', 'Mata Kuliah', 'Kode Matkul', 'Dosen Pengampu', 'Asisten Jaga']];
 
             rawEntries.forEach(e => {
-                pdfBody.push([e.hariTanggal, e.labName, `${e.jamMulaiStr} - ${e.jamSelesaiStr}`, e.matkul, e.dosen, e.asistenName]);
+                pdfBody.push([e.hariTanggal, e.labName, `${e.jamMulaiStr} - ${e.jamSelesaiStr}`, e.matkul, e.kodeMatkul, e.dosen, e.asistenName]);
             });
         }
 
@@ -531,7 +537,7 @@ document.addEventListener("DOMContentLoaded", function () {
             columnStyles: activeType === 'ra' ? {
                 0: { cellWidth: 50 }, 1: { cellWidth: 45 }, 2: { cellWidth: 45 }, 3: { cellWidth: 130 }
             } : {
-                0: { cellWidth: 35 }, 1: { cellWidth: 25 }, 2: { cellWidth: 30 }, 3: { cellWidth: 65 }, 4: { cellWidth: 55 }, 5: { cellWidth: 40 }
+                0: { cellWidth: 32 }, 1: { cellWidth: 23 }, 2: { cellWidth: 28 }, 3: { cellWidth: 55 }, 4: { cellWidth: 22 }, 5: { cellWidth: 50 }, 6: { cellWidth: 35 }
             }
         });
 

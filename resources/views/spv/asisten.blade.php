@@ -4,7 +4,7 @@
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @section('content')
 <div class="min-h-screen font-sans text-slate-800">
-  
+
     {{-- HEADER HALAMAN & PANEL KONTROL AKSES JADWAL --}}
     <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -49,8 +49,8 @@
             <h3 class="text-base font-bold text-blue-950 flex items-center gap-2">
                 <i class="fas fa-file-excel text-green-600"></i> Unggah Jadwal Asisten (Excel/CSV)
             </h3>
-            
-            <form action="{{ route('asisten.clear') }}" method="POST" 
+
+            <form action="{{ route('asisten.clear') }}" method="POST"
                   onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda yakin ingin menghapus SEMUA data jadwal asisten?\nTindakan ini tidak bisa dibatalkan!')">
                 @csrf
                 @method('DELETE')
@@ -59,12 +59,12 @@
                 </button>
             </form>
         </div>
-        
+
         <form action="{{ route('spv.importAsisten') }}" method="POST" enctype="multipart/form-data" class="grid gap-4 sm:grid-cols-[1fr_auto] items-end">
             @csrf
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pilih File Master Jadwal</label>
-                <input type="file" name="file_asisten" required 
+                <input type="file" name="file_asisten" required
                        class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500">
             </div>
 
@@ -77,7 +77,7 @@
     {{-- FORM PENCARIAN FILTER GANDA (NAMA & HARI) --}}
     <div class="mb-6 rounded-2xl border border-white/80 bg-white/80 p-6 shadow-xl shadow-blue-950/5 backdrop-blur">
         <form action="{{ route('spv.asisten') }}" method="GET" id="form-cari-asisten" class="flex flex-wrap items-end gap-4">
-            
+
             <div class="flex-1 min-w-[220px]">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pilih Name Asisten:</label>
                 <select name="nama" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" onchange="this.form.submit()">
@@ -99,7 +99,7 @@
                     @endforeach
                 </select>
             </div>
-            
+
             @if($namaDicari || $hariDicari)
                 <a href="{{ route('spv.asisten') }}" class="inline-flex h-11 items-center gap-2 rounded-xl bg-red-50 px-5 text-sm font-bold text-red-700 transition hover:bg-red-100">
                     <i class="fas fa-times"></i> Bersihkan Filter
@@ -107,14 +107,14 @@
             @endif
         </form>
     </div>
-    
+
     {{-- TABLE DATA JADWAL --}}
     @if($namaDicari || $hariDicari)
         <div class="overflow-hidden rounded-2xl border border-white/80 bg-white shadow-2xl shadow-blue-950/5">
             <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-wrap items-center justify-between gap-2">
                 <h3 class="text-sm font-bold text-blue-900">
-                    Jadwal: <span class="text-blue-600">{{ $namaDicari ?? 'Semua Asisten' }}</span> 
-                    <span class="mx-2 text-slate-300">|</span> 
+                    Jadwal: <span class="text-blue-600">{{ $namaDicari ?? 'Semua Asisten' }}</span>
+                    <span class="mx-2 text-slate-300">|</span>
                     Hari: <span class="text-amber-600">{{ $hariDicari ?? 'Semua Hari' }}</span>
                 </h3>
                 <span class="text-xs font-medium italic text-slate-400">*Gunakan tombol aksi di sebelah kanan untuk memperbarui data.</span>
@@ -137,7 +137,7 @@
                             <td colspan="5" class="p-0">
                                 <form action="{{ route('asisten.update', $a->id_asisten) }}" method="POST" class="grid grid-cols-[1fr_10rem_16rem_1fr_11rem] items-center px-0 m-0">
                                     @csrf
-                                    @submit
+
                                     @method('PATCH')
 
                                     <div class="px-6 py-3.5">
@@ -147,7 +147,7 @@
                                                 <i class="fas fa-lock text-[10px]"></i> {{ $a->nama_asisten }}
                                             </div>
                                         @else
-                                            <input type="text" name="nama_asisten" value="{{ $a->nama_asisten }}" 
+                                            <input type="text" name="nama_asisten" value="{{ $a->nama_asisten }}"
                                                    class="h-9 w-full rounded-lg border border-slate-200 px-3 font-bold text-blue-900 outline-none focus:border-blue-500 focus:bg-blue-50/30">
                                         @endif
                                     </div>
@@ -161,15 +161,15 @@
                                     </div>
 
                                     <div class="px-4 py-3.5 flex items-center gap-2">
-                                        <input type="time" name="jam_mulai" value="{{ \Carbon\Carbon::parse($a->jam_mulai)->format('H:i') }}" 
+                                        <input type="time" name="jam_mulai" value="{{ \Carbon\Carbon::parse($a->jam_mulai)->format('H:i') }}"
                                                class="h-9 w-24 rounded-lg border border-slate-200 px-2 text-center font-medium text-slate-700 outline-none focus:border-blue-500">
                                         <span class="text-slate-400 font-bold">-</span>
-                                        <input type="time" name="jam_selesai" value="{{ \Carbon\Carbon::parse($a->jam_selesai)->format('H:i') }}" 
+                                        <input type="time" name="jam_selesai" value="{{ \Carbon\Carbon::parse($a->jam_selesai)->format('H:i') }}"
                                                class="h-9 w-24 rounded-lg border border-slate-200 px-2 text-center font-medium text-slate-700 outline-none focus:border-blue-500">
                                     </div>
 
                                     <div class="px-4 py-3.5">
-                                        <input type="text" name="mata_kuliah" value="{{ $a->mata_kuliah }}" 
+                                        <input type="text" name="mata_kuliah" value="{{ $a->mata_kuliah }}"
                                                class="h-9 w-full rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 outline-none focus:border-blue-500">
                                     </div>
 
@@ -177,10 +177,10 @@
                                         <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-blue-50 px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-100">
                                             Simpan
                                         </button>
-                                </form> 
-                                        
+                                </form>
+
                                         <form method="POST" action="{{ route('asisten.destroy', $a->id_asisten) }}" class="inline" onsubmit="return confirm('Yakin ingin menghapus jadwal ini?')">
-                                            @csrf 
+                                            @csrf
                                             @method('DELETE')
                                             <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100">
                                                 Hapus
@@ -203,7 +203,7 @@
                             <td colspan="5" class="p-0">
                                 <form action="{{ route('asisten.store') }}" method="POST" class="grid grid-cols-[1fr_10rem_16rem_1fr_11rem] items-center px-0 m-0">
                                     @csrf
-                                    
+
                                     <div class="px-6 py-4">
                                         @if($namaDicari)
                                             <input type="hidden" name="nama_asisten" value="{{ $namaDicari }}">
