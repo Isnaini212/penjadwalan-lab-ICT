@@ -207,6 +207,14 @@
                                         <i class="fas fa-save"></i>
                                         Perbarui
                                     </button>
+                                    <form method="POST" action="{{ route('akun.destroy', $user) }}" class="m-0" onsubmit="return confirm('PERINGATAN KERAS!\n\nYakin ingin menghapus akun {{ $user->name }}?\nSemua jadwal dan riwayat yang terkait dengan akun ini akan ikut terhapus secara permanen.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700" title="Hapus Akun">
+                                                <i class="fas fa-trash-alt"></i>
+                                                Hapus
+                                            </button>
+                                        </form>
                                 </td>
                             </tr>
                         @empty

@@ -91,6 +91,7 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
     
     Route::post('/spv/akun', [AkunController::class, 'simpen'])->name('akun');
     Route::patch('/spv/akun/{user}', [AkunController::class, 'update'])->name('akun.update');
+    Route::delete('/akun/{user}', [\App\Http\Controllers\AkunController::class, 'destroy'])->name('akun.destroy');
     
 });
     Route::get('/tv', [TvController::class, 'tvSon'])->name('tv.display');

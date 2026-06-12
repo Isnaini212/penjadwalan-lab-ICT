@@ -92,4 +92,26 @@ public function update(Request $request, User $user)
 
     return back()->with('success', 'Data akun ' . $validated['name'] . ' berhasil diperbarui.');
 }
+
+// Tambahkan fungsi ini di bawah fungsi update()
+public function destroy(User $user)
+{
+    // Pastikan cuma akun mahasiswa/dosen yang bisa dihapus lewat sini
+    if (! in_array($user->role, ['asisten', 'ormawa', 'dosen'], true)) {
+        abort(403, 'Akun ini tidak dapat dihapus melalui halaman manajemen akun.');
+    }
+
+    $namaAkun = $user->name;
+
+    // 🌟 SAKTI: Jika yang dihapus asisten, bersihkan juga jadwal-jadwalnya
+    if ($user->role === 'asisten') {
+        AssistantSchedule::where('nama_asisten', $namaAkun)->delete();
+        // Opsional: Jika ada model relasi lain, hapus juga di sini
+    }
+
+    // Eksekusi hapus akun utama
+    $user->delete();
+
+    return back()->with('success', 'Akun pengguna <strong>' . $namaAkun . '</strong> berhasil dihapus secara permanen.');
+}
 }
