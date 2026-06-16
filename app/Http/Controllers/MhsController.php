@@ -21,7 +21,6 @@ class MhsController extends Controller
     
    public function store(Request $request)
 {
-    // 1. Validasi Input
     $request->validate([
         'penanggung_jawab' => 'required',
         'tanggal'          => 'required|date',
@@ -31,6 +30,12 @@ class MhsController extends Controller
         'keperluan'        => 'required',
         'file_surat'       => 'required|mimes:pdf|max:2048',
     ]);
+
+    // 1.5 Validasi Kapasitas Maksimum Lab
+    $max_lab_capacity = \App\Models\Lab::max('kapasitas');
+    if ($max_lab_capacity && $request->kapasitas > $max_lab_capacity) {
+        return back()->withInput()->withErrors(['kapasitas' => "Gagal! Kapasitas peserta ({$request->kapasitas}) melebihi kapasitas maksimum lab terbesar yang ada ({$max_lab_capacity} kursi)."]);
+    }
 
     // 2. Format Hari Otomatis
     $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');

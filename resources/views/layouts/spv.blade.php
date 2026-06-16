@@ -155,7 +155,7 @@
         </header>
 
         <!-- Content Inject Area -->
-        <main class="mx-auto w-full max-w-7xl px-6 py-10 lg:px-8">
+        <main class="mx-auto w-full max-w-7xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
             @yield('content')
         </main>
     </div>
