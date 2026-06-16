@@ -4,39 +4,41 @@
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @section('content')
 
-    <div class="space-y-6">
+    <div class="space-y-5 w-full min-w-0">
         <section>
-            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Dashboard</h1>
-            <p class="mt-1.5 text-sm font-medium text-slate-500">Memantau indikator kinerja utama Anda</p>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">Dashboard</h1>
+            <p class="mt-1 text-sm font-medium text-slate-500">Memantau indikator kinerja utama Anda</p>
         </section>
 
-        <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <section class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
             
            
-            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5 h-fit">
+            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5 h-fit min-w-0 overflow-hidden">
                 
-                <form method="GET" action="" class="mb-4 flex flex-col gap-4 border-b border-slate-100 pb-4 lg:flex-row lg:items-end lg:justify-between">
+                <form method="GET" action="" class="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-4">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900">Jadwal Hari Ini</h2>
-                        <p class="mt-1 text-sm text-slate-500">Cari dan filter manajemen jadwal:</p>
+                        <p class="mt-0.5 text-sm text-slate-500">Cari dan filter manajemen jadwal:</p>
                     </div>
                     
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                        <div class="relative flex-1 min-w-[200px] sm:flex-none">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                        <div class="relative w-full sm:w-auto sm:flex-1 sm:min-w-[180px]">
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari matkul, dosen, lab..." 
-                                   class="h-10 w-full sm:w-60 rounded-lg border border-slate-200 pl-9 pr-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100">
+                                   class="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100">
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-xs text-slate-400"></i>
                         </div>
 
-                        <input type="date" name="filter_date" value="{{ request('filter_date', now()->toDateString()) }}" onchange="this.form.submit()" 
-                               class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 cursor-pointer">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <input type="date" name="filter_date" value="{{ request('filter_date', now()->toDateString()) }}" onchange="this.form.submit()" 
+                                   class="h-10 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 cursor-pointer">
 
-                        <select name="per_page" onchange="this.form.submit()" 
-                                class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 cursor-pointer">
-                            @foreach([5, 10, 20, 50, 100] as $limit)
-                                <option value="{{ $limit }}" {{ request('per_page') == $limit ? 'selected' : '' }}>{{ $limit }} Baris</option>
-                            @endforeach
-                        </select>
+                            <select name="per_page" onchange="this.form.submit()" 
+                                    class="h-10 w-24 sm:w-auto rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-700 outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 cursor-pointer">
+                                @foreach([5, 10, 20, 50, 100] as $limit)
+                                    <option value="{{ $limit }}" {{ request('per_page') == $limit ? 'selected' : '' }}>{{ $limit }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </form>
 
@@ -44,7 +46,9 @@
                     <a href="{{ request()->url() }}" class="text-xs font-bold text-red-500 underline">[Reset Semua Filter]</a>
                 @endif
 
-                <div class="mt-4 overflow-x-auto">
+                <div class="mt-4">
+                    <p class="md:hidden text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5"><i class="fas fa-arrows-left-right"></i> Geser tabel untuk melihat detail</p>
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
                     <table class="min-w-[760px] w-full text-left text-xs">
                         <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">
                             <tr>
@@ -84,6 +88,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 @if(method_exists($schedules, 'links'))
@@ -94,7 +99,7 @@
             </div>
 
            
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 h-fit">
+            <div class="grid gap-4 grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 h-fit">
                 <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
                     <div class="flex items-start justify-between gap-4">
                         <div>
@@ -130,7 +135,7 @@
         </section>
 
        
-        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5">
+        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-md shadow-slate-900/5 min-w-0 overflow-hidden">
     <div class="mb-5 flex items-center gap-4">
         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
             <i class="fa-solid fa-user-group text-xl"></i>
@@ -141,7 +146,9 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto">
+    <div class="mt-4">
+        <p class="md:hidden text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5"><i class="fas fa-arrows-left-right"></i> Geser tabel untuk melihat detail</p>
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
         <table class="min-w-[760px] w-full text-left text-xs">
             <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">
                 <tr>
@@ -260,6 +267,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </section>
     </div>
