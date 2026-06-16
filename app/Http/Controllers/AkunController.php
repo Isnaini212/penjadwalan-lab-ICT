@@ -20,7 +20,7 @@ class AkunController extends Controller
     {
         
         $request->validate([
-            'name'     => 'required|string|max:255',
+            'name'     => 'required|string|max:100',
             'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role'     => 'required|in:asisten,ormawa,dosen', 
@@ -103,10 +103,10 @@ public function destroy(User $user)
 
     $namaAkun = $user->name;
 
-    // 🌟 SAKTI: Jika yang dihapus asisten, bersihkan juga jadwal-jadwalnya
+    // Jika yang dihapus asisten, bersihkan juga jadwal-jadwalnya
     if ($user->role === 'asisten') {
         AssistantSchedule::where('nama_asisten', $namaAkun)->delete();
-        // Opsional: Jika ada model relasi lain, hapus juga di sini
+        
     }
 
     // Eksekusi hapus akun utama

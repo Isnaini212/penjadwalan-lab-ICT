@@ -21,7 +21,7 @@
 
         <!-- Header Sidebar -->
         <div class="flex h-24 items-center gap-3 px-6 border-b border-white/10">
-            <img src="{{ asset('img/logo-ubl.png') }}" alt="Logo" class="h-12 w-12 rounded-full object-cover bg-white p-0.5" onerror="this.src='https://ui-avatars.com/api/?name=ICT&background=fff&color=0284c7'">
+            <img src="{{ asset('images/LogoICT.png') }}" alt="Logo" class="h-12 w-12 rounded-full object-cover bg-white p-0.5" onerror="this.src='https://ui-avatars.com/api/?name=ICT&background=fff&color=0284c7'">
             <div class="leading-tight text-white">
                 <h2 class="text-sm font-medium tracking-wide">Laboratorium</h2>
                 <span class="text-base font-extrabold tracking-wide block">ICT Budi Luhur</span>

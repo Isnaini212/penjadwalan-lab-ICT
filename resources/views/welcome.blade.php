@@ -159,7 +159,7 @@
                 </small>
             </td>
 
-            {{-- 🌟 Kolom 3: Nama Lab (Bisa Diklik Link ke Foto + Subtext) --}}
+            {{-- Kolom 3: Nama Lab (Bisa Diklik Link ke Foto + Subtext) --}}
             <td class="px-6 py-5 text-center">
                 @if($s->lab)
                     {{--
@@ -287,7 +287,7 @@
                 startY: 32,
                 theme: 'grid',
                 styles: { fontSize: 9, halign: 'center' },
-                // 🌟 LOGIK SAKTI NYA DI SINI, BRE:
+                //  LOGIK SAKTI NYA DI SINI, BRE:
                 didParseCell: function(data) {
                     // Pastikan kita cuma memanipulasi baris data body, bukan header tabel
                     if (data.section === 'body') {

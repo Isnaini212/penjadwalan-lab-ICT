@@ -98,9 +98,9 @@
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah SKS <span class="text-red-500">*</span></label>
                         <select name="sks" id="input_sks" required class="trigger-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <option value="">-- Pilih SKS --</option>
-                            <option value="1">1 SKS (53 Menit)</option>
-                            <option value="2">2 SKS (106 Menit)</option>
-                            <option value="3">3 SKS (222)</option>
+                            <option value="1">1 SKS (50 Menit)</option>
+                            <option value="2">2 SKS (105 Menit)</option>
+                            <option value="3">3 SKS (160)</option>
                         </select>
                     </div>
 

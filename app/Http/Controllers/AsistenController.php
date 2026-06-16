@@ -216,19 +216,19 @@ class AsistenController extends Controller
 
       public function manajemenasisten(Request $request)
 {
-    // 🌟 FORMAT SAKTI: Semua jeda pas 5 menit, jam asli lu gak ada yang kehapus!
+    //  FORMAT SAKTI: Semua jeda pas 5 menit, jam asli lu gak ada yang kehapus!
     $timeSlots = [
         ['start' => '08:00', 'end' => '08:50', 'label' => '08.00-08.50'],
         ['start' => '08:55', 'end' => '09:45', 'label' => '08.55-09.45'],
         ['start' => '09:50', 'end' => '10:40', 'label' => '09.50-10.40'],
         ['start' => '10:45', 'end' => '11:35', 'label' => '10.45-11.35'],
-        ['start' => '11:40', 'end' => '12:25', 'label' => '11.40-12.25'], // ✨ PENENGAH SIANG
+        ['start' => '11:40', 'end' => '12:25', 'label' => '11.40-12.25'], //  PENENGAH SIANG
         ['start' => '12:30', 'end' => '13:20', 'label' => '12.30-13.20'],
         ['start' => '13:25', 'end' => '14:15', 'label' => '13.25-14.15'],
         ['start' => '14:20', 'end' => '15:10', 'label' => '14.20-15.10'],
         ['start' => '15:15', 'end' => '16:05', 'label' => '15.15-16.05'],
         ['start' => '16:10', 'end' => '17:00', 'label' => '16.10-17.00'],
-        ['start' => '17:05', 'end' => '17:55', 'label' => '17.05-17.55'], // ✨ PENENGAH SORE
+        ['start' => '17:05', 'end' => '17:55', 'label' => '17.05-17.55'], //  PENENGAH SORE
         ['start' => '18:00', 'end' => '18:50', 'label' => '18.00-18.50'],
         ['start' => '18:55', 'end' => '19:45', 'label' => '18.55-19.45'],
         ['start' => '19:50', 'end' => '20:40', 'label' => '19.50-20.40'],
@@ -307,13 +307,13 @@ public function updateMatrixRA(Request $request)
     $cells = $request->input('cells', []);
     $oldCells = $request->input('old_cells', []);
 
-    // 🌟 SAMAKAN DENGAN GET: Masukkan penengah waktu
+    //  SAMAKAN DENGAN GET: Masukkan penengah waktu
     $slotEnds = [
         '08:00' => '08:50', '08:55' => '09:45', '09:50' => '10:40', '10:45' => '11:35',
-        '11:40' => '12:25', // ✨ PENENGAH SIANG
+        '11:40' => '12:25', //  PENENGAH SIANG
         '12:30' => '13:20', '13:25' => '14:15', '14:20' => '15:10', '15:15' => '16:05',
         '16:10' => '17:00',
-        '17:05' => '17:55', // ✨ PENENGAH SORE
+        '17:05' => '17:55', //  PENENGAH SORE
         '18:00' => '18:50', '18:55' => '19:45', '19:50' => '20:40', '20:45' => '21:35'
     ];
 
@@ -399,7 +399,7 @@ public function updateMatrixRA(Request $request)
                         ->exists();
 
                     if ($isBusyInLab) {
-                        throw new \Exception("Gagal Set RA di jam {$bStart}-{$bEnd}! Asisten sedang bertugas mengajar LAB di jam tersebut.");
+                        throw new \Exception("Gagal Set RA di jam {$bStart}-{$bEnd}! Asisten sedang bertugas di LAB tersebut.");
                     }
 
                     // 🚨 PROTEKSI 2: Cek apakah RA menabrak Kuliah Pribadi
