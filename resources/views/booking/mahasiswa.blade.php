@@ -155,7 +155,7 @@
                         <label class="mb-3 block text-sm font-extrabold text-indigo-700">
                             <i class="fas fa-file-pdf mr-2 text-red-500 text-lg"></i> Unggah Surat Peminjaman Resmi
                         </label>
-                        <input type="file" name="file_surat" accept="application/pdf" required
+                        <input type="file" name="file_surat" accept="application/pdf" required onchange="checkFileExtensionPdf(this)"
                                class="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-100 file:px-4 file:py-2 file:text-sm file:font-bold file:text-indigo-700 hover:file:bg-indigo-200 mx-auto max-w-sm cursor-pointer">
                         <p class="mt-2 text-xs font-semibold text-slate-400">Format wajib .PDF (Maksimal 2MB)</p>
                     </div>
@@ -253,6 +253,21 @@
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses Pengajuan...';
             btn.classList.add('opacity-70', 'pointer-events-none');
         });
+
+        function checkFileExtensionPdf(input) {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const fileName = file.name.toLowerCase();
+                
+                if (!fileName.endsWith('.pdf')) {
+                    alert('File tidak valid! Tolong hanya masukkan file dengan format dokumen (.pdf).');
+                    input.value = ''; // Kosongkan input file
+                } else if (file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file terlalu besar! Maksimal ukuran file adalah 2MB.');
+                    input.value = ''; // Kosongkan input file
+                }
+            }
+        }
 
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('time-formatter')) {

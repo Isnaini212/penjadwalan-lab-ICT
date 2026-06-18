@@ -356,7 +356,13 @@ public function store(Request $request)
         $request->validate([
             'start_date' => 'required|date',
             'end_date'   => 'required|date',
-            'file_excel' => 'required|mimes:xlsx,xls,csv|max:5120'
+            'file_excel' => 'required|mimes:xlsx,xls,csv,txt|max:5120'
+        ], [
+            'file_excel.required' => 'File Excel/CSV belum dipilih.',
+            'file_excel.mimes'    => 'Format file ditolak oleh server! Harap pastikan file Anda benar-benar berformat Excel (.xlsx, .xls) atau CSV (.csv).',
+            'file_excel.max'      => 'Ukuran file jadwal terlalu besar (maksimal 5 MB).',
+            'start_date.required' => 'Tanggal periode mulai wajib diisi.',
+            'end_date.required'   => 'Tanggal periode selesai wajib diisi.',
         ]);
 
         $sheets = Excel::toArray([], $request->file('file_excel'));

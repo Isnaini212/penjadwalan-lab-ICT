@@ -11,8 +11,22 @@
     </div>
 
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 border border-emerald-200 flex items-center gap-3">
+        <div class="mb-4 rounded-xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 border border-emerald-200 flex items-center gap-3">
             <i class="fas fa-check-circle text-emerald-500 text-xl"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-4 rounded-xl bg-red-50 px-5 py-4 text-sm font-bold text-red-700 border border-red-200">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                <span>Gagal:</span>
+            </div>
+            <ul class="list-disc pl-8 text-xs font-medium text-red-600">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -59,7 +73,7 @@
                 <form action="/spv/tv/slide" method="POST" enctype="multipart/form-data"
                       class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     @csrf
-                    <input type="file" name="image" accept=".jpg,.jpeg,.png" required
+                    <input type="file" name="image" accept=".jpg,.jpeg,.png" required onchange="checkFileExtensionTv(this)"
                            class="flex-1 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-bold file:text-sky-700 hover:file:bg-sky-200 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 px-3">
                     <button type="submit"
                             class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 whitespace-nowrap">
@@ -106,4 +120,20 @@
     </div>
 
 </div>
+
+<script>
+function checkFileExtensionTv(input) {
+    if (input.files.length > 0) {
+        const file = input.files[0];
+        const validExtensions = ['.jpg', '.jpeg', '.png'];
+        const fileName = file.name.toLowerCase();
+        const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+        if (!isValid) {
+            alert('File tidak valid! Tolong hanya masukkan file dengan format gambar (.jpg, .jpeg, atau .png).');
+            input.value = ''; // Kosongkan input file
+        }
+    }
+}
+</script>
 @endsection
