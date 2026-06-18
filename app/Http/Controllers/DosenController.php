@@ -25,11 +25,7 @@ class DosenController extends Controller
         $tanggal = $request->tanggal;
         $mulai = $request->jam_mulai;
         $sks = $request->sks;
-<<<<<<< HEAD
-        
-=======
         $kapasitas = $request->kapasitas;
->>>>>>> c63b3b29136b0a8f9d3c3b5faaf0960fe9f3f637
 
         $jamSelesai = Carbon::createFromFormat('H:i', $mulai)->addMinutes($sks * 53.3334)->format('H:i');
 
