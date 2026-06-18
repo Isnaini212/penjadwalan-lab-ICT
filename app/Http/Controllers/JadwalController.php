@@ -16,16 +16,22 @@ class JadwalController extends Controller
 {
 
 public function minggu(){
-    $minDate = Schedule::min('tanggal');
-        $maxDate = Schedule::max('tanggal');
+    // Cari tanggal paling awal dan paling akhir KHUSUS untuk praktikum (kecuali RA)
+    $minDate = Schedule::whereHas('lab', function ($query) {
+        $query->whereNotIn('nama_lab', ['RUANG RA', 'RA', 'RUANG ASISTEN']);
+    })->min('tanggal');
 
-        if (!$minDate || !$maxDate) {
-            $startPeriode = Carbon::now()->startOfWeek(Carbon::MONDAY);
-            $endPeriode   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
-        } else {
-            $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
-            $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
-        }
+    $maxDate = Schedule::whereHas('lab', function ($query) {
+        $query->whereNotIn('nama_lab', ['RUANG RA', 'RA', 'RUANG ASISTEN']);
+    })->max('tanggal');
+
+    if (!$minDate || !$maxDate) {
+        $startPeriode = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $endPeriode   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+    } else {
+        $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
+        $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
+    }
 
         $listMinggu  = [];
         $current     = $startPeriode->copy();
