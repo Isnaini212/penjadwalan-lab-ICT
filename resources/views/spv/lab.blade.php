@@ -40,7 +40,7 @@
                 @csrf
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Identitas / Nama Lab</label>
-                    <input type="text" name="nama_lab" placeholder="Misal: Lab Riset AI" required 
+                    <input type="text" name="nama_lab" placeholder="Misal: LAB 02" required 
                            class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                 </div>
 

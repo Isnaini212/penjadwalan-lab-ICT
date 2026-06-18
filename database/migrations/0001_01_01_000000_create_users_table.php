@@ -16,7 +16,7 @@ return new class extends Migration
         $table->string('name');
         $table->string('email')->unique();
         
-        // 🔥 TAMBAHKAN BARIS INI: 4 Role sesuai permintaan lu
+        //  TAMBAHKAN BARIS INI: 4 Role sesuai permintaan lu
         $table->enum('role', ['spv', 'asisten', 'ormawa', 'dosen'])->default('asisten');
         
         $table->timestamp('email_verified_at')->nullable();

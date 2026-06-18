@@ -233,6 +233,19 @@ public function store(Request $request)
 
         $id_asisten = $request->id_asisten ?: null;
 
+        if ($id_lab) {
+            $conflict = Schedule::where('tanggal', $request->tanggal)
+                ->where('id_lab', $id_lab)
+                ->where(function ($query) use ($request, $jam_selesai) {
+                    $query->where('jam_mulai', '<', $jam_selesai)
+                          ->where('jam_selesai', '>', $request->jam_mulai);
+                })->first();
+
+            if ($conflict) {
+                return back()->with('error', "Gagal menambah jadwal! Ruang Lab sudah dipakai oleh matkul {$conflict->matkul} (Dosen: {$conflict->dosen}) pada jam {$conflict->jam_mulai} - {$conflict->jam_selesai}.");
+            }
+        }
+
         Schedule::create([
             'tanggal'        => $request->tanggal,
             'hari'           => $hari,
@@ -342,6 +355,7 @@ public function store(Request $request)
 
         $sheets = Excel::toArray([], $request->file('file_excel'));
         $count = 0;
+        $bentrokCount = 0;
 
         foreach ($sheets as $rows) {
             foreach ($rows as $row) {
@@ -398,8 +412,22 @@ public function store(Request $request)
                     
                     foreach ($period as $date) {
                         if (strtolower($date->locale('id')->translatedFormat('l')) == strtolower($hariExcel)) {
+                            $tanggalFormat = $date->format('Y-m-d');
+                            
+                            $conflict = Schedule::where('tanggal', $tanggalFormat)
+                                ->where('id_lab', $labObj->id_lab)
+                                ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                                    $query->where('jam_mulai', '<', $jamSelesai)
+                                          ->where('jam_selesai', '>', $jamMulai);
+                                })->first();
+
+                            if ($conflict) {
+                                $bentrokCount++;
+                                continue;
+                            }
+
                             Schedule::create([
-                                'tanggal'     => $date->format('Y-m-d'),
+                                'tanggal'     => $tanggalFormat,
                                 'hari'        => $hariExcel,
                                 'id_lab'      => $labObj->id_lab,
                                 'id_asisten'  => $id_asisten, 
@@ -416,11 +444,20 @@ public function store(Request $request)
             }
         }
 
+        if ($count === 0 && $bentrokCount > 0) {
+            return back()->with('error', "Gagal import! $bentrokCount jadwal terdeteksi bentrok dengan jadwal lain dan tidak dimasukkan ke database.");
+        }
+
         if ($count === 0) {
             return back()->with('error', 'Waduh, datanya kebaca tapi nggak nemu satupun jadwal yang ruangannya LAB.');
         }
 
-        return back()->with('success', " Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.");
+        $pesan = "Mantap! $count baris jadwal khusus LAB berhasil di-generate otomatis.";
+        if ($bentrokCount > 0) {
+            $pesan .= " Namun ada $bentrokCount jadwal yang dilewati (tidak masuk db) karena bentrok waktu dan ruangan.";
+        }
+
+        return back()->with('success', $pesan);
     }
 
 

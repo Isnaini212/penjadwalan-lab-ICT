@@ -7,6 +7,7 @@
 
     {{-- Menggunakan aset Tailwind & JS bawaan proyek --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+     <link rel="icon" type="image/LogoICT.png" href="{{ asset('images/LogoICT.png') }}">
     <script defer src="{{ asset('js/spv-table.js') }}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Manajemen Jadwal - Lab ICT</title>
@@ -27,6 +28,27 @@
         <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Manajemen Jadwal</h1>
         <p class="mt-1 text-sm font-medium text-slate-500">Kelola jadwal praktikum dan persetujuan peminjaman lab.</p>
     </div>
+
+    {{-- Alert Notifikasi Session (Pesan Berhasil/Gagal dari Controller) --}}
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm flex items-start gap-3">
+            <i class="fas fa-check-circle text-emerald-500 text-xl mt-0.5"></i>
+            <div>
+                <h3 class="text-sm font-bold text-emerald-800">Berhasil</h3>
+                <p class="text-sm font-medium text-emerald-700 mt-0.5">{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-red-500 text-xl mt-0.5"></i>
+            <div>
+                <h3 class="text-sm font-bold text-red-800">Gagal / Perhatian</h3>
+                <p class="text-sm font-medium text-red-700 mt-0.5">{{ session('error') }}</p>
+            </div>
+        </div>
+    @endif
 
     @if(isset($conflicts) && $conflicts->count() > 0)
         <div class="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-xl shadow-red-950/5 space-y-4">
@@ -99,11 +121,10 @@
                 </button>
             </form>
 
-            <form action="{{ route('bersih') }}" method="POST" class="m-0 inline-flex"
-                  onsubmit="return confirm('PERINGATAN KERAS!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA JADWAL yang ada di dalam database?\nTindakan ini permanen dan data tidak dapat dikembalikan.');">
+            <form action="{{ route('bersih') }}" method="POST" class="m-0 inline-flex" id="form-bersih-jadwal">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="inline-flex h-11 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-600 shadow-sm transition hover:bg-red-600 hover:text-white hover:border-red-600">
+                <button type="button" onclick="showCustomConfirm('Apakah Anda yakin ingin MENGHAPUS SEMUA JADWAL yang ada di dalam database? Tindakan ini permanen dan data tidak dapat dikembalikan.', 'Peringatan Keras!', () => document.getElementById('form-bersih-jadwal').submit())" class="inline-flex h-11 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-sm font-bold text-red-600 shadow-sm transition hover:bg-red-600 hover:text-white hover:border-red-600">
                     <i class="fas fa-trash-alt"></i> Kosongkan Jadwal
                 </button>
             </form>
@@ -301,18 +322,18 @@
                                 <button type="button" title="Simpan Perubahan Seterusnya (Minggu-Minggu Berikutnya)"
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm transition hover:bg-blue-100"
                                         onclick="
-                                            if (confirm('Apakah Anda ingin menerapkan perubahan baris ini ke semua jadwal yang sama di minggu-minggu berikutnya?')) {
+                                            showCustomConfirm('Menerapkan perubahan ini ke semua jadwal yang sama di minggu-minggu berikutnya?', 'Konfirmasi Perubahan Massal', () => {
                                                 document.getElementById('scope-field-{{ $s->id_jadwal }}').value = 'all';
                                                 document.getElementById('update-form-{{ $s->id_jadwal }}').submit();
-                                            }
+                                            });
                                         ">
                                     <i class="fas fa-layer-group text-xs"></i>
                                 </button>
 
-                                <form method="POST" action="{{ route('spv.delete', $s->id_jadwal) }}" class="inline m-0" onsubmit="return confirm('Hapus jadwal ini?')">
+                                <form method="POST" action="{{ route('spv.delete', $s->id_jadwal) }}" class="inline m-0" id="form-delete-{{ $s->id_jadwal }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-100">
+                                    <button type="button" onclick="showCustomConfirm('Hapus jadwal ini?', 'Konfirmasi Hapus', () => document.getElementById('form-delete-{{ $s->id_jadwal }}').submit())" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-100">
                                         Hapus
                                     </button>
                                 </form>
@@ -328,6 +349,39 @@
     <div id="noDataMessage" class="hidden flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-400">
         <i class="fas fa-calendar-times text-3xl mb-2 text-slate-300"></i>
         <p class="text-sm font-semibold">Tidak ada jadwal yang cocok.</p>
+    </div>
+</div>
+
+{{-- Custom Alert Modal --}}
+<div id="custom-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-alert-box" style="transition: transform 0.3s ease;">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-500">
+            <i class="fas fa-exclamation-triangle text-3xl"></i>
+        </div>
+        <h3 class="mb-2 text-lg font-extrabold text-slate-800" id="custom-alert-title">Peringatan</h3>
+        <p class="mb-6 text-sm font-medium text-slate-600" id="custom-alert-message">Pesan peringatan akan muncul di sini.</p>
+        <button type="button" onclick="closeCustomAlert()" class="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-white shadow-md transition hover:bg-slate-700">
+            Mengerti
+        </button>
+    </div>
+</div>
+
+{{-- Custom Confirm Modal --}}
+<div id="custom-confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-confirm-box" style="transition: transform 0.3s ease;">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-500">
+            <i class="fas fa-question-circle text-3xl"></i>
+        </div>
+        <h3 class="mb-2 text-lg font-extrabold text-slate-800" id="custom-confirm-title">Konfirmasi</h3>
+        <p class="mb-6 text-sm font-medium text-slate-600" id="custom-confirm-message">Apakah Anda yakin?</p>
+        <div class="flex gap-3">
+            <button type="button" onclick="closeCustomConfirm()" class="w-full rounded-xl bg-slate-100 py-3 text-sm font-bold text-slate-600 shadow-sm transition hover:bg-slate-200">
+                Batal
+            </button>
+            <button type="button" id="custom-confirm-yes-btn" class="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white shadow-md transition hover:bg-red-700">
+                Ya, Lanjutkan
+            </button>
+        </div>
     </div>
 </div>
 
@@ -468,7 +522,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (rawEntries.length === 0) {
-            alert("⚠️ Tidak ada data aktif sesuai filter saat ini untuk dicetak!");
+            showCustomAlert("Tidak ada data aktif sesuai filter saat ini untuk dicetak!", "Data Kosong");
             return;
         }
 
@@ -548,6 +602,80 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
+let currentConfirmCallback = null;
+
+function showCustomAlert(message, title = 'Perhatian!') {
+    document.getElementById('custom-alert-title').innerText = title;
+    document.getElementById('custom-alert-message').innerText = message;
+    
+    const modal = document.getElementById('custom-alert-modal');
+    const box = document.getElementById('custom-alert-box');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+    }, 10);
+}
+
+function closeCustomAlert() {
+    const modal = document.getElementById('custom-alert-modal');
+    const box = document.getElementById('custom-alert-box');
+    
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    box.classList.remove('scale-100');
+    box.classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function showCustomConfirm(message, title, onConfirm) {
+    document.getElementById('custom-confirm-title').innerText = title;
+    document.getElementById('custom-confirm-message').innerText = message;
+    currentConfirmCallback = onConfirm;
+    
+    const modal = document.getElementById('custom-confirm-modal');
+    const box = document.getElementById('custom-confirm-box');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+    }, 10);
+    
+    document.getElementById('custom-confirm-yes-btn').onclick = function() {
+        closeCustomConfirm();
+        if (currentConfirmCallback) currentConfirmCallback();
+    };
+}
+
+function closeCustomConfirm() {
+    const modal = document.getElementById('custom-confirm-modal');
+    const box = document.getElementById('custom-confirm-box');
+    
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    box.classList.remove('scale-100');
+    box.classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
 function toggleTambahJadwal() {
     const form = document.getElementById('form-tambah-jadwal');
     form.classList.toggle('hidden');
@@ -557,7 +685,7 @@ function cekTanggalSebelumPilihFile() {
     const tglMulai = document.getElementById('import_start_date').value;
     const tglSelesai = document.getElementById('import_end_date').value;
     if (!tglMulai || !tglSelesai) {
-        alert('⚠️ Tolong tentukan tanggal Periode Generate (Mulai s/d Selesai) di sebelah kiri tombol dulu, Pak/Bu!');
+        showCustomAlert('Tolong tentukan tanggal Periode Generate (Mulai s/d Selesai) di sebelah kiri tombol dulu, Pak/Bu!', 'Pilih Periode');
         return;
     }
     document.getElementById('file_excel_cepat').click();
@@ -569,6 +697,18 @@ function triggerAutoSubmit() {
     const form = document.getElementById('form-import-cepat');
 
     if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const validExtensions = ['.xlsx', '.xls', '.csv'];
+        const fileName = file.name.toLowerCase();
+        
+        const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+        if (!isValid) {
+            showCustomAlert('File tidak valid! Tolong hanya masukkan file dengan format Excel (.xlsx, .xls, atau .csv).', 'Format Salah');
+            fileInput.value = ''; // Kosongkan pilihan file agar user bisa memilih ulang
+            return; // Batalkan proses submit
+        }
+
         btnImport.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Men-generate...';
         btnImport.classList.add('opacity-60', 'pointer-events-none');
         form.submit();
