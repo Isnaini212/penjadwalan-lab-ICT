@@ -97,20 +97,20 @@
     $namaMatkulAktif = '';
     $isStartHour = false;
     $isTengahSesi = false;
-    
+
     if ($jadwalKalender) {
         $itemStart = substr($jadwalKalender->jam_mulai, 0, 5);
         $itemEnd   = substr($jadwalKalender->jam_selesai, 0, 5);
-        
+
         // 🌟 LOGIKA BARU: Cari kotak slot pertama yang bersentuhan dengan jam matkul ini
         $firstSlot = collect($timeSlots)->first(function($ts) use ($itemStart, $itemEnd) {
             return ($itemStart < $ts['end'] && $itemEnd > $ts['start']);
         });
-        
+
         // Jika kotak saat ini adalah kotak pertama yang bersentuhan, munculkan Dropdown!
         $isStartHour = $firstSlot && ($firstSlot['start'] === $slot['start']);
         $isTengahSesi = !$isStartHour;
-        
+
         $cleanMatkul = trim(strtoupper($jadwalKalender->matkul));
         $statusAwal = ($cleanMatkul === 'RA') ? 'RA' : 'ASISTEN_LAB';
         $namaMatkulAktif = trim($jadwalKalender->matkul);
@@ -118,15 +118,15 @@
     } elseif ($kelasKuliah) {
         $itemStart = substr($kelasKuliah->jam_mulai, 0, 5);
         $itemEnd   = substr($kelasKuliah->jam_selesai, 0, 5);
-        
+
         // 🌟 LOGIKA BARU BERLAKU SAMA UNTUK KULIAH PRIBADI
         $firstSlot = collect($timeSlots)->first(function($ts) use ($itemStart, $itemEnd) {
             return ($itemStart < $ts['end'] && $itemEnd > $ts['start']);
         });
-        
+
         $isStartHour = $firstSlot && ($firstSlot['start'] === $slot['start']);
         $isTengahSesi = !$isStartHour;
-        
+
         $statusAwal = 'KULIAH_SENDIRI';
         $namaMatkulAktif = trim($kelasKuliah->mata_kuliah);
     }
@@ -135,15 +135,15 @@
                                     @if($isTengahSesi)
                                         {{-- 🔒 TENGAH SESI TERKUNCI (Ekor dari Sesi Sebelumnya) --}}
                                         @php
-                                            $bgColor = ($statusAwal === 'RA') ? 'bg-yellow-200' : (($statusAwal === 'KULIAH_SENDIRI') ? 'bg-red-200' : 'bg-sky-500');
-                                            $textColor = ($statusAwal === 'RA') ? 'text-yellow-800' : (($statusAwal === 'KULIAH_SENDIRI') ? 'text-red-800' : 'text-white');
+                                            $bgColor = ($statusAwal === 'RA') ? 'bg-yellow-200' : (($statusAwal === 'KULIAH_SENDIRI') ? 'bg-slate-200' : 'bg-sky-500');
+                                            $textColor = ($statusAwal === 'RA') ? 'text-yellow-800' : (($statusAwal === 'KULIAH_SENDIRI') ? 'text-slate-800' : 'text-white');
                                             $prefixLabel = ($statusAwal === 'RA') ? 'RA' : '';
                                         @endphp
                                         <td class="border-r border-slate-200 p-2 text-[10px] font-bold opacity-80 cursor-not-allowed {{ $bgColor }} {{ $textColor }}">
                                             {{-- Hidden input agar rantai data merge di database gak putus --}}
                                             <input type="hidden" name="old_cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
                                             <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="{{ $statusAwal === 'ASISTEN_LAB' ? $namaMatkulAktif : $statusAwal }}">
-                                            
+
                                             {{ $prefixLabel }}{{ $prefixLabel ? ': ' : '' }}{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}
                                         </td>
                                     @else
@@ -152,9 +152,9 @@
 
                                         @if($statusAwal === 'KULIAH_SENDIRI')
                                             {{-- SIBUK KULIAH PRIBADI --}}
-                                            <td class="border-r border-slate-200 bg-red-200 p-1">
+                                            <td class="border-r border-slate-200 bg-slate-200 p-1">
                                                 <input type="hidden" name="cells[{{ $day }}][{{ $slot['start'] }}]" value="KULIAH_SENDIRI">
-                                                <select disabled class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-red-800 outline-none cursor-not-allowed">
+                                                <select disabled class="w-full appearance-none bg-transparent text-center text-[11px] font-black text-slate-700 outline-none cursor-not-allowed">
                                                     <option>{{ strtoupper(\Illuminate\Support\Str::limit($namaMatkulAktif, 12)) }}</option>
                                                 </select>
                                             </td>
@@ -182,8 +182,8 @@
                                                     </option>
                                                     @foreach(array_unique($dropdownMatkul) as $m)
                                                         @php $mClean = trim($m); @endphp
-                                                        @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG' || strtolower($mClean) === strtolower($namaMatkulAktif)) 
-                                                            @continue 
+                                                        @if(strtoupper($mClean) === 'RA' || strtoupper($mClean) === 'KOSONG' || strtolower($mClean) === strtolower($namaMatkulAktif))
+                                                            @continue
                                                         @endif
                                                         <option value="{{ $mClean }}" class="bg-sky-500 text-white font-bold">
                                                             🔬 {{ strtoupper($mClean) }}

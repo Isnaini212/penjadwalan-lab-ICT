@@ -155,7 +155,7 @@
                             </form>
 
                             {{-- Tombol Reject --}}
-                            <form method="POST" action="{{ route('spv.booking.reject', ['type' => $b->type, 'id' => $b->id_booking]) }}" onsubmit="return confirm('Tolak pengajuan peminjaman ini?')">
+                            <form method="POST" action="{{ route('spv.booking.reject', ['type' => $b->type, 'id' => $b->id_booking]) }}" onsubmit="return handleCustomConfirmSubmit(event, 'Tolak pengajuan peminjaman ini?', 'Konfirmasi Tolak')">
                                 @csrf
                                 <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600 transition hover:bg-red-500 hover:text-white border border-red-200">
                                     <i class="fas fa-times"></i>
@@ -270,4 +270,74 @@
         </table>
     </div>
 </div>
+
+{{-- Custom Confirm Modal --}}
+<div id="custom-confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-confirm-box" style="transition: transform 0.3s ease;">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-500">
+            <i class="fas fa-question-circle text-3xl"></i>
+        </div>
+        <h3 class="mb-2 text-lg font-extrabold text-slate-800" id="custom-confirm-title">Konfirmasi</h3>
+        <p class="mb-6 text-sm font-medium text-slate-600" id="custom-confirm-message">Apakah Anda yakin?</p>
+        <div class="flex gap-3">
+            <button type="button" onclick="closeCustomConfirm()" class="w-full rounded-xl bg-slate-100 py-3 text-sm font-bold text-slate-600 shadow-sm transition hover:bg-slate-200">
+                Batal
+            </button>
+            <button type="button" id="custom-confirm-yes-btn" class="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white shadow-md transition hover:bg-red-700">
+                Ya, Lanjutkan
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentConfirmCallback = null;
+
+function handleCustomConfirmSubmit(event, message, title = 'Konfirmasi') {
+    event.preventDefault();
+    showCustomConfirm(message, title, function () {
+        event.target.submit();
+    });
+    return false;
+}
+
+function showCustomConfirm(message, title, onConfirm) {
+    document.getElementById('custom-confirm-title').innerText = title;
+    document.getElementById('custom-confirm-message').innerText = message;
+    currentConfirmCallback = onConfirm;
+
+    const modal = document.getElementById('custom-confirm-modal');
+    const box = document.getElementById('custom-confirm-box');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+    }, 10);
+
+    document.getElementById('custom-confirm-yes-btn').onclick = function() {
+        closeCustomConfirm();
+        if (currentConfirmCallback) currentConfirmCallback();
+    };
+}
+
+function closeCustomConfirm() {
+    const modal = document.getElementById('custom-confirm-modal');
+    const box = document.getElementById('custom-confirm-box');
+
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    box.classList.remove('scale-100');
+    box.classList.add('scale-95');
+
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+</script>
 @endsection

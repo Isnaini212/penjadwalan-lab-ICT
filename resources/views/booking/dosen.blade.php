@@ -248,7 +248,7 @@
                     e.target.value = hrStr + ':' + mnStr;
                     e.target.dispatchEvent(new Event('change'));
                 } else if (val.length > 0 && val.length < 5) {
-                    alert('Format jam tidak valid. Ketik 4 angka (contoh: 0800)');
+                    showCustomAlert('Format jam tidak valid. Ketik 4 angka (contoh: 0800)', 'Format Jam');
                     e.target.value = '';
                 }
             }
@@ -362,6 +362,53 @@
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...';
             btn.classList.add('opacity-70', 'pointer-events-none');
         });
+
+        function showCustomAlert(message, title = 'Perhatian!') {
+            document.getElementById('custom-alert-title').innerText = title;
+            document.getElementById('custom-alert-message').innerText = message;
+
+            const modal = document.getElementById('custom-alert-modal');
+            const box = document.getElementById('custom-alert-box');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeCustomAlert() {
+            const modal = document.getElementById('custom-alert-modal');
+            const box = document.getElementById('custom-alert-box');
+
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
     </script>
+
+    {{-- Custom Alert Modal --}}
+    <div id="custom-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+        <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-alert-box" style="transition: transform 0.3s ease;">
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-500">
+                <i class="fas fa-exclamation-triangle text-3xl"></i>
+            </div>
+            <h3 class="mb-2 text-lg font-extrabold text-slate-800" id="custom-alert-title">Peringatan</h3>
+            <p class="mb-6 text-sm font-medium text-slate-600" id="custom-alert-message">Pesan peringatan akan muncul di sini.</p>
+            <button type="button" onclick="closeCustomAlert()" class="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-white shadow-md transition hover:bg-slate-700">
+                Mengerti
+            </button>
+        </div>
+    </div>
 </body>
 </html>
