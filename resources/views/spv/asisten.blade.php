@@ -43,6 +43,27 @@
         </div>
     </div>
 
+    {{-- Alert Notifikasi Session (Pesan Berhasil/Gagal dari Controller) --}}
+    @if(session('success'))
+        <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm flex items-start gap-3">
+            <i class="fas fa-check-circle text-emerald-500 text-xl mt-0.5"></i>
+            <div>
+                <h3 class="text-sm font-bold text-emerald-800">Berhasil</h3>
+                <p class="text-sm font-medium text-emerald-700 mt-0.5">{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-red-500 text-xl mt-0.5"></i>
+            <div>
+                <h3 class="text-sm font-bold text-red-800">Gagal / Perhatian</h3>
+                <p class="text-sm font-medium text-red-700 mt-0.5">{{ session('error') }}</p>
+            </div>
+        </div>
+    @endif
+
     {{-- Panel Import --}}
     <div class="mb-8 rounded-2xl border border-blue-200 bg-blue-50/80 p-6 shadow-xl shadow-blue-950/5 backdrop-blur">
         <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -60,15 +81,15 @@
             </form>
         </div>
 
-        <form action="{{ route('spv.importAsisten') }}" method="POST" enctype="multipart/form-data" class="grid gap-4 sm:grid-cols-[1fr_auto] items-end">
+        <form action="{{ route('spv.importAsisten') }}" method="POST" enctype="multipart/form-data" id="form-import-asisten" class="grid gap-4 sm:grid-cols-[1fr_auto] items-end">
             @csrf
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pilih File Master Jadwal</label>
-                <input type="file" name="file_asisten" required
+                <input type="file" name="file_asisten" id="file_asisten_input" accept=".xlsx, .xls, .csv" onchange="checkFileExtensionAsisten()" required
                        class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500">
             </div>
 
-            <button type="submit" class="h-11 rounded-xl bg-blue-700 px-6 text-sm font-extrabold uppercase tracking-wide text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
+            <button type="button" id="btn-import-asisten" onclick="submitImportAsisten()" class="h-11 rounded-xl bg-blue-700 px-6 text-sm font-extrabold uppercase tracking-wide text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800">
                 Import
             </button>
         </form>
@@ -265,4 +286,93 @@
         </div>
     @endif
 </div>
+</div>
+
+{{-- Custom Alert Modal --}}
+<div id="custom-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-alert-box" style="transition: transform 0.3s ease;">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-500">
+            <i class="fas fa-exclamation-triangle text-3xl"></i>
+        </div>
+        <h3 class="mb-2 text-lg font-extrabold text-slate-800" id="custom-alert-title">Peringatan</h3>
+        <p class="mb-6 text-sm font-medium text-slate-600" id="custom-alert-message">Pesan peringatan akan muncul di sini.</p>
+        <button type="button" onclick="closeCustomAlert()" class="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-white shadow-md transition hover:bg-slate-700">
+            Mengerti
+        </button>
+    </div>
+</div>
+
+<script>
+function showCustomAlert(message, title = 'Perhatian!') {
+    document.getElementById('custom-alert-title').innerText = title;
+    document.getElementById('custom-alert-message').innerText = message;
+    
+    const modal = document.getElementById('custom-alert-modal');
+    const box = document.getElementById('custom-alert-box');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+    }, 10);
+}
+
+function closeCustomAlert() {
+    const modal = document.getElementById('custom-alert-modal');
+    const box = document.getElementById('custom-alert-box');
+    
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    box.classList.remove('scale-100');
+    box.classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function checkFileExtensionAsisten() {
+    const fileInput = document.getElementById('file_asisten_input');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const validExtensions = ['.xlsx', '.xls', '.csv'];
+        const fileName = file.name.toLowerCase();
+        
+        const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+        if (!isValid) {
+            showCustomAlert('File tidak valid! Tolong hanya masukkan file dengan format Excel (.xlsx, .xls, atau .csv).', 'Format Salah');
+            fileInput.value = ''; // Kosongkan pilihan file agar user bisa memilih ulang
+        }
+    }
+}
+
+function submitImportAsisten() {
+    const fileInput = document.getElementById('file_asisten_input');
+    const btnImport = document.getElementById('btn-import-asisten');
+    const form = document.getElementById('form-import-asisten');
+
+    if (fileInput.files.length === 0) {
+        showCustomAlert('Silakan pilih file Excel/CSV terlebih dahulu!', 'Peringatan');
+        return;
+    }
+
+    btnImport.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Mengimpor...';
+    btnImport.classList.add('opacity-60', 'pointer-events-none');
+    form.submit();
+}
+
+// Munculkan alert otomatis jika ada pesan error dari controller (misal: format salah)
+@if(session('error'))
+    document.addEventListener("DOMContentLoaded", function() {
+        showCustomAlert("{{ session('error') }}", "Gagal / Perhatian");
+    });
+@endif
+</script>
+
 @endsection
