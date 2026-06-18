@@ -108,7 +108,11 @@ class AsistenController extends Controller
     public function importAsistenExcel(Request $request)
     {
         $request->validate([
-            'file_asisten' => 'required|mimes:xlsx,xls,csv|max:5120'
+            'file_asisten' => 'required|mimes:xlsx,xls,csv,txt|max:5120'
+        ], [
+            'file_asisten.required' => 'File Excel/CSV belum dipilih.',
+            'file_asisten.mimes'    => 'Format file ditolak oleh server! Harap pastikan file Anda benar-benar berformat Excel (.xlsx, .xls) atau CSV (.csv).',
+            'file_asisten.max'      => 'Ukuran file jadwal terlalu besar (maksimal 5 MB).'
         ]);
 
         $sheets = Excel::toArray([], $request->file('file_asisten'));

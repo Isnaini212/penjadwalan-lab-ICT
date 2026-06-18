@@ -16,16 +16,22 @@ class JadwalController extends Controller
 {
 
 public function minggu(){
-    $minDate = Schedule::min('tanggal');
-        $maxDate = Schedule::max('tanggal');
+    // Cari tanggal paling awal dan paling akhir KHUSUS untuk praktikum (kecuali RA)
+    $minDate = Schedule::whereHas('lab', function ($query) {
+        $query->whereNotIn('nama_lab', ['RUANG RA', 'RA', 'RUANG ASISTEN']);
+    })->min('tanggal');
 
-        if (!$minDate || !$maxDate) {
-            $startPeriode = Carbon::now()->startOfWeek(Carbon::MONDAY);
-            $endPeriode   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
-        } else {
-            $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
-            $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
-        }
+    $maxDate = Schedule::whereHas('lab', function ($query) {
+        $query->whereNotIn('nama_lab', ['RUANG RA', 'RA', 'RUANG ASISTEN']);
+    })->max('tanggal');
+
+    if (!$minDate || !$maxDate) {
+        $startPeriode = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $endPeriode   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+    } else {
+        $startPeriode = Carbon::parse($minDate)->startOfWeek(Carbon::MONDAY);
+        $endPeriode   = Carbon::parse($maxDate)->endOfWeek(Carbon::SUNDAY);
+    }
 
         $listMinggu  = [];
         $current     = $startPeriode->copy();
@@ -350,7 +356,13 @@ public function store(Request $request)
         $request->validate([
             'start_date' => 'required|date',
             'end_date'   => 'required|date',
-            'file_excel' => 'required|mimes:xlsx,xls,csv|max:5120'
+            'file_excel' => 'required|mimes:xlsx,xls,csv,txt|max:5120'
+        ], [
+            'file_excel.required' => 'File Excel/CSV belum dipilih.',
+            'file_excel.mimes'    => 'Format file ditolak oleh server! Harap pastikan file Anda benar-benar berformat Excel (.xlsx, .xls) atau CSV (.csv).',
+            'file_excel.max'      => 'Ukuran file jadwal terlalu besar (maksimal 5 MB).',
+            'start_date.required' => 'Tanggal periode mulai wajib diisi.',
+            'end_date.required'   => 'Tanggal periode selesai wajib diisi.',
         ]);
 
         $sheets = Excel::toArray([], $request->file('file_excel'));

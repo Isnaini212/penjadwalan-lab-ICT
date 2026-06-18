@@ -64,6 +64,27 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-red-500 text-xl mt-0.5"></i>
+            <div>
+                <h3 class="text-sm font-bold text-red-800">Gagal Memproses Data</h3>
+                <ul class="list-disc pl-5 mt-1 text-sm font-medium text-red-700">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        
+        {{-- Munculkan alert pop-up khusus agar lebih terlihat --}}
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                showCustomAlert("{{ $errors->first() }}", "Gagal Memproses");
+            });
+        </script>
+    @endif
+
     {{-- Panel Import --}}
     <div class="mb-8 rounded-2xl border border-blue-200 bg-blue-50/80 p-6 shadow-xl shadow-blue-950/5 backdrop-blur">
         <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

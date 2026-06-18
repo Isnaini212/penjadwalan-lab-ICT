@@ -11,8 +11,22 @@
     </div>
 
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 border border-emerald-200 flex items-center gap-3">
+        <div class="mb-4 rounded-xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700 border border-emerald-200 flex items-center gap-3">
             <i class="fas fa-check-circle text-emerald-500 text-xl"></i> {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-4 rounded-xl bg-red-50 px-5 py-4 text-sm font-bold text-red-700 border border-red-200">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                <span>Gagal:</span>
+            </div>
+            <ul class="list-disc pl-8 text-xs font-medium text-red-600">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -59,7 +73,7 @@
                 <form action="/spv/tv/slide" method="POST" enctype="multipart/form-data"
                       class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     @csrf
-                    <input type="file" name="image" accept=".jpg,.jpeg,.png" required
+                    <input type="file" name="image" accept=".jpg,.jpeg,.png" required onchange="checkFileExtensionTv(this)"
                            class="flex-1 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-2 file:text-xs file:font-bold file:text-sky-700 hover:file:bg-sky-200 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 px-3">
                     <button type="submit"
                             class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 whitespace-nowrap">
@@ -107,6 +121,20 @@
 
 </div>
 
+{{-- Custom Alert Modal --}}
+<div id="custom-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-alert-box" style="transition: transform 0.3s ease;">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-500">
+            <i class="fas fa-exclamation-triangle text-3xl"></i>
+        </div>
+        <h3 class="mb-2 text-lg font-extrabold text-slate-800" id="custom-alert-title">Peringatan</h3>
+        <p class="mb-6 text-sm font-medium text-slate-600" id="custom-alert-message">Pesan peringatan akan muncul di sini.</p>
+        <button type="button" onclick="closeCustomAlert()" class="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-white shadow-md transition hover:bg-slate-700">
+            Mengerti
+        </button>
+    </div>
+</div>
+
 {{-- Custom Confirm Modal --}}
 <div id="custom-confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
     <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center transform transition-transform scale-95" id="custom-confirm-box" style="transition: transform 0.3s ease;">
@@ -128,6 +156,53 @@
 
 <script>
 let currentConfirmCallback = null;
+
+function checkFileExtensionTv(input) {
+    if (input.files.length > 0) {
+        const file = input.files[0];
+        const validExtensions = ['.jpg', '.jpeg', '.png'];
+        const fileName = file.name.toLowerCase();
+        const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+        if (!isValid) {
+            showCustomAlert('File tidak valid! Tolong hanya masukkan file dengan format gambar (.jpg, .jpeg, atau .png).', 'Format File');
+            input.value = ''; // Kosongkan input file
+        }
+    }
+}
+
+function showCustomAlert(message, title = 'Perhatian!') {
+    document.getElementById('custom-alert-title').innerText = title;
+    document.getElementById('custom-alert-message').innerText = message;
+
+    const modal = document.getElementById('custom-alert-modal');
+    const box = document.getElementById('custom-alert-box');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+    }, 10);
+}
+
+function closeCustomAlert() {
+    const modal = document.getElementById('custom-alert-modal');
+    const box = document.getElementById('custom-alert-box');
+
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0');
+    box.classList.remove('scale-100');
+    box.classList.add('scale-95');
+
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }, 300);
+}
 
 function handleCustomConfirmSubmit(event, message, title = 'Konfirmasi') {
     event.preventDefault();
