@@ -6,8 +6,8 @@
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 <div class="min-h-screen font-sans text-slate-800">
     {{-- HEADER MANAGEMENT --}}
-    <div class="mb-10">
-        <h2 class="text-2xl font-bold tracking-tight text-blue-900 sm:text-3xl">Dashboard Manajemen Laboratorium</h2>
+    <div class="mb-6 sm:mb-10">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-blue-900">Dashboard Manajemen Laboratorium</h2>
         <p class="mt-2 text-sm text-slate-500">Gunakan panel ini untuk memonitor dan menambah kapasitas infrastruktur.</p>
     </div>
 
@@ -28,7 +28,7 @@
     @endif
 
     {{-- GRID UTAMA: 2 KOLOM --}}
-    <div class="grid gap-8 lg:grid-cols-[1fr_2fr]">
+    <div class="grid gap-6 md:grid-cols-[1fr_2fr]">
         
         {{-- SISI KIRI: FORM TAMBAH LAB (CARD STYLE) --}}
         <div class="h-fit rounded-2xl border border-white/80 bg-white/80 p-6 shadow-xl shadow-blue-950/5 backdrop-blur">

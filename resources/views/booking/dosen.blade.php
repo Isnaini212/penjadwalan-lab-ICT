@@ -108,12 +108,24 @@
                         <i class="fas fa-info-circle mr-1"></i> Jam Selesai diperkirakan pada pukul: <span id="text_jam_selesai" class="font-bold font-mono border-b border-indigo-600">--:--</span> WIB
                     </div>
 
+                    <div class="md:col-span-4">
+                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas Mahasiswa <span class="text-red-500">*</span></label>
+                        <input type="number" name="kapasitas" id="input_kapasitas" required placeholder="Cth: 40"
+                               class="trigger-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                    </div>
+
+                    <div class="md:col-span-8">
+                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara / Keperluan Matkul <span class="text-red-500">*</span></label>
+                        <input type="text" name="keperluan" required placeholder="Cth: Ujian Pemrograman Web"
+                               class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                    </div>
+
                     <div class="md:col-span-12 rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-6 transition">
                         <label class="mb-3 block text-sm font-extrabold text-indigo-700">
                             <i class="fas fa-door-open mr-2"></i> Pilih Laboratorium Tersedia <span class="text-red-500">*</span>
                         </label>
                         <select name="id_lab" id="select_lab" required disabled class="w-full rounded-xl border border-slate-300 bg-slate-200 py-3 px-4 text-sm font-bold text-slate-500 outline-none cursor-not-allowed transition">
-                            <option value="">Kunci Terbuka Jika Tanggal, Jam, & SKS Terisi</option>
+                            <option value="">Isi Tanggal, Jam, SKS, & Kapasitas Dahulu</option>
                         </select>
                     </div>
 
@@ -122,18 +134,6 @@
                             <i class="fas fa-tools mr-1"></i> Spesifikasi & Fasilitas Ruangan:
                         </h4>
                         <p class="text-sm font-bold text-emerald-950" id="text_fasilitas">---</p>
-                    </div>
-
-                    <div class="md:col-span-4">
-                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas Mahasiswa <span class="text-red-500">*</span></label>
-                        <input type="number" name="kapasitas" required placeholder="Cth: 40"
-                               class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
-                    </div>
-
-                    <div class="md:col-span-8">
-                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara / Keperluan Matkul <span class="text-red-500">*</span></label>
-                        <input type="text" name="keperluan" required placeholder="Cth: Ujian Pemrograman Web"
-                               class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
                 </div>
 
@@ -257,6 +257,7 @@
         const inputTanggal = document.getElementById('input_tanggal');
         const inputJam = document.getElementById('input_jam');
         const inputSks = document.getElementById('input_sks');
+        const inputKapasitas = document.getElementById('input_kapasitas');
         const selectLab = document.getElementById('select_lab');
         const infoJamSelesai = document.getElementById('info_jam_selesai');
         const textJamSelesai = document.getElementById('text_jam_selesai');
@@ -265,10 +266,10 @@
         const triggers = document.querySelectorAll('.trigger-ajax');
 
         triggers.forEach(el => {
-            el.addEventListener('change', function() {
-                if(inputTanggal.value && inputJam.value.length === 5 && inputSks.value) {
+            el.addEventListener('input', function() {
+                if(inputTanggal.value && inputJam.value.length === 5 && inputSks.value && inputKapasitas.value) {
                     selectLab.disabled = true;
-                    selectLab.innerHTML = '<option value="">⏳ Mencari Lab yang Kosong...</option>';
+                    selectLab.innerHTML = '<option value="">⏳ Mencari Lab yang Sesuai...</option>';
                     selectLab.classList.replace('bg-white', 'bg-slate-200');
                     infoFasilitas.classList.add('hidden');
 
@@ -283,7 +284,8 @@
                         body: JSON.stringify({
                             tanggal: inputTanggal.value,
                             jam_mulai: inputJam.value,
-                            sks: inputSks.value
+                            sks: inputSks.value,
+                            kapasitas: inputKapasitas.value
                         })
                     })
                     .then(async response => {
@@ -325,7 +327,7 @@
                         selectLab.classList.remove('cursor-not-allowed');
 
                         if (!adaKosong) {
-                            selectLab.innerHTML = '<option value="">⚠️ Mohon Maaf, Semua Lab Penuh pada Jam Ini</option>';
+                            selectLab.innerHTML = '<option value="">⚠️ Semua Lab Penuh/Kapasitas Kurang</option>';
                             selectLab.disabled = true;
                             selectLab.classList.replace('bg-white', 'bg-red-100');
                         }
@@ -336,7 +338,7 @@
                     });
                 } else {
                     selectLab.disabled = true;
-                    selectLab.innerHTML = '<option value="">Kunci Terbuka Jika Tanggal, Jam, & SKS Terisi</option>';
+                    selectLab.innerHTML = '<option value="">Isi Tanggal, Jam, SKS, & Kapasitas Dahulu</option>';
                     selectLab.classList.replace('bg-white', 'bg-slate-200');
                     infoJamSelesai.classList.add('hidden');
                     infoFasilitas.classList.add('hidden');

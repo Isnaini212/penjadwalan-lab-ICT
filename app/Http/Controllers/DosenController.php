@@ -25,7 +25,11 @@ class DosenController extends Controller
         $tanggal = $request->tanggal;
         $mulai = $request->jam_mulai;
         $sks = $request->sks;
+<<<<<<< HEAD
         
+=======
+        $kapasitas = $request->kapasitas;
+>>>>>>> c63b3b29136b0a8f9d3c3b5faaf0960fe9f3f637
 
         $jamSelesai = Carbon::createFromFormat('H:i', $mulai)->addMinutes($sks * 53.3334)->format('H:i');
 
@@ -57,7 +61,8 @@ class DosenController extends Controller
         $response = [];
         foreach ($allLabs as $lab) {
             
-            $isBusy = in_array($lab->id_lab, $allBusyLabs);
+            // Lab sibuk JIKA sudah dipesan ATAU kapasitas lab kurang dari kapasitas yang diminta
+            $isBusy = in_array($lab->id_lab, $allBusyLabs) || ($kapasitas && $lab->kapasitas < $kapasitas);
             
             $response[] = [
                 'id_lab'    => $lab->id_lab, 
@@ -81,7 +86,14 @@ public function store(Request $request)
         'jam_mulai' => 'required',
         'sks'       => 'required|numeric',
         'id_lab'    => 'required',
+        'kapasitas' => 'required|numeric',
     ]);
+
+    // Cek kapasitas lab di backend
+    $lab = Lab::find($request->id_lab);
+    if ($lab && $request->kapasitas > $lab->kapasitas) {
+        return back()->with('error', "Gagal! Kapasitas peserta ({$request->kapasitas}) melebihi kapasitas {$lab->nama_lab} ({$lab->kapasitas} kursi).");
+    }
 
     
     $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');

@@ -37,8 +37,32 @@ class SetujuController extends Controller
             return $item;
         });
 
-      
         $bookings = $pendingOrmawa->concat($pendingDosen)->sortBy('created_at');
+
+        // ==== GET HISTORY BOOKINGS ====
+        $historyOrmawa = Ormawa::whereIn('status', ['approved', 'rejected'])->orderBy('updated_at', 'desc')->take(20)->get()->map(function($item) {
+            $item->type = 'ormawa';
+            $item->nama_pengaju = $item->penanggung_jawab;
+            $item->identitas = $item->nama_ormawa;
+            $item->kontak = $item->no_wa;
+            $item->current_lab = $item->lab; 
+            $item->current_id_lab = null;
+            $item->dokumen = $item->file_surat;
+            return $item;
+        });
+
+        $historyDosen = Dosen::with('lab')->whereIn('status', ['approved', 'rejected'])->orderBy('updated_at', 'desc')->take(20)->get()->map(function($item) {
+            $item->type = 'dosen';
+            $item->nama_pengaju = $item->nm_dosen;
+            $item->identitas = 'Dosen / Staf';
+            $item->kontak = '-';
+            $item->current_lab = $item->lab ? ($item->lab->nama_lab ?? $item->lab->nm_lab) : 'Lab Dihapus';
+            $item->current_id_lab = $item->id_lab;
+            $item->dokumen = null; 
+            return $item;
+        });
+
+        $historyBookings = $historyOrmawa->concat($historyDosen)->sortByDesc('updated_at')->take(30);
 
       
         $totalOrmawa = $pendingOrmawa->count();
@@ -47,10 +71,10 @@ class SetujuController extends Controller
 
         
         foreach ($bookings as $b) {
-            $b->lab_options = $this->getLabAvailability($b->tanggal, $b->hari, $b->jam_mulai, $b->jam_selesai, $allLabs);
+            $b->lab_options = $this->getLabAvailability($b->tanggal, $b->hari, $b->jam_mulai, $b->jam_selesai, $allLabs, $b->kapasitas);
         }
 
-        return view('spv.setuju', compact('bookings', 'totalOrmawa', 'totalDosen'));
+        return view('spv.setuju', compact('bookings', 'historyBookings', 'totalOrmawa', 'totalDosen'));
     }
 
    
@@ -90,6 +114,10 @@ class SetujuController extends Controller
                     return back()->with('error', 'Ruangan Lab yang dipilih tidak terdaftar di database!');
                 }
 
+                if ($lab->kapasitas < $booking->kapasitas) {
+                    return back()->with('error', "Gagal Approve! Kapasitas {$lab->nama_lab} ({$lab->kapasitas}) tidak cukup untuk menampung peserta Ormawa ({$booking->kapasitas}).");
+                }
+
                 
                 Schedule::create([
                     'tanggal'     => $booking->tanggal,
@@ -108,6 +136,11 @@ class SetujuController extends Controller
             } else {
                 
                 $booking = Dosen::findOrFail($id);
+
+                $lab = Lab::find($booking->id_lab);
+                if ($lab && $lab->kapasitas < $booking->kapasitas) {
+                    return back()->with('error', "Gagal Approve! Kapasitas Lab ({$lab->kapasitas}) tidak cukup untuk menampung peserta Dosen ({$booking->kapasitas}).");
+                }
 
                 Schedule::create([
                     'tanggal'     => $booking->tanggal,
@@ -147,7 +180,7 @@ class SetujuController extends Controller
     }
 
     
-    private function getLabAvailability($tanggal, $hari, $mulai, $selesai, $allLabs)
+    private function getLabAvailability($tanggal, $hari, $mulai, $selesai, $allLabs, $kapasitas)
     {
         $busySchedules = Schedule::where('hari', $hari)->where(function($q) use ($mulai, $selesai) {
             $q->where('jam_mulai', '<', $selesai)->where('jam_selesai', '>', $mulai);
@@ -165,7 +198,9 @@ class SetujuController extends Controller
         $options = [];
         foreach ($allLabs as $lab) {
             $namaLab = $lab->nama_lab ?? $lab->nm_lab;
-            $isBusy = in_array($lab->id_lab, $allBusyLabs) || in_array($namaLab, $allBusyLabs);
+            
+            // Sibuk jika jadwal tabrakan ATAU kapasitas lab kurang dari yg diminta
+            $isBusy = in_array($lab->id_lab, $allBusyLabs) || in_array($namaLab, $allBusyLabs) || ($kapasitas && $lab->kapasitas < $kapasitas);
             
             $options[] = [
                 'id_lab'   => $lab->id_lab,

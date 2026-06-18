@@ -5,9 +5,9 @@
 @section('content')
 
 {{-- Header --}}
-<div class="mb-8">
-    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Manajemen Akun</h1>
-    <p class="text-slate-500 font-medium mt-1 text-sm sm:text-base">Kelola dan buat akses portal untuk Asisten, Ormawa, dan Dosen.</p>
+<div class="mb-6">
+    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Manajemen Akun</h1>
+    <p class="text-slate-500 font-medium mt-1 text-sm">Kelola dan buat akses portal untuk Asisten, Ormawa, dan Dosen.</p>
 </div>
 
 {{-- Alert Success --}}
