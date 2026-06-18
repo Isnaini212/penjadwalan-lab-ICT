@@ -117,6 +117,8 @@ class AsistenController extends Controller
         foreach ($sheets as $rows) {
             $currentAssistant = 'TBD';
             $pendingSchedules = [];
+            $validFormatFound = false;
+            $hariMap = [];
 
             $flushSchedule = function($hari) use (&$pendingSchedules, &$count) {
                 if (isset($pendingSchedules[$hari])) {
@@ -130,13 +132,30 @@ class AsistenController extends Controller
                 if (empty(array_filter($row))) continue;
 
                 $seninIndex = array_search('Senin', $row);
-                if ($seninIndex !== false) {
+                $selasaIndex = array_search('Selasa', $row);
+                
+                // Cek apakah baris ini adalah HEADER HARI (Senin, Selasa, dll)
+                if ($seninIndex !== false && $selasaIndex !== false) {
+                    $validFormatFound = true;
                     foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $h) {
                         $flushSchedule($h);
                     }
+                    
                     $currentAssistant = !empty($row[0]) ? $row[0] : (!empty($row[1]) ? $row[1] : 'TBD');
+                    
+                    // Bangun map hari secara dinamis dari header
+                    $hariMap = [];
+                    foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $hari) {
+                        $idx = array_search($hari, $row);
+                        if ($idx !== false) {
+                            $hariMap[$idx] = $hari;
+                        }
+                    }
                     continue;
                 }
+
+                // Jika belum ketemu header sama sekali, lewati baris ini (mencegah salah baca format lain)
+                if (!$validFormatFound) continue;
 
                 $jamColumn = '';
                 foreach ($row as $col) {
@@ -150,14 +169,6 @@ class AsistenController extends Controller
                     $jamRaw = explode('-', $jamColumn);
                     $jamMulai = str_replace('.', ':', trim($jamRaw[0]));
                     $jamSelesai = str_replace('.', ':', trim($jamRaw[1]));
-
-                    $hariMap = [
-                        2 => 'Senin',
-                        3 => 'Selasa',
-                        4 => 'Rabu',
-                        5 => 'Kamis',
-                        6 => 'Jumat'
-                    ];
 
                     foreach ($hariMap as $colIndex => $namaHari) {
                         $matkul = isset($row[$colIndex]) ? trim($row[$colIndex]) : '';
@@ -191,7 +202,7 @@ class AsistenController extends Controller
         }
 
         if ($count === 0) {
-            return back()->with('error', 'Gagal! Format tidak dikenali atau file kosong.');
+            return back()->with('error', 'Peringatan: Format file salah atau tidak sesuai dengan template Excel yang ditentukan!');
         }
 
         return redirect('/spv/asisten')->with('success', 'Data asisten berhasil diimport!');
