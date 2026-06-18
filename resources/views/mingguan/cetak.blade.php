@@ -14,6 +14,8 @@
         .center { text-align: center; }
         .font-mono { font-family: monospace; font-size: 11px; font-weight: bold; }
         .text-muted { color: #888; font-style: italic; }
+        .day-separator { background-color: #1e3a8a; color: white; padding: 8px 12px; font-weight: bold; font-size: 12px; margin-top: 20px; text-transform: uppercase; border: 1px solid #1e3a8a; border-bottom: none; }
+        .day-table { margin-top: 0; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -23,52 +25,64 @@
         <p>Laporan Jadwal Perkuliahan: Minggu Ke {{ $minggu }} ({{ \Carbon\Carbon::parse($activeRange['start'])->translatedFormat('d F Y') }} s/d {{ \Carbon\Carbon::parse($activeRange['end'])->translatedFormat('d F Y') }})</p>
     </div>
 
-    <table>
-        <thead>
+    @php
+        $groupedSchedules = $schedules->groupBy('tanggal');
+    @endphp
+
+    @forelse($groupedSchedules as $tanggal => $dailySchedules)
+        @php
+            $hari = $dailySchedules->first()->hari;
+            $tanggalFormat = \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y');
+        @endphp
+        
+        <div class="day-separator">
+            {{ $hari }}, {{ $tanggalFormat }}
+        </div>
+
+        <table class="day-table">
+            <thead>
+                <tr>
+                    <th style="width: 18%;">Laboratorium</th>
+                    <th style="width: 15%;">Waktu Sesi</th>
+                    <th style="width: 30%;">Nama Mata Kuliah</th>
+                    <th style="width: 22%;">Dosen Pengampu</th>
+                    <th style="width: 15%;">Asisten Praktikum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($dailySchedules as $sch)
+                    <tr>
+                        <td class="center" style="font-weight: bold; color: #2563eb;">
+                            {{ $sch->lab->nama_lab ?? 'Lab Terhapus' }}
+                        </td>
+                        <td class="center font-mono">
+                            {{ substr($sch->jam_mulai, 0, 5) }} - {{ substr($sch->jam_selesai, 0, 5) }}
+                        </td>
+                        <td>
+                            <strong>{{ $sch->matkul }}</strong><br>
+                            <span class="text-muted">{{ $sch->sks }} SKS</span>
+                        </td>
+                        <td>{{ $sch->dosen }}</td>
+                        <td class="center">
+                            @if($sch->assistantSchedule)
+                                <span style="font-weight: bold; color: #16a34a;">{{ $sch->assistantSchedule->nama_asisten }}</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @empty
+        <table>
             <tr>
-                <th style="width: 15%;">Hari & Tanggal</th>
-                <th style="width: 15%;">Laboratorium</th>
-                <th style="width: 12%;">Waktu Sesi</th>
-                <th style="width: 25%;">Nama Mata Kuliah</th>
-                <th style="width: 18%;">Dosen Pengampu</th>
-                <th style="width: 15%;">Asisten Praktikum</th>
+                <td class="center" style="padding: 30px; font-size: 13px; color: #666;">
+                    <strong>Tidak ada agenda / jadwal praktikum yang terdaftar pada Minggu ke-{{ $minggu }}.</strong>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @forelse($schedules as $sch)
-                <tr>
-                    <td class="center">
-                        <strong>{{ $sch->hari }}</strong><br>
-                        <span class="text-muted">{{ \Carbon\Carbon::parse($sch->tanggal)->translatedFormat('d M Y') }}</span>
-                    </td>
-                    <td class="center" style="font-weight: bold; color: #2563eb;">
-                        {{ $sch->lab->nama_lab ?? 'Lab Terhapus' }}
-                    </td>
-                    <td class="center font-mono">
-                        {{ substr($sch->jam_mulai, 0, 5) }} - {{ substr($sch->jam_selesai, 0, 5) }}
-                    </td>
-                    <td>
-                        <strong>{{ $sch->matkul }}</strong><br>
-                        <span class="text-muted">{{ $sch->sks }} SKS</span>
-                    </td>
-                    <td>{{ $sch->dosen }}</td>
-                    <td class="center">
-                        @if($sch->assistantSchedule)
-                            <span style="font-weight: bold; color: #16a34a;">{{ $sch->assistantSchedule->nama_asisten }}</span>
-                        @else
-                            <span class="text-muted">Kosong</span>
-                        @endif
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" class="center" style="padding: 30px; font-size: 13px; color: #666;">
-                        <strong>Tidak ada agenda / jadwal praktikum yang terdaftar pada Minggu ke-{{ $minggu }}.</strong>
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+        </table>
+    @endforelse
 
 </body>
 </html>
