@@ -50,6 +50,27 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-red-500 text-xl mt-0.5"></i>
+            <div>
+                <h3 class="text-sm font-bold text-red-800">Gagal Memproses Data</h3>
+                <ul class="list-disc pl-5 mt-1 text-sm font-medium text-red-700">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        
+        {{-- Munculkan alert pop-up khusus agar lebih terlihat --}}
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                showCustomAlert("{{ $errors->first() }}", "Gagal Memproses");
+            });
+        </script>
+    @endif
+
     @if(isset($conflicts) && $conflicts->count() > 0)
         <div class="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-xl shadow-red-950/5 space-y-4">
             <div class="flex items-center gap-3 text-red-800">
