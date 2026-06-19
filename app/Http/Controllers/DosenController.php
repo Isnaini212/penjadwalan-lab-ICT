@@ -52,7 +52,7 @@ class DosenController extends Controller
             })->pluck('lab')->toArray();
 
         $allBusyLabs = array_unique(array_merge($busySchedules, $busyDosen, $busyOrmawa));
-        $allLabs = Lab::all(); 
+        $allLabs = Lab::where('nama_lab', '!=', 'RUANG ASISTEN')->get();
 
         $response = [];
         foreach ($allLabs as $lab) {

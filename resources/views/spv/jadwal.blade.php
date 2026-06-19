@@ -161,7 +161,9 @@
             <select id="filterLab" class="h-11 rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer">
                 <option value="">Semua Lab / Ruangan</option>
                 @foreach($labs->sortBy('nama_lab') as $lab)
-                    <option value="{{ $lab->nama_lab }}">{{ strtoupper($lab->nama_lab) }}</option>
+                    @if(strtoupper($lab->nama_lab) !== 'RUANG ASISTEN')
+                        <option value="{{ $lab->nama_lab }}">{{ strtoupper($lab->nama_lab) }}</option>
+                    @endif
                 @endforeach
             </select>
         </div>
@@ -184,7 +186,9 @@
                     <select name="id_lab" required class="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
                         <option value="">-- Pilih Lab --</option>
                         @foreach($labs as $lab)
-                            <option value="{{ $lab->id_lab }}">{{ $lab->nama_lab }}</option>
+                            @if(strtoupper($lab->nama_lab) !== 'RUANG ASISTEN')
+                                <option value="{{ $lab->id_lab }}">{{ $lab->nama_lab }}</option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
