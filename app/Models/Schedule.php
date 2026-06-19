@@ -45,7 +45,7 @@ class Schedule extends Model
 
     public function getLabStatuses()
     {
-        $allLabs = \App\Models\Lab::all();
+        $allLabs = \App\Models\Lab::where('nama_lab', '!=', 'RUANG ASISTEN')->get();
         $statuses = [];
 
         foreach ($allLabs as $lab) {

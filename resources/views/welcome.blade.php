@@ -99,7 +99,9 @@
                     <select id="filterLab" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                         <option value="">Semua Ruang Lab</option>
                         @foreach($labs as $lab)
-                            <option value="{{ $lab->nama_lab }}">{{ $lab->nama_lab }}</option>
+                            @if(strtoupper($lab->nama_lab) !== 'RUANG ASISTEN')
+                                <option value="{{ $lab->nama_lab }}">{{ $lab->nama_lab }}</option>
+                            @endif
                         @endforeach
                     </select>
                 </label>
