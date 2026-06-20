@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -63,17 +63,17 @@
     </div>
 
     <main class="relative flex-1 p-8 overflow-hidden">
-        
+
         <button class="nav-button absolute left-4 top-1/2 -translate-y-1/2 z-40 bg-white/80 hover:bg-blue-700 text-slate-600 hover:text-white border border-slate-200 hover:border-blue-700 w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold cursor-pointer transition shadow-xl backdrop-blur-sm" onclick="gantiSlideManuel(-1)">
             &#10094;
         </button>
-        
+
         <button class="nav-button absolute right-4 top-1/2 -translate-y-1/2 z-40 bg-white/80 hover:bg-blue-700 text-slate-600 hover:text-white border border-slate-200 hover:border-blue-700 w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold cursor-pointer transition shadow-xl backdrop-blur-sm" onclick="gantiSlideManuel(1)">
             &#10095;
         </button>
 
         <div class="relative w-full flex-1 h-full">
-            
+
             <div class="slide flex flex-col active">
                 <table class="w-full border-separate border-spacing-y-2.5">
                     <thead>
@@ -86,7 +86,7 @@
                     </thead>
                     <tbody id="tableBody">
                         @forelse($jadwal ?? [] as $j)
-                            @php 
+                            @php
                                 $roomLabel = is_object($j->lab) ? $j->lab->nama_lab : $j->lab;
                             @endphp
                             <tr class="schedule-row bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl" data-time="{{ date('H:i', strtotime($j->jam_mulai)) }}" style="display: none;">
@@ -145,7 +145,7 @@
             const sessionNameText = document.getElementById('current-session-name');
 
             let currentTablePage = 1;
-            const rowsPerPage = 6; 
+            const rowsPerPage = 6;
 
             function updateClock() {
                 const now = new Date();
@@ -232,7 +232,7 @@
 
         function segarkanTimerSlider() {
             clearInterval(sliderTimer);
-            sliderTimer = setInterval(putarSlideOtomatis, 15000); 
+            sliderTimer = setInterval(putarSlideOtomatis, 15000);
         }
 
         segarkanTimerSlider();
