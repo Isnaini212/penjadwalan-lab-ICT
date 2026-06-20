@@ -110,10 +110,10 @@
                     <span class="sr-only">Sesi</span>
                     <select id="filterSession" class="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                         <option value="">Semua Sesi</option>
-                        <option value="pagi">Pagi (07:00 - 12:20)</option>
-                        <option value="siang">Siang (12:20 - 16:05)</option>
-                        <option value="sore">Sore (16:05 - 18:30)</option>
-                        <option value="malam">Malam (18:30 - 22:00)</option>
+                        <option value="pagi">Pagi (08:00 - 10:35)</option>
+                        <option value="siang">Siang (10:40 - 13:20)</option>
+                        <option value="sore">Sore (13:25 - 16:05)</option>
+                        <option value="malam">Malam (16:10 - 18:50)</option>
                     </select>
                 </label>
 
