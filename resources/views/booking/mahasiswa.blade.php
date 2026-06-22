@@ -35,21 +35,21 @@
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div x-show="open" 
+                <div x-show="open"
                      x-transition:enter="transition ease-out duration-100"
                      x-transition:enter-start="transform opacity-0 scale-95"
                      x-transition:enter-end="transform opacity-100 scale-100"
                      x-transition:leave="transition ease-in duration-75"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" 
+                     class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                      style="display: none;">
                     <div class="px-4 py-2 border-b border-slate-100 text-left">
                         <p class="text-xs font-semibold text-slate-400">Masuk sebagai</p>
                         <p class="text-sm font-bold text-slate-800 truncate">{{ auth()->user()->name }}</p>
                         <p class="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{{ auth()->user()->role }}</p>
                     </div>
-                    
+
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition">
                         <i class="fas fa-user-cog text-slate-400 text-base"></i> Edit Profil
                     </a>
@@ -158,13 +158,31 @@
                     </div>
 
                     {{-- Kapasitas --}}
-                    <div class="md:col-span-2">
+                    <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Peserta<span class="text-red-500">*</span></label>
                         <div class="relative">
                             <input type="number" name="kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-chair absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
+                    </div>
+
+                    {{-- Jumlah Lab --}}
+                    <div>
+                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Lab Dibutuhkan <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select name="jumlah_lab" required
+                                    class="w-full appearance-none rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 pr-10 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <option value="{{ $i }}" {{ (int) old('jumlah_lab', 1) === $i ? 'selected' : '' }}>
+                                        {{ $i }} Lab
+                                    </option>
+                                @endfor
+                            </select>
+                            <i class="fas fa-door-open absolute left-4 top-3.5 text-slate-400"></i>
+                            <i class="fas fa-chevron-down pointer-events-none absolute right-4 top-4 text-xs text-slate-400"></i>
+                        </div>
+                        <p class="mt-1 text-[10px] font-bold text-indigo-500">Standar maksimal 36 peserta per lab. Lab tetap ditentukan oleh SPV.</p>
                     </div>
 
                     {{-- Keperluan --}}

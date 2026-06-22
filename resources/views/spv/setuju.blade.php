@@ -91,11 +91,85 @@
                         <div class="font-bold text-slate-700 text-xs mb-1">
                             <i class="fas fa-users text-slate-400 mr-1"></i> {{ $b->kapasitas }} Orang
                         </div>
+                        @if($b->type === 'ormawa')
+                            <div class="mb-1 text-xs font-bold text-indigo-600">
+                                <i class="fas fa-door-open text-indigo-400 mr-1"></i> Butuh {{ $b->jumlah_lab }} Lab
+                            </div>
+                        @endif
                         <div class="text-sm font-semibold text-slate-600">{{ $b->keperluan }}</div>
                     </td>
 
                     {{-- Dropdown Pilih LAB --}}
                     <td class="px-4 py-4">
+                        @if($b->type === 'ormawa')
+                            <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}"
+                                  method="POST"
+                                  x-data="{ selectedLabs: @js(array_map('strval', $b->current_lab_ids ?? [])), requiredLabs: {{ (int) $b->jumlah_lab }} }"
+                                  class="min-w-[420px] max-w-[560px] rounded-2xl border border-slate-200 bg-slate-50/70 p-3 shadow-sm">
+                                @csrf @method('PATCH')
+
+                                <div class="mb-2 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="text-[11px] font-black uppercase tracking-wide text-slate-500">Pilih Lab Ormawa</p>
+                                        <p class="text-[10px] font-bold text-slate-400">Wajib {{ $b->jumlah_lab }} lab berbeda.</p>
+                                    </div>
+                                    <span class="rounded-full bg-indigo-100 px-3 py-1 text-[10px] font-black text-indigo-700">
+                                        {{ $b->jumlah_lab }} Lab
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-wrap items-start gap-2">
+                                    @for($i = 0; $i < $b->jumlah_lab; $i++)
+                                        @php
+                                            $selectedLabId = $b->current_lab_ids[$i] ?? null;
+                                        @endphp
+
+                                        <div class="relative">
+                                            <select name="lab_ids[]"
+                                                    x-model="selectedLabs[{{ $i }}]"
+                                                    class="h-11 w-48 appearance-none rounded-xl border border-slate-300 bg-white px-3 pr-9 text-xs font-bold text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
+                                                <option value="" {{ $selectedLabId ? '' : 'selected' }} disabled class="font-bold text-red-500">
+                                                    -- Pilih Lab {{ $i + 1 }} --
+                                                </option>
+
+                                                @foreach($b->lab_options as $opt)
+                                                    @continue(! str_contains(strtoupper($opt['nama_lab']), 'LAB'))
+
+                                                    @php
+                                                        $isSelected = (int) $selectedLabId === (int) $opt['id_lab'];
+                                                        $labIdString = (string) $opt['id_lab'];
+                                                    @endphp
+
+                                                    @if($opt['is_busy'] && ! $isSelected)
+                                                        <option value="" disabled class="bg-red-50 font-bold text-red-500">
+                                                            {{ $opt['nama_lab'] }} (Penuh / Kapasitas Kurang)
+                                                        </option>
+                                                    @else
+                                                        <option value="{{ $opt['id_lab'] }}"
+                                                                {{ $isSelected ? 'selected' : '' }}
+                                                                :disabled="selectedLabs.includes('{{ $labIdString }}') && selectedLabs[{{ $i }}] !== '{{ $labIdString }}'"
+                                                                class="font-bold text-emerald-700">
+                                                            {{ $opt['nama_lab'] }} (Tersedia)
+                                                        </option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                            <i class="fas fa-chevron-down pointer-events-none absolute right-3 top-4 text-[10px] text-slate-400"></i>
+                                        </div>
+                                    @endfor
+
+                                    <button type="submit"
+                                            :disabled="selectedLabs.filter(Boolean).length !== requiredLabs"
+                                            class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">
+                                        <i class="fas fa-save"></i> Simpan
+                                    </button>
+                                </div>
+
+                                <p class="mt-2 text-[10px] font-bold text-slate-400">
+                                    Lab yang sudah dipilih akan otomatis terkunci di pilihan lain.
+                                </p>
+                            </form>
+                        @else
                         <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}" method="POST">
                             @csrf @method('PATCH')
                             <select name="lab_id" onchange="this.form.submit()" class="h-10 w-48 rounded-xl border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
@@ -129,6 +203,7 @@
                                 
                             </select>
                         </form>
+                        @endif
                     </td>
                     {{-- Dokumen PDF --}}
                     {{-- Dokumen PDF --}}

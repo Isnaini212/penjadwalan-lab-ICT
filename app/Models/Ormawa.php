@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Ormawa extends Model
 {
@@ -20,6 +21,7 @@ class Ormawa extends Model
         'jam_mulai',
         'jam_selesai',
         'kapasitas',
+        'jumlah_lab',
         'keperluan',
         'file_surat',
         'status',
@@ -29,5 +31,11 @@ class Ormawa extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function labs(): BelongsToMany
+    {
+        return $this->belongsToMany(Lab::class, 'booking_ormawa_labs', 'id_booking', 'id_lab', 'id_booking', 'id_lab')
+            ->withTimestamps();
     }
 }

@@ -241,23 +241,23 @@
 
     <div class="overflow-hidden rounded-2xl border border-white bg-white shadow-2xl shadow-blue-950/5">
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[1200px] border-collapse text-left text-sm" id="scheduleTable">
+            <table class="w-full min-w-[1500px] border-collapse text-left text-sm" id="scheduleTable">
                 <thead class="bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider">
                     <tr>
-                        <th class="px-6 py-4">Tanggal</th>
-                        <th class="px-6 py-4">Lab</th>
-                        <th class="px-6 py-4">Jam (Mulai - Selesai)</th>
-                        <th class="px-6 py-4">Mata Kuliah</th>
-                        <th class="px-6 py-4">Kode Matkul</th>
-                        <th class="px-6 py-4">Dosen</th>
-                        <th class="px-6 py-4">Asisten</th>
+                        <th class="px-6 py-4 min-w-[220px]">Tanggal</th>
+                        <th class="px-6 py-4 min-w-[190px]">Lab</th>
+                        <th class="px-6 py-4 min-w-[260px]">Jam (Mulai - Selesai)</th>
+                        <th class="px-6 py-4 min-w-[300px]">Mata Kuliah</th>
+                        <th class="px-6 py-4 min-w-[130px]">Kode Matkul</th>
+                        <th class="px-6 py-4 min-w-[280px]">Dosen</th>
+                        <th class="px-6 py-4 min-w-[260px]">Asisten</th>
                         <th class="px-6 py-4">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
                     @foreach($schedules as $s)
                     <tr data-hari="{{ $s->hari }}" class="transition hover:bg-slate-50/60">
-                        <td class="px-6 py-3.5">
+                        <td class="px-6 py-4 min-w-[220px]">
                             <form action="{{ route('spv.update', $s->id_jadwal) }}" method="POST" id="update-form-{{ $s->id_jadwal }}" class="hidden">
                                 @csrf
                                 @method('PUT')
@@ -266,11 +266,11 @@
                             <div class="text-[10px] font-extrabold tracking-wider text-blue-600 uppercase mb-1">
                                 {{ $s->hari }}
                             </div>
-                            <input type="date" name="tanggal" value="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}" class="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            <input type="date" name="tanggal" value="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}" class="h-11 w-[190px] rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                         </td>
 
-                        <td class="px-4 py-3.5">
-                            <select name="id_lab" class="h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="px-5 py-4 min-w-[190px]">
+                            <select name="id_lab" class="h-11 w-[170px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                                 @foreach($s->getLabStatuses() as $lab)
                                     @php
                                         $labJadwalSaatIni = $s->id_lab;
@@ -297,30 +297,30 @@
                             </select>
                         </td>
 
-                        <td class="px-4 py-3.5">
-                            <div class="flex items-center gap-1.5 font-mono">
-                                <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="px-5 py-4 min-w-[260px]">
+                            <div class="flex items-center gap-3 font-mono">
+                                <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-11 w-28 rounded-xl border border-slate-200 px-4 text-center text-sm font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
 
-                                <span class="text-slate-400 font-bold text-xs">-</span>
+                                <span class="text-slate-400 font-bold text-sm">-</span>
 
-                                <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-9 w-20 rounded-lg border border-slate-200 px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                                <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-11 w-28 rounded-xl border border-slate-200 px-4 text-center text-sm font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                             </div>
                         </td>
 
-                        <td class="px-4 py-3.5">
-                            <input type="text" name="matkul" value="{{ $s->matkul }}" class="h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="px-5 py-4 min-w-[300px]">
+                            <input type="text" name="matkul" value="{{ $s->matkul }}" class="h-11 w-[280px] rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                         </td>
 
-                        <td class="px-4 py-3.5 text-center text-xs font-black uppercase tracking-wide text-blue-700">
+                        <td class="px-5 py-4 text-center text-xs font-black uppercase tracking-wide text-blue-700 min-w-[130px]">
                             {{ \Illuminate\Support\Str::substr($s->matkul, -4) }}
                         </td>
 
-                        <td class="px-4 py-3.5">
-                            <input type="text" name="dosen" value="{{ $s->dosen }}" class="h-9 w-full rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-600 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="px-5 py-4 min-w-[280px]">
+                            <input type="text" name="dosen" value="{{ $s->dosen }}" class="h-11 w-[260px] rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                         </td>
 
-                        <td class="px-4 py-3.5">
-                            <select name="id_asisten" class="h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="px-5 py-4 min-w-[260px]">
+                            <select name="id_asisten" class="h-11 w-[240px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                                 <option value="">-- Pilih Asisten --</option>
                                 @foreach($s->getAssistantStatuses() as $asisten)
                                     @if($asisten->is_busy)
