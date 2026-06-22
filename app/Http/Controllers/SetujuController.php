@@ -168,15 +168,85 @@ class SetujuController extends Controller
         }}
 
     
-    public function reject($type, $id)
+    public function reject(Request $request, $type, $id)
     {
+        $request->validate([
+            'alasan_penolakan' => 'nullable|string|max:500',
+        ]);
+
+        $alasan = trim($request->alasan_penolakan ?? 'Tidak ada keterangan.');
+
         if ($type === 'ormawa') {
-            Ormawa::where('id_booking', $id)->update(['status' => 'rejected']);
+            Ormawa::where('id_booking', $id)->update([
+                'status' => 'rejected',
+                'alasan_penolakan' => $alasan,
+            ]);
         } else {
-            Dosen::where('id_booking', $id)->update(['status' => 'rejected']);
+            Dosen::where('id_booking', $id)->update([
+                'status' => 'rejected',
+                'alasan_penolakan' => $alasan,
+            ]);
         }
 
         return back()->with('success', 'Pengajuan berhasil ditolak.');
+    }
+
+    public function updateRejectionReason(Request $request, $type, $id)
+    {
+        $request->validate([
+            'alasan_penolakan' => 'nullable|string|max:500',
+        ]);
+
+        $alasan = trim($request->alasan_penolakan ?? '');
+
+        if ($type === 'ormawa') {
+            Ormawa::where('id_booking', $id)
+                ->where('status', 'rejected')
+                ->update(['alasan_penolakan' => $alasan]);
+        } else {
+            Dosen::where('id_booking', $id)
+                ->where('status', 'rejected')
+                ->update(['alasan_penolakan' => $alasan]);
+        }
+
+        return back()->with('success', 'Alasan penolakan berhasil diperbarui.');
+    }
+
+    public function bulkDeleteHistory(Request $request)
+    {
+        $ids = $request->input('selected_ids', []);
+        $types = $request->input('selected_types', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada item yang dipilih untuk dihapus.');
+        }
+
+        $dosenIds = [];
+        $ormawaIds = [];
+
+        foreach ($ids as $index => $id) {
+            $type = $types[$index] ?? null;
+            if ($type === 'dosen') {
+                $dosenIds[] = $id;
+            } elseif ($type === 'ormawa') {
+                $ormawaIds[] = $id;
+            }
+        }
+
+        if (!empty($dosenIds)) {
+            Dosen::whereIn('id_booking', $dosenIds)
+                ->whereIn('status', ['approved', 'rejected'])
+                ->delete();
+        }
+
+        if (!empty($ormawaIds)) {
+            Ormawa::whereIn('id_booking', $ormawaIds)
+                ->whereIn('status', ['approved', 'rejected'])
+                ->delete();
+        }
+
+        $totalDeleted = count($dosenIds) + count($ormawaIds);
+        return back()->with('success', "Berhasil menghapus {$totalDeleted} riwayat booking.");
     }
 
     

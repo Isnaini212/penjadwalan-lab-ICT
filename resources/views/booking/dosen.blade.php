@@ -141,7 +141,8 @@
                             <option value="">-- Pilih SKS --</option>
                             <option value="1">1 SKS (50 Menit)</option>
                             <option value="2">2 SKS (105 Menit)</option>
-                            <option value="3">3 SKS (160)</option>
+                            <option value="3">3 SKS (160 Menit)</option>
+                            <option value="4">4 SKS (215 Menit)</option>
                         </select>
                     </div>
 
@@ -209,6 +210,7 @@
                             <th class="px-6 py-4">Lab & Waktu</th>
                             <th class="px-6 py-4 w-full">Keperluan / Matkul</th>
                             <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 min-w-[200px]">Alasan Penolakan</th>
                             <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -244,6 +246,19 @@
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-red-800 border border-red-300">
                                             <i class="fas fa-times"></i> Ditolak
                                         </span>
+                                    @endif
+                                </td>
+                                {{-- Alasan Penolakan --}}
+                                <td class="px-6 py-4 whitespace-normal min-w-[200px]">
+                                    @if($book->status === 'rejected' && !empty($book->alasan_penolakan))
+                                        <div class="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">
+                                            <i class="fas fa-comment-slash mr-1 text-red-400"></i>
+                                            {{ $book->alasan_penolakan }}
+                                        </div>
+                                    @elseif($book->status === 'rejected')
+                                        <span class="text-xs text-slate-400 italic">Tidak ada keterangan.</span>
+                                    @else
+                                        <span class="text-xs text-slate-300">-</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -730,7 +745,8 @@
                                 <option value="">-- Pilih SKS --</option>
                                 <option value="1">1 SKS (50 Menit)</option>
                                 <option value="2">2 SKS (105 Menit)</option>
-                                <option value="3">3 SKS (160)</option>
+                                <option value="3">3 SKS (160 Menit)</option>
+                                <option value="4">4 SKS (215 Menit)</option>
                             </select>
                             <i class="fas fa-graduation-cap absolute left-4 top-3.5 text-slate-400"></i>
                         </div>

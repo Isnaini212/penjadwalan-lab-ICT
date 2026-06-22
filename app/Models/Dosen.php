@@ -22,6 +22,7 @@ class Dosen extends Model
         'keperluan',
         'sks',
         'status',
+        'alasan_penolakan',
     ];
 
     public function user(): BelongsTo

@@ -74,6 +74,8 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
         Route::patch('/update-lab/{type}/{id}', [SetujuController::class, 'updateLab'])->name('spv.booking.update_lab');
         Route::post('/approve/{type}/{id}', [SetujuController::class, 'approve'])->name('spv.booking.approve');
         Route::post('/reject/{type}/{id}', [SetujuController::class, 'reject'])->name('spv.booking.reject');
+        Route::patch('/update-rejection/{type}/{id}', [SetujuController::class, 'updateRejectionReason'])->name('spv.booking.update_rejection');
+        Route::delete('/history/bulk-delete', [SetujuController::class, 'bulkDeleteHistory'])->name('spv.booking.history.bulk_delete');
     });
 
     // TV SPV MANAGEMENT
@@ -81,6 +83,7 @@ Route::middleware(['auth', 'role:spv'])->group(function () {
         Route::get('/', [TvController::class, 'manageTv'])->name('spv.tv.index');
         Route::post('/text', [TvController::class, 'updateTvText'])->name('spv.tv.text');
         Route::post('/slide', [TvController::class, 'uploadTvSlide'])->name('spv.tv.slide.upload');
+        Route::patch('/slide/{id}/delay', [TvController::class, 'updateTvSlideDelay'])->name('spv.tv.slide.update_delay');
         Route::delete('/slide/{id}', [TvController::class, 'deleteTvSlide'])->name('spv.tv.slide.delete');
     });
 
@@ -102,6 +105,7 @@ Route::middleware(['auth', 'role:ormawa'])->group(function () {
 Route::prefix('ormawa')->group(function () {
     Route::get('/booking', [MhsController::class, 'index'])->name('ormawa.booking.index');
     Route::post('/booking/store', [MhsController::class, 'store'])->name('ormawa.booking.store');
+    Route::delete('/booking/delete/{id}', [MhsController::class, 'destroy'])->name('ormawa.booking.delete');
 });});
 
 Route::middleware(['auth', 'role:dosen'])->group(function () {
