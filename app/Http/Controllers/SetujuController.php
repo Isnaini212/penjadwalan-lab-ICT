@@ -96,15 +96,34 @@ class SetujuController extends Controller
     {
         if ($type === 'ormawa') {
             $booking = Ormawa::with('labs')->findOrFail($id);
-            $jumlahLab = max(1, (int) ($booking->jumlah_lab ?? 1));
+
+            $availableOptionsAll = $this->getLabAvailability(
+                $booking->tanggal,
+                $booking->hari,
+                $booking->jam_mulai,
+                $booking->jam_selesai,
+                Lab::all(),
+                0
+            );
+            $availableLabsCount = collect($availableOptionsAll)->where('is_busy', false)->count();
+            $maxSelectable = max(1, $availableLabsCount);
 
             $request->validate([
-                'lab_ids' => 'required|array|size:' . $jumlahLab,
-                'lab_ids.*' => 'required|integer|distinct|exists:labs,id_lab',
+                'jumlah_lab_disetujui' => 'required|integer|min:1|max:' . $maxSelectable,
+                'lab_ids'              => 'required|array|size:' . $request->jumlah_lab_disetujui,
+                'lab_ids.*'            => 'required|integer|distinct|exists:labs,id_lab',
+                'alasan_perubahan'     => 'nullable|string|max:500',
             ]);
 
+            $jumlahLabDisetujui = (int) $request->jumlah_lab_disetujui;
+            $isReduced = $jumlahLabDisetujui < (int) $booking->jumlah_lab;
+
+            if ($isReduced && empty(trim($request->alasan_perubahan))) {
+                return back()->with('error', 'Gagal! Alasan perubahan lab wajib diisi saat jumlah lab dikurangi.');
+            }
+
             $labIds = array_map('intval', $request->lab_ids);
-            $kapasitasPerLab = $this->getKapasitasPerLab($booking->kapasitas, $jumlahLab);
+            $kapasitasPerLab = $this->getKapasitasPerLab($booking->kapasitas, $jumlahLabDisetujui);
             $availableOptions = collect($this->getLabAvailability(
                 $booking->tanggal,
                 $booking->hari,
@@ -126,7 +145,14 @@ class SetujuController extends Controller
             $namaLabs = collect($labIds)->map(fn ($labId) => $labs[$labId]->nama_lab ?? $labs[$labId]->nm_lab)->implode(', ');
 
             $booking->labs()->sync($labIds);
-            $booking->update(['lab' => $namaLabs]);
+
+            $updateData = [
+                'lab' => $namaLabs,
+                'jumlah_lab' => $jumlahLabDisetujui,
+                'alasan_perubahan' => $request->alasan_perubahan ? trim($request->alasan_perubahan) : null,
+            ];
+
+            $booking->update($updateData);
 
             return back()->with('success', "Lab Ormawa berhasil diatur: {$namaLabs}.");
         }
@@ -164,7 +190,7 @@ class SetujuController extends Controller
                     return back()->with('error', "Pilih {$jumlahLab} ruangan Lab terlebih dahulu sebelum melakukan Approve!");
                 }
 
-                if ($booking->lab === 'TBD' || $booking->lab === 'Menunggu SPV') {
+                if ($booking->lab === 'TBD' || $booking->lab === 'Menunggu SPV' || $booking->lab === 'Belum ditentukan') {
                     DB::rollBack();
                     return back()->with('error', 'Pilih ruangan Lab terlebih dahulu sebelum melakukan Approve!');
                 }
@@ -357,12 +383,15 @@ class SetujuController extends Controller
             $namaLab = $lab->nama_lab ?? $lab->nm_lab;
             
             // Sibuk jika jadwal tabrakan ATAU kapasitas lab kurang dari yg diminta
-            $isBusy = in_array($lab->id_lab, $allBusyLabs) || in_array($namaLab, $allBusyLabs) || ($kapasitas && $lab->kapasitas < $kapasitas);
+            $isColliding = in_array($lab->id_lab, $allBusyLabs) || in_array($namaLab, $allBusyLabs);
+            $isBusy = $isColliding || ($kapasitas && $lab->kapasitas < $kapasitas);
             
             $options[] = [
                 'id_lab'   => $lab->id_lab,
                 'nama_lab' => $namaLab,
-                'is_busy'  => $isBusy
+                'is_busy'  => $isBusy,
+                'is_colliding' => $isColliding,
+                'kapasitas' => (int) $lab->kapasitas,
             ];
         }
         return $options;

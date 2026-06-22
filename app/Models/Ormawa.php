@@ -26,6 +26,7 @@ class Ormawa extends Model
         'file_surat',
         'status',
         'alasan_penolakan',
+        'alasan_perubahan',
     ];
 
     

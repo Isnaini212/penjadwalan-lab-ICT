@@ -101,78 +101,127 @@
 
                     {{-- Dropdown Pilih LAB --}}
                     <td class="px-4 py-4">
-                        @if($b->type === 'ormawa')
-                            <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}"
-                                  method="POST"
-                                  x-data="{ selectedLabs: @js(array_map('strval', $b->current_lab_ids ?? [])), requiredLabs: {{ (int) $b->jumlah_lab }} }"
-                                  class="min-w-[420px] max-w-[560px] rounded-2xl border border-slate-200 bg-slate-50/70 p-3 shadow-sm">
-                                @csrf @method('PATCH')
+                         @if($b->type === 'ormawa')
+                             @php
+                                 $availableCount = collect($b->lab_options)->where('is_colliding', false)->count();
+                                 $savedCount = count($b->current_lab_ids ?? []);
+                                 $maxLabs = max(1, $availableCount, $savedCount, (int)$b->jumlah_lab);
+                             @endphp
+                             <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}"
+                                   method="POST"
+                                   x-data="{ 
+                                       selectedLabs: @js(array_map('strval', $b->current_lab_ids ?? [])), 
+                                       requiredLabs: {{ count($b->current_lab_ids ?? []) ?: (int) $b->jumlah_lab }}, 
+                                       originalLabs: {{ (int) $b->jumlah_lab }},
+                                       kapasitasTotal: {{ (int) $b->kapasitas }},
+                                       isOptionDisabled(idLab, kapasitasLab, isColliding, index) {
+                                           if (isColliding) return true;
+                                           
+                                           // Check if already selected in other dropdowns
+                                           let isAlreadySelected = this.selectedLabs.slice(0, parseInt(this.requiredLabs)).includes(idLab.toString()) 
+                                               && this.selectedLabs[index] !== idLab.toString();
+                                           if (isAlreadySelected) return true;
+                                           
+                                           // Check capacity constraint dynamically!
+                                           let kapasitasPerLabRequired = Math.ceil(this.kapasitasTotal / parseInt(this.requiredLabs));
+                                           if (kapasitasLab < kapasitasPerLabRequired) return true;
+                                           
+                                           return false;
+                                       },
+                                       getLabStatusText(namaLab, kapasitasLab, isColliding) {
+                                           if (isColliding) return namaLab + ' (Penuh / Bentrok)';
+                                           
+                                           let kapasitasPerLabRequired = Math.ceil(this.kapasitasTotal / parseInt(this.requiredLabs));
+                                           if (kapasitasLab < kapasitasPerLabRequired) {
+                                               return namaLab + ' (Kapasitas Kurang: ' + kapasitasLab + ' < ' + kapasitasPerLabRequired + ')';
+                                           }
+                                           
+                                           return namaLab + ' (Tersedia)';
+                                       }
+                                   }"
+                                   class="min-w-[420px] max-w-[560px] rounded-2xl border border-slate-200 bg-slate-50/70 p-3 shadow-sm">
+                                 @csrf @method('PATCH')
 
-                                <div class="mb-2 flex items-center justify-between gap-3">
-                                    <div>
-                                        <p class="text-[11px] font-black uppercase tracking-wide text-slate-500">Pilih Lab Ormawa</p>
-                                        <p class="text-[10px] font-bold text-slate-400">Wajib {{ $b->jumlah_lab }} lab berbeda.</p>
-                                    </div>
-                                    <span class="rounded-full bg-indigo-100 px-3 py-1 text-[10px] font-black text-indigo-700">
-                                        {{ $b->jumlah_lab }} Lab
-                                    </span>
-                                </div>
+                                 <div class="mb-2 flex items-center justify-between gap-3">
+                                     <div>
+                                         <p class="text-[11px] font-black uppercase tracking-wide text-slate-500">Pilih Lab Ormawa</p>
+                                         <p class="text-[10px] font-bold text-slate-400">Wajib pilih lab berbeda.</p>
+                                     </div>
+                                     <div class="flex items-center gap-2">
+                                         <span class="text-[10px] font-bold text-slate-500 uppercase">Disetujui:</span>
+                                         <div class="relative">
+                                             <select name="jumlah_lab_disetujui" x-model="requiredLabs"
+                                                     class="h-9 w-24 appearance-none rounded-xl border border-slate-300 bg-white pl-3 pr-8 text-xs font-black text-indigo-700 outline-none transition focus:border-indigo-500 cursor-pointer">
+                                                 @for($l = 1; $l <= $maxLabs; $l++)
+                                                     <option value="{{ $l }}">{{ $l }} Lab</option>
+                                                 @endfor
+                                             </select>
+                                             <i class="fas fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                                         </div>
+                                     </div>
+                                 </div>
 
-                                <div class="flex flex-wrap items-start gap-2">
-                                    @for($i = 0; $i < $b->jumlah_lab; $i++)
-                                        @php
-                                            $selectedLabId = $b->current_lab_ids[$i] ?? null;
-                                        @endphp
+                                 <div class="flex flex-wrap items-start gap-2">
+                                     @for($i = 0; $i < $maxLabs; $i++)
+                                         @php
+                                             $selectedLabId = $b->current_lab_ids[$i] ?? null;
+                                         @endphp
 
-                                        <div class="relative">
-                                            <select name="lab_ids[]"
-                                                    x-model="selectedLabs[{{ $i }}]"
-                                                    class="h-11 w-48 appearance-none rounded-xl border border-slate-300 bg-white px-3 pr-9 text-xs font-bold text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
-                                                <option value="" {{ $selectedLabId ? '' : 'selected' }} disabled class="font-bold text-red-500">
-                                                    -- Pilih Lab {{ $i + 1 }} --
-                                                </option>
+                                         <div class="relative" x-show="{{ $i }} < parseInt(requiredLabs)">
+                                             <select name="lab_ids[]"
+                                                     x-model="selectedLabs[{{ $i }}]"
+                                                     :disabled="{{ $i }} >= parseInt(requiredLabs)"
+                                                     class="h-11 w-64 appearance-none rounded-xl border border-slate-300 bg-white px-3 pr-9 text-xs font-bold text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
+                                                 <option value="" {{ $selectedLabId ? '' : 'selected' }} disabled class="font-bold text-red-500">
+                                                     -- Pilih Lab {{ $i + 1 }} --
+                                                 </option>
 
-                                                @foreach($b->lab_options as $opt)
-                                                    @continue(! str_contains(strtoupper($opt['nama_lab']), 'LAB'))
+                                                 @foreach($b->lab_options as $opt)
+                                                     @continue(! str_contains(strtoupper($opt['nama_lab']), 'LAB'))
 
-                                                    @php
-                                                        $isSelected = (int) $selectedLabId === (int) $opt['id_lab'];
-                                                        $labIdString = (string) $opt['id_lab'];
-                                                    @endphp
+                                                     @php
+                                                         $isSelected = (int) $selectedLabId === (int) $opt['id_lab'];
+                                                         $labIdString = (string) $opt['id_lab'];
+                                                     @endphp
 
-                                                    @if($opt['is_busy'] && ! $isSelected)
-                                                        <option value="" disabled class="bg-red-50 font-bold text-red-500">
-                                                            {{ $opt['nama_lab'] }} (Penuh / Kapasitas Kurang)
-                                                        </option>
-                                                    @else
-                                                        <option value="{{ $opt['id_lab'] }}"
-                                                                {{ $isSelected ? 'selected' : '' }}
-                                                                :disabled="selectedLabs.includes('{{ $labIdString }}') && selectedLabs[{{ $i }}] !== '{{ $labIdString }}'"
-                                                                class="font-bold text-emerald-700">
-                                                            {{ $opt['nama_lab'] }} (Tersedia)
-                                                        </option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                            <i class="fas fa-chevron-down pointer-events-none absolute right-3 top-4 text-[10px] text-slate-400"></i>
-                                        </div>
-                                    @endfor
+                                                     <option value="{{ $opt['id_lab'] }}"
+                                                             {{ $isSelected ? 'selected' : '' }}
+                                                             :disabled="isOptionDisabled('{{ $opt['id_lab'] }}', {{ $opt['kapasitas'] }}, {{ $opt['is_colliding'] ? 'true' : 'false' }}, {{ $i }})"
+                                                             :class="isOptionDisabled('{{ $opt['id_lab'] }}', {{ $opt['kapasitas'] }}, {{ $opt['is_colliding'] ? 'true' : 'false' }}, {{ $i }}) ? 'font-semibold text-slate-400 bg-red-50' : 'font-bold text-emerald-700'"
+                                                             x-text="getLabStatusText('{{ $opt['nama_lab'] }}', {{ $opt['kapasitas'] }}, {{ $opt['is_colliding'] ? 'true' : 'false' }})">
+                                                         {{ $opt['nama_lab'] }}
+                                                     </option>
+                                                 @endforeach
+                                             </select>
+                                             <i class="fas fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                                         </div>
+                                     @endfor
 
-                                    <button type="submit"
-                                            :disabled="selectedLabs.filter(Boolean).length !== requiredLabs"
-                                            class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">
-                                        <i class="fas fa-save"></i> Simpan
-                                    </button>
-                                </div>
+                                     <button type="submit"
+                                             :disabled="selectedLabs.slice(0, parseInt(requiredLabs)).filter(Boolean).length !== parseInt(requiredLabs)"
+                                             class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">
+                                         <i class="fas fa-save"></i> Simpan
+                                     </button>
+                                 </div>
 
-                                <p class="mt-2 text-[10px] font-bold text-slate-400">
-                                    Lab yang sudah dipilih akan otomatis terkunci di pilihan lain.
-                                </p>
-                            </form>
+                                 <div class="mt-3">
+                                     <label class="block text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1">
+                                         Alasan Perubahan Lab <span class="text-red-500" x-show="parseInt(requiredLabs) < parseInt(originalLabs)">*</span>
+                                     </label>
+                                     <input type="text" name="alasan_perubahan" :required="parseInt(requiredLabs) < parseInt(originalLabs)"
+                                            value="{{ $b->alasan_perubahan }}"
+                                            placeholder="Contoh: Kapasitas lab lain tidak cukup / Lab 3 sedang maintenance"
+                                            class="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500">
+                                 </div>
+
+                                 <p class="mt-2 text-[10px] font-bold text-slate-400">
+                                     Lab yang sudah dipilih akan otomatis terkunci di pilihan lain.
+                                 </p>
+                             </form>
                         @else
                         <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}" method="POST">
                             @csrf @method('PATCH')
-                            <select name="lab_id" onchange="this.form.submit()" class="h-10 w-48 rounded-xl border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
+                            <select name="lab_id" onchange="this.form.submit()" class="h-10 w-64 rounded-xl border border-slate-300 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
 
                                 @if($b->current_lab === 'TBD' || empty($b->current_id_lab))
                                     <option value="" selected disabled class="font-bold text-red-500">
@@ -348,6 +397,16 @@
                             <div class="font-bold text-slate-500 text-xs mb-1">
                                 <i class="fas fa-users text-slate-400 mr-1"></i> {{ $h->kapasitas }} Orang
                             </div>
+                            @if($h->type === 'ormawa')
+                                <div class="mb-1 text-xs font-bold text-indigo-600">
+                                    <i class="fas fa-door-open text-indigo-400 mr-1"></i> {{ $h->jumlah_lab }} Lab
+                                </div>
+                                @if($h->alasan_perubahan)
+                                    <div class="mb-1 text-[11px] font-semibold text-amber-600 italic">
+                                        <i class="fas fa-info-circle mr-1"></i> Perubahan: {{ $h->alasan_perubahan }}
+                                    </div>
+                                @endif
+                            @endif
                             <div class="text-sm font-semibold text-slate-600">{{ $h->keperluan }}</div>
                         </td>
 

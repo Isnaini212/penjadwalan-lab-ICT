@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ormawa;
+use App\Models\Schedule;
+use App\Models\Lab;
+use App\Models\Dosen;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +29,7 @@ class MhsController extends Controller
         'jam_mulai'        => 'required',
         'jam_selesai'      => 'required',
         'kapasitas'        => 'required|integer|min:1',
-        'jumlah_lab'       => 'required|integer|min:1|max:5',
+        'jumlah_lab'       => 'required|integer|min:1',
         'keperluan'        => 'required',
         'file_surat'       => 'required|mimes:pdf|max:2048',
     ]);
@@ -47,10 +50,61 @@ class MhsController extends Controller
         ]);
     }
 
-    $jumlahLabTersedia = \App\Models\Lab::where('nama_lab', 'like', '%LAB%')->count();
-    if ($jumlahLabTersedia && (int) $request->jumlah_lab > $jumlahLabTersedia) {
+    // Hitung lab yang benar-benar tersedia saat itu
+    $mulai = $request->jam_mulai;
+    $selesai = $request->jam_selesai;
+    $tanggal = $request->tanggal;
+    $hari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
+
+    // 1. Cek schedule kuliah (berdasarkan HARI)
+    $busySchedules = Schedule::where('hari', $hari)
+        ->where(function($q) use ($mulai, $selesai) {
+            $q->where('jam_mulai', '<', $selesai)
+              ->where('jam_selesai', '>', $mulai);
+        })->pluck('id_lab')->toArray();
+
+    // 2. Cek approved Dosen booking (berdasarkan TANGGAL)
+    $busyDosen = Dosen::where('tanggal', $tanggal)
+        ->where('status', 'approved')
+        ->where(function($q) use ($mulai, $selesai) {
+            $q->where('jam_mulai', '<', $selesai)
+              ->where('jam_selesai', '>', $mulai);
+        })->pluck('id_lab')->toArray();
+
+    // 3. Cek approved Ormawa booking (berdasarkan TANGGAL)
+    $busyOrmawaLabIds = DB::table('booking_ormawa_labs')
+        ->join('booking_ormawa', 'booking_ormawa_labs.id_booking', '=', 'booking_ormawa.id_booking')
+        ->where('booking_ormawa.tanggal', $tanggal)
+        ->where('booking_ormawa.status', 'approved')
+        ->where(function($q) use ($mulai, $selesai) {
+            $q->where('booking_ormawa.jam_mulai', '<', $selesai)
+              ->where('booking_ormawa.jam_selesai', '>', $mulai);
+        })
+        ->pluck('booking_ormawa_labs.id_lab')
+        ->toArray();
+
+    $busyOrmawaNames = Ormawa::where('tanggal', $tanggal)
+        ->where('status', 'approved')
+        ->where(function($q) use ($mulai, $selesai) {
+            $q->where('jam_mulai', '<', $selesai)
+              ->where('jam_selesai', '>', $mulai);
+        })->pluck('lab')->toArray();
+
+    $allBusyLabs = array_unique(array_merge($busySchedules, $busyDosen, $busyOrmawaLabIds));
+    $allLabs = Lab::where('nama_lab', 'like', '%LAB%')->get();
+
+    $jumlahLabTersedia = 0;
+    foreach ($allLabs as $lab) {
+        $namaLab = $lab->nama_lab ?? $lab->nm_lab;
+        $isBusy = in_array($lab->id_lab, $allBusyLabs) || in_array($namaLab, $busyOrmawaNames);
+        if (!$isBusy) {
+            $jumlahLabTersedia++;
+        }
+    }
+
+    if ((int) $request->jumlah_lab > $jumlahLabTersedia) {
         return back()->withInput()->withErrors([
-            'jumlah_lab' => "Jumlah lab yang diminta melebihi jumlah lab tersedia ({$jumlahLabTersedia} lab).",
+            'jumlah_lab' => "Jumlah lab yang diminta melebihi jumlah lab tersedia pada waktu tersebut (Tersedia: {$jumlahLabTersedia} lab).",
         ]);
     }
 
@@ -80,7 +134,7 @@ class MhsController extends Controller
         'penanggung_jawab' => $request->penanggung_jawab,
         'tanggal'          => $request->tanggal,
         'hari'             => $hari_otomatis,
-        'lab'              => 'Menunggu SPV',
+        'lab'              => 'Belum ditentukan',
         'jam_mulai'        => $request->jam_mulai,
         'jam_selesai'      => $request->jam_selesai,
         'kapasitas'        => $request->kapasitas,
@@ -118,5 +172,71 @@ class MhsController extends Controller
         $booking->delete();
 
         return back()->with('success', 'Pengajuan booking berhasil dihapus.');
+    }
+
+    public function checkAvailableLabsCount(Request $request)
+    {
+        $request->validate([
+            'tanggal'     => 'required|date',
+            'jam_mulai'   => 'required',
+            'jam_selesai' => 'required',
+        ]);
+
+        $tanggal = $request->tanggal;
+        $mulai = $request->jam_mulai;
+        $selesai = $request->jam_selesai;
+
+        Carbon::setLocale('id');
+        $hari = Carbon::parse($tanggal)->translatedFormat('l');
+
+        // 1. Cek schedule kuliah (berdasarkan HARI)
+        $busySchedules = Schedule::where('hari', $hari)
+            ->where(function($q) use ($mulai, $selesai) {
+                $q->where('jam_mulai', '<', $selesai)
+                  ->where('jam_selesai', '>', $mulai);
+            })->pluck('id_lab')->toArray();
+
+        // 2. Cek approved Dosen booking (berdasarkan TANGGAL)
+        $busyDosen = Dosen::where('tanggal', $tanggal)
+            ->where('status', 'approved')
+            ->where(function($q) use ($mulai, $selesai) {
+                $q->where('jam_mulai', '<', $selesai)
+                  ->where('jam_selesai', '>', $mulai);
+            })->pluck('id_lab')->toArray();
+
+        // 3. Cek approved Ormawa booking (berdasarkan TANGGAL)
+        $busyOrmawaLabIds = DB::table('booking_ormawa_labs')
+            ->join('booking_ormawa', 'booking_ormawa_labs.id_booking', '=', 'booking_ormawa.id_booking')
+            ->where('booking_ormawa.tanggal', $tanggal)
+            ->where('booking_ormawa.status', 'approved')
+            ->where(function($q) use ($mulai, $selesai) {
+                $q->where('booking_ormawa.jam_mulai', '<', $selesai)
+                  ->where('booking_ormawa.jam_selesai', '>', $mulai);
+            })
+            ->pluck('booking_ormawa_labs.id_lab')
+            ->toArray();
+
+        $busyOrmawaNames = Ormawa::where('tanggal', $tanggal)
+            ->where('status', 'approved')
+            ->where(function($q) use ($mulai, $selesai) {
+                $q->where('jam_mulai', '<', $selesai)
+                  ->where('jam_selesai', '>', $mulai);
+            })->pluck('lab')->toArray();
+
+        $allBusyLabs = array_unique(array_merge($busySchedules, $busyDosen, $busyOrmawaLabIds));
+        $allLabs = Lab::where('nama_lab', 'like', '%LAB%')->get();
+
+        $availableLabsCount = 0;
+        foreach ($allLabs as $lab) {
+            $namaLab = $lab->nama_lab ?? $lab->nm_lab;
+            $isBusy = in_array($lab->id_lab, $allBusyLabs) || in_array($namaLab, $busyOrmawaNames);
+            if (!$isBusy) {
+                $availableLabsCount++;
+            }
+        }
+
+        return response()->json([
+            'available_labs_count' => $availableLabsCount
+        ]);
     }
 }

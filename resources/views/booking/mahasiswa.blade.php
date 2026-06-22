@@ -105,7 +105,7 @@
                 @csrf
 
                 {{-- 🌟 LOGIC: Default value Lab dikirim tersembunyi biar validasi tembus --}}
-                <input type="hidden" name="lab" value="Menunggu SPV">
+                <input type="hidden" name="lab" value="Belum ditentukan">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -171,13 +171,9 @@
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Lab Dibutuhkan <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <select name="jumlah_lab" required
-                                    class="w-full appearance-none rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 pr-10 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <option value="{{ $i }}" {{ (int) old('jumlah_lab', 1) === $i ? 'selected' : '' }}>
-                                        {{ $i }} Lab
-                                    </option>
-                                @endfor
+                            <select name="jumlah_lab" id="select_jumlah_lab" required disabled
+                                    class="w-full appearance-none rounded-xl border border-slate-300 bg-slate-100 py-3 px-4 pl-12 pr-10 text-sm font-bold text-slate-400 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 cursor-not-allowed">
+                                <option value="">Isi Info Tanggal & Waktu Dahulu</option>
                             </select>
                             <i class="fas fa-door-open absolute left-4 top-3.5 text-slate-400"></i>
                             <i class="fas fa-chevron-down pointer-events-none absolute right-4 top-4 text-xs text-slate-400"></i>
@@ -248,6 +244,14 @@
                                     <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1">
                                         {{ $book->lab }}
                                     </span>
+                                    <div class="text-xs font-bold text-indigo-600 mb-1">
+                                        <i class="fas fa-door-open text-indigo-400 mr-1"></i> {{ $book->jumlah_lab }} Lab
+                                    </div>
+                                    @if($book->alasan_perubahan)
+                                        <div class="text-[10px] font-semibold text-amber-600 italic max-w-[200px] whitespace-normal mb-1">
+                                            <i class="fas fa-info-circle mr-1"></i> Perubahan: {{ $book->alasan_perubahan }}
+                                        </div>
+                                    @endif
                                     <div class="font-mono text-xs font-bold text-slate-500">
                                         {{ substr($book->jam_mulai, 0, 5) }} - {{ substr($book->jam_selesai, 0, 5) }}
                                     </div>
@@ -341,6 +345,96 @@
 
     {{-- Mesin Ketik JS --}}
     <script>
+        // AJAX Lab Availability for Ormawa
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputTanggal = document.getElementById('input_tanggal');
+            const inputJamMulai = document.getElementById('input_jam_mulai');
+            const inputJamSelesai = document.getElementById('input_jam_selesai');
+            const selectJumlahLab = document.getElementById('select_jumlah_lab');
+
+            let lastTriggerValues = '';
+
+            function checkAvailableLabsCount() {
+                const tanggal = inputTanggal.value;
+                const jamMulai = inputJamMulai.value;
+                const jamSelesai = inputJamSelesai.value;
+
+                if (tanggal && jamMulai.length === 5 && jamSelesai.length === 5) {
+                    const currentValues = `${tanggal}-${jamMulai}-${jamSelesai}`;
+                    if (currentValues === lastTriggerValues) return;
+                    lastTriggerValues = currentValues;
+
+                    selectJumlahLab.disabled = true;
+                    selectJumlahLab.innerHTML = '<option value="">⏳ Mencari Lab Tersedia...</option>';
+                    selectJumlahLab.classList.replace('bg-slate-50', 'bg-slate-100');
+                    selectJumlahLab.classList.add('cursor-not-allowed');
+
+                    fetch('{{ route('ormawa.booking.check_available_labs_count') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            tanggal: tanggal,
+                            jam_mulai: jamMulai,
+                            jam_selesai: jamSelesai
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response error');
+                        return response.json();
+                    })
+                    .then(data => {
+                        selectJumlahLab.innerHTML = '';
+                        const count = data.available_labs_count;
+
+                        if (count > 0) {
+                            for (let i = 1; i <= count; i++) {
+                                let option = document.createElement('option');
+                                option.value = i;
+                                option.textContent = `${i} Lab`;
+                                selectJumlahLab.appendChild(option);
+                            }
+                            selectJumlahLab.disabled = false;
+                            selectJumlahLab.classList.replace('bg-slate-100', 'bg-slate-50');
+                            selectJumlahLab.classList.remove('cursor-not-allowed', 'bg-red-100');
+                        } else {
+                            let option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = '⚠️ Semua Lab Penuh/Bentrok';
+                            selectJumlahLab.appendChild(option);
+                            selectJumlahLab.disabled = true;
+                            selectJumlahLab.classList.replace('bg-slate-50', 'bg-red-100');
+                            selectJumlahLab.classList.replace('bg-slate-100', 'bg-red-100');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('AJAX Error:', error);
+                        selectJumlahLab.innerHTML = '<option value="">❌ Terjadi Kesalahan (Cek Console)</option>';
+                    });
+                } else {
+                    selectJumlahLab.disabled = true;
+                    selectJumlahLab.innerHTML = '<option value="">Isi Info Tanggal & Waktu Dahulu</option>';
+                    selectJumlahLab.classList.replace('bg-slate-50', 'bg-slate-100');
+                    selectJumlahLab.classList.remove('bg-red-100');
+                }
+            }
+
+            [inputTanggal, inputJamMulai, inputJamSelesai].forEach(el => {
+                ['input', 'change'].forEach(evt => {
+                    el.addEventListener(evt, checkAvailableLabsCount);
+                });
+            });
+
+            // Expose check function globally
+            window.triggerCheckAvailableLabsCount = checkAvailableLabsCount;
+
+            // Run check on load in case inputs are pre-filled
+            checkAvailableLabsCount();
+        });
+
         function reapplyBooking(data) {
             document.getElementById('input_penanggung_jawab').value = data.penanggung_jawab;
             document.getElementById('input_tanggal').value = data.tanggal;
@@ -348,6 +442,11 @@
             document.getElementById('input_jam_selesai').value = data.jam_selesai;
             document.getElementById('input_kapasitas').value = data.kapasitas;
             document.getElementById('input_keperluan').value = data.keperluan;
+
+            // Trigger check lab
+            if (window.triggerCheckAvailableLabsCount) {
+                window.triggerCheckAvailableLabsCount();
+            }
 
             // Scroll smoothly to form container
             document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth' });
