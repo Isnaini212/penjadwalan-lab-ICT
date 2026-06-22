@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Schedule;
 use App\Models\AssistantSchedule;
 use App\Models\Lab;
+use App\Models\Dosen;
+use App\Models\Ormawa;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -218,18 +220,19 @@ public function manajemenJadwal(Request $request) {
 public function store(Request $request)
 {
         $request->validate([
-            'tanggal'   => 'required|date',
-            'id_lab'    => 'nullable',
-            'lab'       => 'nullable',
-            'jam_mulai' => 'required',
-            'matkul'    => 'required',
-            'sks'       => 'required|numeric',
-            'dosen'     => 'required',
+            'tanggal'         => 'required|date',
+            'repeat_type'     => 'required|in:single,daily,weekdays,weekly',
+            'tanggal_selesai' => 'nullable|required_unless:repeat_type,single|date|after_or_equal:tanggal',
+            'id_lab'          => 'nullable',
+            'lab'             => 'nullable',
+            'jam_mulai'       => 'required',
+            'matkul'          => 'required',
+            'sks'             => 'required|numeric',
+            'dosen'           => 'required',
         ]);
 
         $menit = $request->sks * 50;
         $jam_selesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
-        $hari = Carbon::parse($request->tanggal)->locale('id')->translatedFormat('l');
 
         $id_lab = $request->id_lab;
         if (!$id_lab && $request->lab) {
@@ -239,34 +242,201 @@ public function store(Request $request)
 
         $id_asisten = $request->id_asisten ?: null;
 
-        if ($id_lab) {
-            $conflict = Schedule::where('tanggal', $request->tanggal)
-                ->where('id_lab', $id_lab)
-                ->where(function ($query) use ($request, $jam_selesai) {
-                    $query->where('jam_mulai', '<', $jam_selesai)
-                          ->where('jam_selesai', '>', $request->jam_mulai);
-                })->first();
+        // Tentukan tanggal-tanggal yang akan diinsert
+        $dates = [];
+        if ($request->repeat_type === 'single') {
+            $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+        } else if ($request->tanggal_selesai) {
+            $period = CarbonPeriod::create($request->tanggal, $request->tanggal_selesai);
+            
+            if ($request->repeat_type === 'weekly') {
+                $startDayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
+                foreach ($period as $date) {
+                    if ($date->dayOfWeek === $startDayOfWeek) {
+                        $dates[] = $date->format('Y-m-d');
+                    }
+                }
+            } elseif ($request->repeat_type === 'daily') {
+                foreach ($period as $date) {
+                    $dates[] = $date->format('Y-m-d');
+                }
+            } elseif ($request->repeat_type === 'weekdays') {
+                foreach ($period as $date) {
+                    if ($date->isWeekday()) {
+                        $dates[] = $date->format('Y-m-d');
+                    }
+                }
+            }
+        } else {
+            $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+        }
 
-            if ($conflict) {
-                return back()->with('error', "Gagal menambah jadwal! Ruang Lab sudah dipakai oleh matkul {$conflict->matkul} (Dosen: {$conflict->dosen}) pada jam {$conflict->jam_mulai} - {$conflict->jam_selesai}.");
+        // Cek konflik untuk seluruh tanggal
+        $conflicts = [];
+        if ($id_lab) {
+            foreach ($dates as $tgl) {
+                // 1. Cek schedule
+                $conflict = Schedule::where('tanggal', $tgl)
+                    ->where('id_lab', $id_lab)
+                    ->where(function ($query) use ($request, $jam_selesai) {
+                        $query->where('jam_mulai', '<', $jam_selesai)
+                              ->where('jam_selesai', '>', $request->jam_mulai);
+                    })->first();
+
+                if ($conflict) {
+                    $formattedDate = Carbon::parse($tgl)->translatedFormat('d M Y');
+                    $conflicts[] = "Tanggal {$formattedDate} bentrok dengan matkul {$conflict->matkul} ({$conflict->jam_mulai} - {$conflict->jam_selesai})";
+                }
+
+                // 2. Cek approved Dosen booking
+                $conflictDosen = Dosen::where('tanggal', $tgl)
+                    ->where('id_lab', $id_lab)
+                    ->where('status', 'approved')
+                    ->where(function ($query) use ($request, $jam_selesai) {
+                        $query->where('jam_mulai', '<', $jam_selesai)
+                              ->where('jam_selesai', '>', $request->jam_mulai);
+                    })->first();
+
+                if ($conflictDosen) {
+                    $formattedDate = Carbon::parse($tgl)->translatedFormat('d M Y');
+                    $conflicts[] = "Tanggal {$formattedDate} bentrok dengan booking Dosen {$conflictDosen->nm_dosen} (Acara: {$conflictDosen->keperluan}) pada jam " . substr($conflictDosen->jam_mulai, 0, 5) . " - " . substr($conflictDosen->jam_selesai, 0, 5);
+                }
+
+                // 3. Cek approved Ormawa booking
+                $conflictOrmawa = Ormawa::where('tanggal', $tgl)
+                    ->where('lab', $id_lab)
+                    ->where('status', 'approved')
+                    ->where(function ($query) use ($request, $jam_selesai) {
+                        $query->where('jam_mulai', '<', $jam_selesai)
+                              ->where('jam_selesai', '>', $request->jam_mulai);
+                    })->first();
+
+                if ($conflictOrmawa) {
+                    $formattedDate = Carbon::parse($tgl)->translatedFormat('d M Y');
+                    $conflicts[] = "Tanggal {$formattedDate} bentrok dengan booking Ormawa {$conflictOrmawa->nama_ormawa} (Acara: {$conflictOrmawa->keperluan}) pada jam " . substr($conflictOrmawa->jam_mulai, 0, 5) . " - " . substr($conflictOrmawa->jam_selesai, 0, 5);
+                }
             }
         }
 
-        Schedule::create([
-            'tanggal'        => $request->tanggal,
-            'hari'           => $hari,
-            'id_lab'         => $id_lab,
-            'id_asisten'     => $id_asisten,
-            'jam_mulai'      => $request->jam_mulai,
-            'jam_selesai'    => $jam_selesai,
-            'matkul'         => $request->matkul,
-            'sks'            => $request->sks,
-            'dosen'          => $request->dosen,
-        ]);
+        if (!empty($conflicts)) {
+            return back()->withInput()->with('error', 'Gagal menambah jadwal karena terdeteksi bentrok pada: ' . implode(', ', $conflicts));
+        }
 
-        return back()->with('success', 'Jadwal berhasil ditambahkan!');
+        // Simpan semua jadwal jika tidak ada bentrok sama sekali
+        $count = 0;
+        foreach ($dates as $tgl) {
+            $hari = Carbon::parse($tgl)->locale('id')->translatedFormat('l');
+            Schedule::create([
+                'tanggal'     => $tgl,
+                'hari'        => $hari,
+                'id_lab'      => $id_lab,
+                'id_asisten'  => $id_asisten,
+                'jam_mulai'   => $request->jam_mulai,
+                'jam_selesai' => $jam_selesai,
+                'matkul'      => $request->matkul,
+                'sks'         => $request->sks,
+                'dosen'       => $request->dosen,
+            ]);
+            $count++;
+        }
+
+        $pesan = $count > 1 ? "Berhasil menambahkan {$count} jadwal mingguan!" : 'Jadwal berhasil ditambahkan!';
+        return back()->with('success', $pesan);
 }
 
+    public function checkLabsRange(Request $request)
+    {
+        $request->validate([
+            'tanggal'         => 'required|date',
+            'repeat_type'     => 'required|in:single,daily,weekdays,weekly',
+            'tanggal_selesai' => 'nullable|required_unless:repeat_type,single|date|after_or_equal:tanggal',
+            'jam_mulai'       => 'required',
+            'sks'             => 'required|numeric',
+        ]);
+
+        $menit = $request->sks * 50;
+        $jam_selesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
+
+        // Tentukan tanggal-tanggal yang akan dicheck
+        $dates = [];
+        if ($request->repeat_type === 'single') {
+            $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+        } else if ($request->tanggal_selesai) {
+            $period = CarbonPeriod::create($request->tanggal, $request->tanggal_selesai);
+            if ($request->repeat_type === 'weekly') {
+                $startDayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
+                foreach ($period as $date) {
+                    if ($date->dayOfWeek === $startDayOfWeek) {
+                        $dates[] = $date->format('Y-m-d');
+                    }
+                }
+            } elseif ($request->repeat_type === 'daily') {
+                foreach ($period as $date) {
+                    $dates[] = $date->format('Y-m-d');
+                }
+            } elseif ($request->repeat_type === 'weekdays') {
+                foreach ($period as $date) {
+                    if ($date->isWeekday()) {
+                        $dates[] = $date->format('Y-m-d');
+                    }
+                }
+            }
+        } else {
+            $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+        }
+
+        $allLabs = Lab::where('nama_lab', '!=', 'RUANG ASISTEN')->get();
+
+        $response = [];
+        foreach ($allLabs as $lab) {
+            $conflicts = [];
+            foreach ($dates as $tgl) {
+                // Cek schedule
+                $hasSchedule = Schedule::where('tanggal', $tgl)
+                    ->where('id_lab', $lab->id_lab)
+                    ->where(function($q) use ($request, $jam_selesai) {
+                        $q->where('jam_mulai', '<', $jam_selesai)
+                          ->where('jam_selesai', '>', $request->jam_mulai);
+                    })->exists();
+
+                // Cek approved Dosen booking
+                $hasDosen = Dosen::where('tanggal', $tgl)
+                    ->where('id_lab', $lab->id_lab)
+                    ->where('status', 'approved')
+                    ->where(function($q) use ($request, $jam_selesai) {
+                        $q->where('jam_mulai', '<', $jam_selesai)
+                          ->where('jam_selesai', '>', $request->jam_mulai);
+                    })->exists();
+
+                // Cek approved Ormawa booking
+                $hasOrmawa = Ormawa::where('tanggal', $tgl)
+                    ->where('lab', $lab->id_lab)
+                    ->where('status', 'approved')
+                    ->where(function($q) use ($request, $jam_selesai) {
+                        $q->where('jam_mulai', '<', $jam_selesai)
+                          ->where('jam_selesai', '>', $request->jam_mulai);
+                    })->exists();
+
+                if ($hasSchedule || $hasDosen || $hasOrmawa) {
+                    $formattedDate = Carbon::parse($tgl)->translatedFormat('d M');
+                    $conflicts[] = $formattedDate;
+                }
+            }
+
+            $isBusy = !empty($conflicts);
+            $response[] = [
+                'id_lab'    => $lab->id_lab,
+                'nama_lab'  => $lab->nama_lab,
+                'is_busy'   => $isBusy,
+                'conflict_dates' => $conflicts
+            ];
+        }
+
+        return response()->json([
+            'jam_selesai' => $jam_selesai,
+            'labs'        => $response
+        ]);
+    }
 
     public function destroy($id)
     {

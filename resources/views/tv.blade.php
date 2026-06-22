@@ -72,54 +72,17 @@
             &#10095;
         </button>
 
-        <div class="relative w-full flex-1 h-full">
+        <div class="relative w-full flex-1 h-full" id="slides-container">
+            <!-- Dynamic table slides and announcement slides will be injected here by JS -->
+        </div>
 
-            <div class="slide flex flex-col active">
-                <table class="w-full border-separate border-spacing-y-2.5">
-                    <thead>
-                        <tr class="text-left text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-white/40">
-                            <th class="px-5 pb-2 w-[15%]">Ruangan</th>
-                            <th class="px-5 pb-2 w-[45%]">Mata Kuliah</th>
-                            <th class="px-5 pb-2 w-[25%]">Dosen Pengampu</th>
-                            <th class="px-5 pb-2 w-[15%] text-right pr-5">Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        @forelse($jadwal ?? [] as $j)
-                            @php
-                                $roomLabel = is_object($j->lab) ? $j->lab->nama_lab : $j->lab;
-                            @endphp
-                            <tr class="schedule-row bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl" data-time="{{ date('H:i', strtotime($j->jam_mulai)) }}" style="display: none;">
-                                <td class="px-5 py-4 text-base font-bold rounded-l-xl border-l-4 border-blue-500">
-                                    <span class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100 text-sm font-bold tracking-wide">
-                                        {{ $roomLabel }}
-                                    </span>
-                                </td>
-                                <td class="px-5 py-4 text-xl font-extrabold text-slate-800">{{ $j->matkul }}</td>
-                                <td class="px-5 py-4 text-lg font-semibold text-slate-600">{{ $j->dosen }}</td>
-                                <td class="px-5 py-4 text-right pr-5 rounded-r-xl">
-                                    <span class="text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 text-lg font-bold tracking-wide tabular-nums">
-                                        {{ date('H:i', strtotime($j->jam_mulai)) }} - {{ date('H:i', strtotime($j->jam_selesai)) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @empty
-                            @endforelse
-                        <tr id="empty-state-row" style="display: none;">
-                            <td colspan="4" class="text-center text-slate-500 py-16 text-xl font-semibold tracking-wide border-2 border-dashed border-slate-300 rounded-xl bg-white/50">
-                                Tidak ada agenda praktikum aktif pada sesi waktu ini.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+        <!-- Hidden Announcement Source -->
+        <div id="announcement-source" class="hidden">
             @foreach($slides ?? [] as $slide)
-                <div class="slide">
+                <div class="announcement-slide-item" data-delay="{{ $slide->delay ?? 15 }}">
                     <img src="{{ asset('storage/' . $slide->image_path) }}" alt="Pengumuman Laboratorium" class="w-full h-full object-contain rounded-xl bg-black/5 backdrop-blur-sm shadow-xl border border-white/60">
                 </div>
             @endforeach
-
         </div>
     </main>
 
@@ -138,14 +101,16 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const tbody = document.getElementById("tableBody");
-            const rows = Array.from(tbody.querySelectorAll("tr.schedule-row"));
-            const emptyState = document.getElementById("empty-state-row");
+            const rawSchedules = @json($jadwal ?? []);
+            const scheduleDelay = {{ $scheduleDelay ?? 15 }};
+            const slidesContainer = document.getElementById("slides-container");
+            const announcementSource = document.getElementById("announcement-source");
             const pageIndicator = document.getElementById("page-indicator");
             const sessionNameText = document.getElementById('current-session-name');
 
-            let currentTablePage = 1;
-            const rowsPerPage = 6;
+            let allSlides = [];
+            let activeIndex = 0;
+            let sliderTimer;
 
             function updateClock() {
                 const now = new Date();
@@ -153,6 +118,7 @@
                 document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             }
             setInterval(updateClock, 1000);
+            updateClock();
 
             function detectCurrentSession() {
                 const now = new Date();
@@ -164,38 +130,179 @@
                 return { id: "none", title: "ISTIRAHAT / INTERVAL", start: "00:00", end: "00:00" };
             }
 
-            function renderTable() {
+            function formatTime(timeStr) {
+                if (!timeStr) return '';
+                return timeStr.substring(0, 5);
+            }
+
+            // Room check
+            function getRoomName(s) {
+                if (s.lab) {
+                    return s.lab.nama_lab || s.lab.nm_lab || s.lab;
+                }
+                return 'Lab Terhapus';
+            }
+
+            function generateTableSlide(chunk) {
+                const slideDiv = document.createElement("div");
+                slideDiv.className = "slide flex flex-col";
+
+                let rowsHtml = '';
+                chunk.forEach(s => {
+                    const roomLabel = getRoomName(s);
+                    const start = formatTime(s.jam_mulai);
+                    const end = formatTime(s.jam_selesai);
+                    rowsHtml += `
+                        <tr class="schedule-row bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl">
+                            <td class="px-5 py-4 text-base font-bold rounded-l-xl border-l-4 border-blue-500">
+                                <span class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100 text-sm font-bold tracking-wide">
+                                    ${roomLabel}
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 text-xl font-extrabold text-slate-800">${s.matkul}</td>
+                            <td class="px-5 py-4 text-lg font-semibold text-slate-600">${s.dosen}</td>
+                            <td class="px-5 py-4 text-right pr-5 rounded-r-xl">
+                                <span class="text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 text-lg font-bold tracking-wide tabular-nums">
+                                    ${start} - ${end}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                slideDiv.innerHTML = `
+                    <table class="w-full border-separate border-spacing-y-2.5">
+                        <thead>
+                            <tr class="text-left text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-white/40">
+                                <th class="px-5 pb-2 w-[15%]">Ruangan</th>
+                                <th class="px-5 pb-2 w-[45%]">Mata Kuliah</th>
+                                <th class="px-5 pb-2 w-[25%]">Dosen Pengampu</th>
+                                <th class="px-5 pb-2 w-[15%] text-right pr-5">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                `;
+
+                return slideDiv;
+            }
+
+            function generateEmptySlide() {
+                const slideDiv = document.createElement("div");
+                slideDiv.className = "slide flex flex-col";
+                slideDiv.innerHTML = `
+                    <table class="w-full border-separate border-spacing-y-2.5">
+                        <thead>
+                            <tr class="text-left text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-white/40">
+                                <th class="px-5 pb-2 w-[15%]">Ruangan</th>
+                                <th class="px-5 pb-2 w-[45%]">Mata Kuliah</th>
+                                <th class="px-5 pb-2 w-[25%]">Dosen Pengampu</th>
+                                <th class="px-5 pb-2 w-[15%] text-right pr-5">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" class="text-center text-slate-500 py-16 text-xl font-semibold tracking-wide border-2 border-dashed border-slate-300 rounded-xl bg-white/50">
+                                    Tidak ada agenda praktikum aktif pada sesi waktu ini.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+                return slideDiv;
+            }
+
+            function buildSlides() {
+                slidesContainer.innerHTML = '';
                 const currentSession = detectCurrentSession();
                 sessionNameText.innerText = currentSession.title;
 
-                let filtered = rows.filter(r => {
-                    const timeTarget = r.getAttribute('data-time');
-                    return timeTarget >= currentSession.start && timeTarget < currentSession.end;
+                // Filter schedules
+                const filtered = rawSchedules.filter(s => {
+                    const start = formatTime(s.jam_mulai);
+                    return start >= currentSession.start && start < currentSession.end;
                 });
 
-                const totalPage = Math.ceil(filtered.length / rowsPerPage) || 1;
-                if (currentTablePage > totalPage) currentTablePage = 1;
-
-                const start = (currentTablePage - 1) * rowsPerPage;
-                const end = start + rowsPerPage;
-
-                rows.forEach(r => r.style.display = "none");
-                filtered.slice(start, end).forEach(r => r.style.display = "");
-
+                // Generate table slides (max 5 items per slide)
+                const rowsPerPage = 5;
+                let tableSlides = [];
                 if (filtered.length === 0) {
-                    if (emptyState) emptyState.style.display = "";
+                    const emptySlide = generateEmptySlide();
+                    emptySlide.setAttribute("data-delay", scheduleDelay); // Dynamic delay
+                    tableSlides.push(emptySlide);
                 } else {
-                    if (emptyState) emptyState.style.display = "none";
+                    const totalPages = Math.ceil(filtered.length / rowsPerPage);
+                    for (let i = 0; i < totalPages; i++) {
+                        const chunk = filtered.slice(i * rowsPerPage, (i + 1) * rowsPerPage);
+                        const tableSlide = generateTableSlide(chunk);
+                        tableSlide.setAttribute("data-delay", scheduleDelay); // Dynamic delay
+                        tableSlides.push(tableSlide);
+                    }
                 }
 
-                pageIndicator.innerText = `Halaman Tabel ${currentTablePage}/${totalPage}`;
+                // Append table slides
+                tableSlides.forEach(slide => {
+                    slidesContainer.appendChild(slide);
+                });
+
+                // Append announcement slides from source
+                const announcementItems = Array.from(announcementSource.querySelectorAll('.announcement-slide-item'));
+                announcementItems.forEach(item => {
+                    const slideDiv = document.createElement("div");
+                    slideDiv.className = "slide";
+                    const delay = item.getAttribute("data-delay") || "15";
+                    slideDiv.setAttribute("data-delay", delay);
+                    slideDiv.innerHTML = item.innerHTML;
+                    slidesContainer.appendChild(slideDiv);
+                });
+
+                // Cache all slide elements
+                allSlides = Array.from(slidesContainer.querySelectorAll(".slide"));
+                
+                // Show initial slide
+                tunjukkanSlide(0);
             }
 
-            setInterval(() => {
-                currentTablePage++;
-                renderTable();
-            }, 10000);
+            function tunjukkanSlide(index) {
+                if (allSlides.length === 0) return;
+                allSlides.forEach(s => s.classList.remove('active'));
+                
+                if (index >= allSlides.length) activeIndex = 0;
+                else if (index < 0) activeIndex = allSlides.length - 1;
+                else activeIndex = index;
 
+                const activeSlide = allSlides[activeIndex];
+                activeSlide.classList.add('active');
+
+                // Update Page Indicator
+                if (pageIndicator) {
+                    pageIndicator.innerText = `Slide ${activeIndex + 1}/${allSlides.length}`;
+                }
+
+                // Read delay from data-delay attribute
+                const delayInSeconds = parseInt(activeSlide.getAttribute("data-delay") || "15", 10);
+                const delayInMs = delayInSeconds * 1000;
+
+                // Schedule next slide
+                segarkanTimerSlider(delayInMs);
+            }
+
+            window.gantiSlideManuel = function(langkah) {
+                tunjukkanSlide(activeIndex + langkah);
+            }
+
+            function putarSlideOtomatis() {
+                tunjukkanSlide(activeIndex + 1);
+            }
+
+            function segarkanTimerSlider(delayMs = 15000) {
+                clearTimeout(sliderTimer);
+                sliderTimer = setTimeout(putarSlideOtomatis, delayMs);
+            }
+
+            // Reload page on session boundaries
             setInterval(() => {
                 const time = new Date().toTimeString().slice(0, 5);
                 if (["07:00", "12:20", "16:05", "18:30", "22:00"].includes(time)) {
@@ -203,39 +310,9 @@
                 }
             }, 30000);
 
-            renderTable();
-            updateClock();
+            // Initialize
+            buildSlides();
         });
-
-        // MANAGEMENT KONTROL SLIDER CAROUSEL
-        let activeIndex = 0;
-        let sliderTimer;
-        const allSlides = document.querySelectorAll('.slide');
-
-        function tunjukkanSlide(index) {
-            allSlides.forEach(s => s.classList.remove('active'));
-            if (index >= allSlides.length) activeIndex = 0;
-            if (index < 0) activeIndex = allSlides.length - 1;
-            allSlides[activeIndex].classList.add('active');
-        }
-
-        function gantiSlideManuel(langkah) {
-            activeIndex += langkah;
-            tunjukkanSlide(activeIndex);
-            segarkanTimerSlider();
-        }
-
-        function putarSlideOtomatis() {
-            activeIndex++;
-            tunjukkanSlide(activeIndex);
-        }
-
-        function segarkanTimerSlider() {
-            clearInterval(sliderTimer);
-            sliderTimer = setInterval(putarSlideOtomatis, 15000);
-        }
-
-        segarkanTimerSlider();
     </script>
 </body>
 </html>
