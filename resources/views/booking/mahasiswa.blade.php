@@ -24,18 +24,45 @@
                 <span>LabSystem <span class="text-slate-400 font-medium">| Ormawa Portal</span></span>
             </div>
 
-            {{-- 🌟 LOGIC: Profil User & Tombol Logout --}}
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex items-center gap-2 text-sm font-bold text-slate-600 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-                    <i class="fas fa-user-circle text-indigo-500 text-lg"></i>
-                    <span>{{ auth()->user()->name ?? 'Ormawa' }}</span>
+            {{-- 🌟 LOGIC: Profil User Dropdown --}}
+            <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2.5 text-sm font-bold text-slate-700 bg-slate-50 px-2 py-1.5 pr-3.5 sm:pr-4 rounded-full border border-slate-200 hover:bg-slate-100 transition focus:outline-none">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-black text-indigo-700">
+                        {{ collect(explode(' ', auth()->user()->name))->map(fn($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('') }}
+                    </span>
+                    <span class="hidden sm:inline text-slate-600">{{ auth()->user()->name ?? 'Ormawa' }}</span>
+                    <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div x-show="open" 
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="transform opacity-100 scale-100"
+                     x-transition:leave-end="transform opacity-0 scale-95"
+                     class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" 
+                     style="display: none;">
+                    <div class="px-4 py-2 border-b border-slate-100 text-left">
+                        <p class="text-xs font-semibold text-slate-400">Masuk sebagai</p>
+                        <p class="text-sm font-bold text-slate-800 truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{{ auth()->user()->role }}</p>
+                    </div>
+                    
+                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition">
+                        <i class="fas fa-user-cog text-slate-400 text-base"></i> Edit Profil
+                    </a>
+
+                    <div class="border-t border-slate-100"></div>
+
+                    <form method="POST" action="{{ route('logout') }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition">
+                            <i class="fas fa-sign-out-alt text-red-400 text-base"></i> Logout
+                        </button>
+                    </form>
                 </div>
-                <form method="POST" action="{{ route('logout') }}" class="m-0">
-                    @csrf
-                    <button type="submit" class="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-100 hover:text-red-700 focus:outline-none">
-                        <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Logout</span>
-                    </button>
-                </form>
             </div>
         </div>
     </nav>
@@ -107,7 +134,7 @@
                     {{-- Tanggal --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Tanggal Peminjaman <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal" required value="{{ old('tanggal') }}"
+                        <input type="date" name="tanggal" required value="{{ old('tanggal') }}" min="{{ date('Y-m-d') }}"
                                class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
 

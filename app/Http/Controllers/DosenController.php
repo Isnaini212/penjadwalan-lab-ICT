@@ -77,13 +77,21 @@ public function store(Request $request)
 {
     
     $request->validate([
-        'nm_dosen'  => 'required',
-        'tanggal'   => 'required',
-        'jam_mulai' => 'required',
-        'sks'       => 'required|numeric',
-        'id_lab'    => 'required',
-        'kapasitas' => 'required|numeric',
+        'nm_dosen'    => 'required',
+        'tanggal'     => 'required',
+        'jam_mulai'   => 'required',
+        'sks'         => 'required|numeric',
+        'id_lab'      => 'required',
+        'kapasitas'   => 'required|numeric',
+        'keperluan'   => 'required|string',
+        'kode_matkul' => 'required|string|max:4',
     ]);
+
+    // Validasi Tanggal & Jam tidak boleh berlalu (masa lalu)
+    $bookingDateTime = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
+    if ($bookingDateTime->isPast()) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Tanggal dan jam peminjaman tidak boleh di masa lalu.']);
+    }
 
     // Cek kapasitas lab di backend
     $lab = Lab::find($request->id_lab);
@@ -101,6 +109,21 @@ public function store(Request $request)
                                   ->addMinutes($total_menit)
                                   ->format('H:i');
 
+    // Validasi tabrakan jadwal untuk dosen yang sama (status pending/approved)
+    $hasOverlap = Dosen::where('user_id', auth()->id())
+        ->where('tanggal', $request->tanggal)
+        ->whereIn('status', ['pending', 'approved'])
+        ->where(function($q) use ($request, $jam_selesai_otomatis) {
+            $q->where('jam_mulai', '<', $jam_selesai_otomatis)
+              ->where('jam_selesai', '>', $request->jam_mulai);
+        })->exists();
+
+    if ($hasOverlap) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Anda sudah memiliki reservasi lain yang bertabrakan (status Pending/Approved) pada tanggal dan jam tersebut.']);
+    }
+
+    $kode_formatted = '(' . strtoupper(trim($request->kode_matkul)) . ')';
+    $keperluan_formatted = trim($request->keperluan) . ' ' . $kode_formatted;
     
     Dosen::create([
         'user_id'     => auth()->id(),
@@ -113,15 +136,114 @@ public function store(Request $request)
         'id_lab'      => $request->id_lab,
         'jam_mulai'   => $request->jam_mulai,
         'kapasitas'   => $request->kapasitas,
-        'keperluan'   => $request->keperluan,
+        'keperluan'   => $keperluan_formatted,
         'sks'         => $request->sks,
         'status'      => 'pending',
     ]);
 
     return redirect()->back()->with('success', 'Reservasi laboratorium berhasil dikirim!');
 }
-    
 
-          
-    
+public function update(Request $request, $id)
+{
+    $booking = Dosen::findOrFail($id);
+
+    // Pastikan booking milik user saat ini
+    if ($booking->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    // Pastikan status belum approved
+    if ($booking->status === 'approved') {
+        return back()->with('error', 'Gagal! Booking yang sudah disetujui tidak dapat diubah.');
+    }
+
+    $request->validate([
+        'tanggal'     => 'required|date',
+        'jam_mulai'   => 'required',
+        'sks'         => 'required|numeric',
+        'id_lab'      => 'required',
+        'kapasitas'   => 'required|numeric',
+        'keperluan'   => 'required|string',
+        'kode_matkul' => 'required|string|max:4',
+    ]);
+
+    // Validasi Tanggal & Jam tidak boleh berlalu (masa lalu)
+    $bookingDateTime = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
+    if ($bookingDateTime->isPast()) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Tanggal dan jam peminjaman tidak boleh di masa lalu.']);
+    }
+
+    // Cek kapasitas lab
+    $lab = Lab::find($request->id_lab);
+    if ($lab && $request->kapasitas > $lab->kapasitas) {
+        return back()->with('error', "Gagal! Kapasitas peserta ({$request->kapasitas}) melebihi kapasitas {$lab->nama_lab} ({$lab->kapasitas} kursi).");
+    }
+
+    $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');
+    $total_menit = $request->sks * 53.3334;
+    $jam_selesai_otomatis = Carbon::createFromFormat('H:i', $request->jam_mulai)
+                                  ->addMinutes($total_menit)
+                                  ->format('H:i');
+
+    // Cek apakah waktu booking berubah
+    $original_mulai = Carbon::parse($booking->jam_mulai)->format('H:i');
+    $original_selesai = Carbon::parse($booking->jam_selesai)->format('H:i');
+    $original_tanggal = $booking->tanggal;
+
+    $timeChanged = ($original_tanggal !== $request->tanggal) || 
+                    ($original_mulai !== $request->jam_mulai) || 
+                    ($original_selesai !== $jam_selesai_otomatis);
+
+    if ($timeChanged) {
+        // Validasi tabrakan jadwal untuk dosen yang sama (status pending/approved, kecuali booking saat ini)
+        $hasOverlap = Dosen::where('user_id', auth()->id())
+            ->where('id_booking', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->whereIn('status', ['pending', 'approved'])
+            ->where(function($q) use ($request, $jam_selesai_otomatis) {
+                $q->where('jam_mulai', '<', $jam_selesai_otomatis)
+                  ->where('jam_selesai', '>', $request->jam_mulai);
+            })->exists();
+
+        if ($hasOverlap) {
+            return back()->withInput()->withErrors(['tanggal' => 'Gagal! Anda sudah memiliki reservasi lain yang bertabrakan (status Pending/Approved) pada tanggal dan jam tersebut.']);
+        }
+    }
+
+    $kode_formatted = '(' . strtoupper(trim($request->kode_matkul)) . ')';
+    $keperluan_formatted = trim($request->keperluan) . ' ' . $kode_formatted;
+
+    $booking->update([
+        'tanggal'     => $request->tanggal,
+        'hari'        => $hari_otomatis,
+        'jam_selesai' => $jam_selesai_otomatis,
+        'id_lab'      => $request->id_lab,
+        'jam_mulai'   => $request->jam_mulai,
+        'kapasitas'   => $request->kapasitas,
+        'keperluan'   => $keperluan_formatted,
+        'sks'         => $request->sks,
+    ]);
+
+    return redirect()->back()->with('success', 'Reservasi laboratorium berhasil diperbarui!');
+}
+
+public function destroy($id)
+{
+    $booking = Dosen::findOrFail($id);
+
+    // Pastikan booking milik user saat ini
+    if ($booking->user_id !== auth()->id()) {
+        abort(403);
+    }
+
+    // Pastikan status belum approved
+    if ($booking->status === 'approved') {
+        return back()->with('error', 'Gagal! Booking yang sudah disetujui tidak dapat dihapus.');
+    }
+
+    $booking->delete();
+
+    return redirect()->back()->with('success', 'Reservasi laboratorium berhasil dihapus!');
+}
 }

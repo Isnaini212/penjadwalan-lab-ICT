@@ -31,6 +31,12 @@ class MhsController extends Controller
         'file_surat'       => 'required|mimes:pdf|max:2048',
     ]);
 
+    // Validasi Tanggal & Jam tidak boleh berlalu (masa lalu)
+    $bookingDateTime = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
+    if ($bookingDateTime->isPast()) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Tanggal dan jam peminjaman tidak boleh di masa lalu.']);
+    }
+
     // 1.5 Validasi Kapasitas Maksimum Lab
     $max_lab_capacity = \App\Models\Lab::max('kapasitas');
     if ($max_lab_capacity && $request->kapasitas > $max_lab_capacity) {
