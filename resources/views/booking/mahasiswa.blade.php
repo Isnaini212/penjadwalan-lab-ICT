@@ -132,7 +132,7 @@
 
                     {{-- Kapasitas --}}
                     <div class="md:col-span-2">
-                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas (Jumlah Peserta) <span class="text-red-500">*</span></label>
+                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Peserta<span class="text-red-500">*</span></label>
                         <div class="relative">
                             <input type="number" name="kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
@@ -258,7 +258,7 @@
             if (input.files.length > 0) {
                 const file = input.files[0];
                 const fileName = file.name.toLowerCase();
-                
+
                 if (!fileName.endsWith('.pdf')) {
                     showCustomAlert('File tidak valid! Tolong hanya masukkan file dengan format dokumen (.pdf).', 'Format File');
                     input.value = ''; // Kosongkan input file
