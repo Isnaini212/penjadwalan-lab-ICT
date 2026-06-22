@@ -178,27 +178,35 @@
             <form action="{{ route('spv.store') }}" method="POST" class="grid gap-4 sm:grid-cols-2">
                 @csrf
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tanggal</label>
-                    <input type="date" name="tanggal" required class="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tanggal Mulai / Utama</label>
+                    <input type="date" name="tanggal" id="input_tanggal" required class="trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tipe Peminjaman</label>
+                    <select name="repeat_type" id="repeat_type" onchange="toggleRepeatDate()" class="trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
+                        <option value="single">Hanya Sekali (1 Hari)</option>
+                        <option value="weekly">Berulang Setiap Minggu</option>
+                        <option value="daily">Setiap Hari (Senin - Minggu)</option>
+                        <option value="weekdays">Setiap Hari Kerja (Senin - Jumat)</option>
+                    </select>
+                </div>
+                <div id="end_date_container" class="hidden">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Sampai Tanggal (Selesai)</label>
+                    <input type="date" name="tanggal_selesai" id="tanggal_selesai" class="trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Ruang Lab</label>
-                    <select name="id_lab" required class="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer">
-                        <option value="">-- Pilih Lab --</option>
-                        @foreach($labs as $lab)
-                            @if(strtoupper($lab->nama_lab) !== 'RUANG ASISTEN')
-                                <option value="{{ $lab->id_lab }}">{{ $lab->nama_lab }}</option>
-                            @endif
-                        @endforeach
+                    <select name="id_lab" id="select_lab" required disabled class="h-11 w-full rounded-xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-500 outline-none focus:border-blue-500 cursor-not-allowed transition">
+                        <option value="">Isi Info Tanggal, Waktu & SKS Dahulu</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Jam Mulai (Format 24 Jam)</label>
-                    <input type="time" name="jam_mulai" required class="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500">
+                    <input type="text" name="jam_mulai" id="input_jam" class="time-formatter trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold font-mono text-slate-700 outline-none focus:border-blue-500 text-center tracking-widest" placeholder="08:00" maxlength="5" required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Jumlah SKS</label>
-                    <input type="number" name="sks" required min="1" max="6" placeholder="Contoh: 2" class="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500">
+                    <input type="number" name="sks" id="input_sks" required min="1" max="6" placeholder="Contoh: 2" class="trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 outline-none focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Mata Kuliah</label>
@@ -739,6 +747,151 @@ function triggerAutoSubmit() {
         form.submit();
     }
 }
+
+// Time Formatter logic
+document.addEventListener('input', function (e) {
+    if (e.target.classList.contains('time-formatter')) {
+        let inputVal = e.target.value.replace(/\D/g, '');
+        if (inputVal.length > 4) inputVal = inputVal.substring(0, 4);
+        let formatted = inputVal;
+        if (inputVal.length > 2) {
+            formatted = inputVal.substring(0, 2) + ':' + inputVal.substring(2, 4);
+        }
+        e.target.value = formatted;
+    }
+});
+
+document.addEventListener('change', function (e) {
+    if (e.target.classList.contains('time-formatter')) {
+        let val = e.target.value;
+        if (val.length === 5) {
+            let parts = val.split(':');
+            let hours = parseInt(parts[0], 10);
+            let mins = parseInt(parts[1], 10);
+            if (hours > 23) hours = 23;
+            if (mins > 59) mins = 59;
+            if (isNaN(hours)) hours = 0;
+            if (isNaN(mins)) mins = 0;
+            let hrStr = hours < 10 ? '0' + hours : hours;
+            let mnStr = mins < 10 ? '0' + mins : mins;
+            e.target.value = hrStr + ':' + mnStr;
+            e.target.dispatchEvent(new Event('change'));
+        } else if (val.length > 0 && val.length < 5) {
+            showCustomAlert('Format jam tidak valid. Ketik 4 angka (contoh: 0800)', 'Format Jam');
+            e.target.value = '';
+        }
+    }
+});
+
+function toggleRepeatDate() {
+    const type = document.getElementById('repeat_type').value;
+    const container = document.getElementById('end_date_container');
+    const input = document.getElementById('tanggal_selesai');
+    if (type !== 'single') {
+        container.classList.remove('hidden');
+        input.required = true;
+    } else {
+        container.classList.add('hidden');
+        input.required = false;
+        input.value = '';
+    }
+}
+
+// AJAX Lab Availability Checker for SPV
+document.addEventListener("DOMContentLoaded", function () {
+    const inputTanggal = document.getElementById('input_tanggal');
+    const repeatType = document.getElementById('repeat_type');
+    const tanggalSelesai = document.getElementById('tanggal_selesai');
+    const inputJam = document.getElementById('input_jam');
+    const inputSks = document.getElementById('input_sks');
+    const selectLab = document.getElementById('select_lab');
+
+    const triggers = document.querySelectorAll('.trigger-ajax');
+    let lastTriggerValues = '';
+
+    triggers.forEach(el => {
+        ['input', 'change'].forEach(evt => {
+            el.addEventListener(evt, function() {
+                const isWeeklyOrOther = repeatType.value !== 'single';
+                const hasEndDateIfNeeded = !isWeeklyOrOther || tanggalSelesai.value;
+
+                if (inputTanggal.value && inputJam.value.length === 5 && inputSks.value && hasEndDateIfNeeded) {
+                    const currentValues = `${inputTanggal.value}-${repeatType.value}-${tanggalSelesai.value}-${inputJam.value}-${inputSks.value}`;
+                    if (currentValues === lastTriggerValues) return;
+                    lastTriggerValues = currentValues;
+
+                    selectLab.disabled = true;
+                    selectLab.innerHTML = '<option value="">⏳ Mencari Lab yang Sesuai...</option>';
+                    selectLab.classList.replace('bg-white', 'bg-slate-200');
+
+                    fetch('{{ route('spv.jadwal.check_labs_range') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            tanggal: inputTanggal.value,
+                            repeat_type: repeatType.value,
+                            tanggal_selesai: tanggalSelesai.value,
+                            jam_mulai: inputJam.value,
+                            sks: inputSks.value
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response error');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        selectLab.innerHTML = '<option value="">-- Pilih Laboratorium --</option>';
+                        let adaKosong = false;
+
+                        data.labs.forEach(lab => {
+                            let option = document.createElement('option');
+                            option.value = lab.id_lab;
+
+                            if (lab.is_busy) {
+                                option.disabled = true;
+                                const datesStr = lab.conflict_dates.join(', ');
+                                option.textContent = `🔴 ${lab.nama_lab} (Bentrok: ${datesStr})`;
+                                option.style.color = '#ef4444';
+                                option.style.fontWeight = 'bold';
+                            } else {
+                                option.textContent = `🟢 ${lab.nama_lab} (Tersedia)`;
+                                option.style.color = '#10b981';
+                                option.style.fontWeight = 'bold';
+                                adaKosong = true;
+                            }
+                            selectLab.appendChild(option);
+                        });
+
+                        selectLab.disabled = false;
+                        selectLab.classList.replace('bg-slate-200', 'bg-white');
+                        selectLab.classList.remove('cursor-not-allowed');
+
+                        if (!adaKosong) {
+                            selectLab.innerHTML = '<option value="">⚠️ Semua Lab Penuh/Bentrok</option>';
+                            selectLab.disabled = true;
+                            selectLab.classList.replace('bg-white', 'bg-red-100');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('AJAX Error:', error);
+                        selectLab.innerHTML = '<option value="">❌ Terjadi Kesalahan (Cek Console)</option>';
+                    });
+                } else {
+                    selectLab.disabled = true;
+                    selectLab.innerHTML = '<option value="">Isi Info Tanggal, Waktu & SKS Dahulu</option>';
+                    selectLab.classList.replace('bg-white', 'bg-slate-200');
+                    selectLab.classList.remove('bg-red-100');
+                }
+            });
+        });
+    });
+});
 </script>
 @endsection
 </body>

@@ -277,6 +277,7 @@
                                             <option value="1">1 SKS</option>
                                             <option value="2">2 SKS</option>
                                             <option value="3">3 SKS</option>
+                                            <option value="4">4 SKS</option>
                                         </select>
                                     </div>
 

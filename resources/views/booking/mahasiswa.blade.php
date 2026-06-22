@@ -125,7 +125,7 @@
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Penanggung Jawab <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="text" name="penanggung_jawab" required placeholder="Cth: Budi Santoso" value="{{ old('penanggung_jawab') }}"
+                            <input type="text" name="penanggung_jawab" id="input_penanggung_jawab" required placeholder="Cth: Budi Santoso" value="{{ old('penanggung_jawab') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-11 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-user-tie absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
@@ -134,7 +134,7 @@
                     {{-- Tanggal --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Tanggal Peminjaman <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal" required value="{{ old('tanggal') }}" min="{{ date('Y-m-d') }}"
+                        <input type="date" name="tanggal" id="input_tanggal" required value="{{ old('tanggal') }}" min="{{ date('Y-m-d') }}"
                                class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
 
@@ -149,19 +149,19 @@
                     {{-- Jam Mulai & Jam Selesai --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai <span class="text-red-500">*</span></label>
-                        <input type="text" name="jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required value="{{ old('jam_mulai') }}">
+                        <input type="text" name="jam_mulai" id="input_jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required value="{{ old('jam_mulai') }}">
                     </div>
 
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Selesai <span class="text-red-500">*</span></label>
-                        <input type="text" name="jam_selesai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="10:30" maxlength="5" required value="{{ old('jam_selesai') }}">
+                        <input type="text" name="jam_selesai" id="input_jam_selesai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="10:30" maxlength="5" required value="{{ old('jam_selesai') }}">
                     </div>
 
                     {{-- Kapasitas --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Peserta<span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="number" name="kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}"
+                            <input type="number" name="kapasitas" id="input_kapasitas" required placeholder="Cth: 30" min=1 value="{{ old('kapasitas') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-chair absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
@@ -189,7 +189,7 @@
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara & Kebutuhan Software <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="text" name="keperluan" required placeholder="Cth: Pelatihan Desain (Butuh Photoshop)" value="{{ old('keperluan') }}"
+                            <input type="text" name="keperluan" id="input_keperluan" required placeholder="Cth: Pelatihan Desain (Butuh Photoshop)" value="{{ old('keperluan') }}"
                                    class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                             <i class="fas fa-info-circle absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
@@ -231,6 +231,8 @@
                             <th class="px-6 py-4">Lab & Waktu</th>
                             <th class="px-6 py-4 w-full">Keperluan</th>
                             <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 min-w-[200px]">Alasan Penolakan</th>
+                            <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -268,11 +270,57 @@
                                         </span>
                                     @endif
                                 </td>
+                                {{-- Alasan Penolakan --}}
+                                <td class="px-6 py-4 whitespace-normal min-w-[200px]">
+                                    @if($book->status === 'rejected' && !empty($book->alasan_penolakan))
+                                        <div class="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">
+                                            <i class="fas fa-comment-slash mr-1 text-red-400"></i>
+                                            {{ $book->alasan_penolakan }}
+                                        </div>
+                                    @elseif($book->status === 'rejected')
+                                        <span class="text-xs text-slate-400 italic">Tidak ada keterangan.</span>
+                                    @else
+                                        <span class="text-xs text-slate-300">-</span>
+                                    @endif
+                                </td>
+                                {{-- Aksi --}}
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        @if($book->status === 'rejected')
+                                            <button type="button" 
+                                                    onclick="reapplyBooking({{ json_encode([
+                                                        'penanggung_jawab' => $book->penanggung_jawab,
+                                                        'tanggal' => $book->tanggal,
+                                                        'jam_mulai' => substr($book->jam_mulai, 0, 5),
+                                                        'jam_selesai' => substr($book->jam_selesai, 0, 5),
+                                                        'kapasitas' => $book->kapasitas,
+                                                        'keperluan' => $book->keperluan
+                                                    ]) }})"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-600 border border-indigo-200 transition duration-200 hover:bg-indigo-600 hover:text-white hover:scale-105 transform">
+                                                <i class="fas fa-redo text-[10px]"></i> Ulang
+                                            </button>
+                                        @endif
+                                        @if($book->status !== 'approved')
+                                            <form action="{{ route('ormawa.booking.delete', $book->id_booking) }}" method="POST" class="m-0 inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 transition duration-200 hover:bg-red-600 hover:text-white hover:scale-105 transform">
+                                                    <i class="fas fa-trash text-[10px]"></i> Hapus
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-400 border border-slate-200">
+                                                <i class="fas fa-lock text-[9px]"></i> Terkunci
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center">
+                                <td colspan="6" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center text-slate-400">
                                         <i class="fas fa-clipboard-check text-4xl mb-3 text-slate-300"></i>
                                         <span class="font-bold">Anda belum pernah mengajukan peminjaman.</span>
@@ -293,6 +341,21 @@
 
     {{-- Mesin Ketik JS --}}
     <script>
+        function reapplyBooking(data) {
+            document.getElementById('input_penanggung_jawab').value = data.penanggung_jawab;
+            document.getElementById('input_tanggal').value = data.tanggal;
+            document.getElementById('input_jam_mulai').value = data.jam_mulai;
+            document.getElementById('input_jam_selesai').value = data.jam_selesai;
+            document.getElementById('input_kapasitas').value = data.kapasitas;
+            document.getElementById('input_keperluan').value = data.keperluan;
+
+            // Scroll smoothly to form container
+            document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth' });
+
+            // Show a small notification or flash a banner to let user know
+            showCustomAlert('Data pengajuan lama telah disalin ke formulir. Silakan sesuaikan tanggal/waktu dan unggah ulang surat resmi (.PDF) Anda.', 'Pengajuan Ulang');
+        }
+
         document.getElementById('booking-form').addEventListener('submit', function() {
             const btn = document.getElementById('btn-submit');
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses Pengajuan...';

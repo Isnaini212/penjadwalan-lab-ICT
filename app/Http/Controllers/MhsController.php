@@ -12,8 +12,7 @@ class MhsController extends Controller
 
     public function index(Request $request)
     {
-
-        $myBookings = Ormawa::orderBy('created_at', 'desc')->take(10)->get();
+        $myBookings = Ormawa::where('user_id', auth()->id())->orderBy('created_at', 'desc')->take(20)->get();
 
         return view('booking.mahasiswa', compact('myBookings'));
     }
@@ -93,4 +92,31 @@ class MhsController extends Controller
 
     return back()->with('success', 'Pengajuan booking laboratorium berhasil dikirim!');
 }
+
+    public function destroy($id)
+    {
+        $booking = Ormawa::findOrFail($id);
+
+        // Pastikan hanya pemilik yang bisa menghapus
+        if ($booking->user_id !== auth()->id()) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk menghapus pengajuan ini.');
+        }
+
+        // Jangan izinkan hapus jika status approved
+        if ($booking->status === 'approved') {
+            return back()->with('error', 'Gagal! Pengajuan yang sudah disetujui tidak dapat dihapus.');
+        }
+
+        // Hapus file surat jika ada
+        if ($booking->file_surat) {
+            $filePath = public_path('surat_ormawa/' . $booking->file_surat);
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
+
+        $booking->delete();
+
+        return back()->with('success', 'Pengajuan booking berhasil dihapus.');
+    }
 }
