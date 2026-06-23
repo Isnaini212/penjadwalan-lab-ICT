@@ -101,7 +101,7 @@ public function cetakMinggu(Request $request)
         }
 
         // Ambil data murni langsung dari database berdasarkan parameter minggu terpilih
-        $schedules = Schedule::with(['lab', 'assistantSchedule'])
+        $schedules = Schedule::with(['lab', 'assistants'])
             ->whereDate('tanggal', '>=', $activeRange['start'])
             ->whereDate('tanggal', '<=', $activeRange['end'])
             ->whereHas('lab', function ($query) {
@@ -131,7 +131,7 @@ public function welcome(Request $request)
 
         $filterDate = $request->query('filter_date', now()->toDateString());
         $labs = Lab::all();
-        $schedules = Schedule::with(['lab', 'assistantSchedule'])
+        $schedules = Schedule::with(['lab', 'assistants'])
                          ->whereDate('tanggal', $filterDate)
                          ->whereHas('lab', function($query) {
                              $query->where('nama_lab', '!=', 'RUANG ASISTEN')
@@ -157,11 +157,11 @@ public function dashboard(Request $request)
     $search = $request->query('search');
     $perPage = $request->query('per_page', 5); 
 
-    $daySchedules = Schedule::with(['lab', 'assistantSchedule'])
+    $daySchedules = Schedule::with(['lab', 'assistants'])
         ->whereDate('tanggal', $filterDate)
         ->get();
 
-    $query = Schedule::with(['lab', 'assistantSchedule'])
+    $query = Schedule::with(['lab', 'assistants'])
         ->whereDate('tanggal', $filterDate);
 
     if (!empty($search)) {
@@ -182,7 +182,7 @@ public function dashboard(Request $request)
 
 public function manajemenJadwal(Request $request) {
     $filterDate = $request->query('filter_date', now()->toDateString());
-    $schedules = Schedule::with(['lab', 'assistantSchedule'])->whereDate('tanggal', $filterDate)->orderBy('jam_mulai', 'asc')->get();
+    $schedules = Schedule::with(['lab', 'assistants'])->whereDate('tanggal', $filterDate)->orderBy('jam_mulai', 'asc')->get();
     $labs = Lab::all();
 
     $checkData = Schedule::with('lab')
@@ -240,7 +240,9 @@ public function store(Request $request)
             $id_lab = $labObj->id_lab;
         }
 
-        $id_asisten = $request->id_asisten ?: null;
+        // Ambil array id_asisten (mendukung multi-asisten)
+        $assistantIds = array_filter((array) ($request->id_asisten ?? []));
+
 
         // Tentukan tanggal-tanggal yang akan diinsert
         $dates = [];
@@ -326,17 +328,22 @@ public function store(Request $request)
         $count = 0;
         foreach ($dates as $tgl) {
             $hari = Carbon::parse($tgl)->locale('id')->translatedFormat('l');
-            Schedule::create([
+            $schedule = Schedule::create([
                 'tanggal'     => $tgl,
                 'hari'        => $hari,
                 'id_lab'      => $id_lab,
-                'id_asisten'  => $id_asisten,
                 'jam_mulai'   => $request->jam_mulai,
                 'jam_selesai' => $jam_selesai,
                 'matkul'      => $request->matkul,
                 'sks'         => $request->sks,
                 'dosen'       => $request->dosen,
             ]);
+
+            // Sync asisten via pivot table (mendukung multi-asisten)
+            if (!empty($assistantIds)) {
+                $schedule->assistants()->sync($assistantIds);
+            }
+
             $count++;
         }
 
@@ -451,9 +458,11 @@ public function store(Request $request)
     public function quickUpdate(Request $request, $id)
     {
         $schedule = Schedule::findOrFail($id);
-        $schedule->update([
-            'id_asisten' => $request->id_asisten ?: null
-        ]);
+        
+        // Sync asisten via pivot table (mendukung multi-asisten)
+        $assistantIds = array_filter((array) ($request->id_asisten ?? []));
+        $schedule->assistants()->sync($assistantIds);
+        
         return back()->with('success', 'Asisten diperbarui!');
     }
 
@@ -482,34 +491,40 @@ public function store(Request $request)
         ->translatedFormat('l');
 
     
+    // Ambil array id_asisten (mendukung multi-asisten)
+    $assistantIds = array_filter((array) ($request->id_asisten ?? []));
+
     if ($request->scope === 'all') {
 
-        Schedule::where('matkul', $matkulLama)
+        $affectedSchedules = Schedule::where('matkul', $matkulLama)
             ->where('dosen', $dosenLama)
             ->where('jam_mulai', $jamMulaiLama)
             ->where('jam_selesai', $jamSelesaiLama)
-            ->update([
+            ->get();
+
+        foreach ($affectedSchedules as $affectedSchedule) {
+            $affectedSchedule->update([
                 'matkul'      => $request->matkul,
                 'dosen'       => $request->dosen,
                 'jam_mulai'   => $request->jam_mulai,
                 'jam_selesai' => $request->jam_selesai,
                 'id_lab'      => $request->id_lab,
-                'id_asisten'  => $request->id_asisten,
             ]);
+            $affectedSchedule->assistants()->sync($assistantIds);
+        }
 
     } else {
 
-        
         $schedule->update([
             'matkul'      => $request->matkul,
             'dosen'       => $request->dosen,
             'jam_mulai'   => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
             'id_lab'      => $request->id_lab,
-            'id_asisten'  => $request->id_asisten,
             'tanggal'     => $request->tanggal,
             'hari'        => $namaHariOtomatis,
         ]);
+        $schedule->assistants()->sync($assistantIds);
     }
 
     return redirect()->back()
@@ -581,13 +596,13 @@ public function store(Request $request)
                     $jamSelesai = isset($jamSplit[1]) ? trim($jamSplit[1]) : '00:00';
     
                     
-                    $id_asisten = null;
+                    $importAssistantId = null;
                     if (!empty($asisten) && strtoupper($asisten) !== 'TBD') {
                         $asistenObj = AssistantSchedule::firstOrCreate(
                             ['nama_asisten' => $asisten], 
                             ['hari' => '-', 'jam_mulai' => '00:00', 'jam_selesai' => '00:00', 'mata_kuliah' => '-']
                         );
-                        $id_asisten = $asistenObj->id_asisten;
+                        $importAssistantId = $asistenObj->id_asisten;
                     }
 
                     $period = CarbonPeriod::create($request->start_date, $request->end_date);
@@ -608,17 +623,21 @@ public function store(Request $request)
                                 continue;
                             }
 
-                            Schedule::create([
+                            $newSchedule = Schedule::create([
                                 'tanggal'     => $tanggalFormat,
                                 'hari'        => $hariExcel,
                                 'id_lab'      => $labObj->id_lab,
-                                'id_asisten'  => $id_asisten, 
                                 'jam_mulai'   => $jamMulai,
                                 'jam_selesai' => $jamSelesai,
                                 'matkul'      => strtoupper($matkulRaw) . " ($kelp)",
                                 'sks'         => $sks,
                                 'dosen'       => $dosen,
                             ]);
+
+                            // Attach asisten via pivot table
+                            if ($importAssistantId) {
+                                $newSchedule->assistants()->attach($importAssistantId);
+                            }
                             $count++;
                         }
                     }

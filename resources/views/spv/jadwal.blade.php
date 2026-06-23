@@ -328,26 +328,49 @@
                         </td>
 
                         <td class="px-5 py-4 min-w-[260px]">
-                            <select name="id_asisten" class="h-11 w-[240px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-                                <option value="">-- Pilih Asisten --</option>
-                                @foreach($s->getAssistantStatuses() as $asisten)
-                                    @if($asisten->is_busy)
-                                        @if($s->id_asisten == $asisten->id_asisten)
-                                            <option value="{{ $asisten->id_asisten }}" selected class="font-bold text-red-600 bg-red-50">
-                                                {{ $asisten->nama }} {{ $asisten->label }}
-                                            </option>
-                                        @else
-                                            <option value="" disabled class="text-red-400 bg-red-50/50 cursor-not-allowed">
-                                                {{ $asisten->nama }} {{ $asisten->label }}
-                                            </option>
-                                        @endif
+                            {{-- Multi-Asisten Checkbox Dropdown --}}
+                            @php $assignedIds = $s->assistant_ids; @endphp
+                            <div class="multi-asisten-wrapper relative" data-form="update-form-{{ $s->id_jadwal }}" data-scope="scope-field-{{ $s->id_jadwal }}">
+                                <button type="button" onclick="toggleMultiAsisten(this)" class="h-11 w-[240px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer text-left truncate relative">
+                                    @if(count($assignedIds) > 0)
+                                        <span class="text-blue-600 font-bold">{{ count($assignedIds) }} asisten dipilih</span>
                                     @else
-                                        <option value="{{ $asisten->id_asisten }}" {{ $s->id_asisten == $asisten->id_asisten ? 'selected' : '' }}>
-                                            {{ $asisten->nama }}
-                                        </option>
+                                        <span class="text-slate-400">-- Pilih Asisten --</span>
                                     @endif
-                                @endforeach
-                            </select>
+                                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                </button>
+
+                                <div class="multi-asisten-dropdown hidden absolute z-50 mt-1 w-[280px] rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/50 overflow-hidden" style="max-height: 320px;">
+                                    <div class="overflow-y-auto" style="max-height: 260px;">
+                                        @foreach($s->getAssistantStatuses() as $asisten)
+                                            <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 {{ $asisten->is_busy && !$asisten->is_assigned ? 'opacity-50' : '' }}">
+                                                <input type="checkbox"
+                                                       name="id_asisten[]"
+                                                       value="{{ $asisten->id_asisten }}"
+                                                       form="update-form-{{ $s->id_jadwal }}"
+                                                       {{ $asisten->is_assigned ? 'checked' : '' }}
+                                                       {{ $asisten->is_busy && !$asisten->is_assigned ? 'disabled' : '' }}
+                                                       class="asisten-checkbox h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                                >
+                                                <div class="flex-1 min-w-0">
+                                                    <span class="text-sm font-bold text-slate-700 block truncate {{ $asisten->is_assigned ? 'text-blue-600' : '' }}">{{ $asisten->nama }}</span>
+                                                    @if($asisten->is_busy)
+                                                        <span class="text-[10px] font-bold text-red-500">{{ $asisten->label }}</span>
+                                                    @endif
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    <div class="border-t border-slate-200 bg-slate-50 p-2 flex gap-2">
+                                        <button type="button" onclick="submitMultiAsisten(this)" class="flex-1 h-8 rounded-lg bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 transition">
+                                            <i class="fas fa-save mr-1"></i> Simpan
+                                        </button>
+                                        <button type="button" onclick="closeMultiAsisten(this)" class="h-8 px-3 rounded-lg bg-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-300 transition">
+                                            Batal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
 
                         <td class="px-6 py-3.5 text-right">
@@ -532,9 +555,22 @@ document.addEventListener("DOMContentLoaded", function () {
             if (matchLab && matchType) {
                 // 🌟 FIX PDF: Cari class "time-formatter" karena tipe inputnya sekarang "text" bukan "time"
                 const jamInputs = tr.cells[2].querySelectorAll('.time-formatter');
-                const asistenSelect = tr.cells[6].querySelector('select');
-                let asistenName = asistenSelect ? asistenSelect.options[asistenSelect.selectedIndex].text : '-';
-                asistenName = asistenName.replace(/[⚠️|🔒]/g, '').replace('-- Pilih Asisten --', '-').trim();
+                
+                // Multi-Asisten: Baca semua checkbox yang terceklis
+                const asistenWrapper = tr.cells[6].querySelector('.multi-asisten-wrapper');
+                let asistenName = '-';
+                if (asistenWrapper) {
+                    const checkedBoxes = asistenWrapper.querySelectorAll('.asisten-checkbox:checked');
+                    if (checkedBoxes.length > 0) {
+                        const names = [];
+                        checkedBoxes.forEach(cb => {
+                            const label = cb.closest('label');
+                            const nameSpan = label ? label.querySelector('.text-sm.font-bold') : null;
+                            if (nameSpan) names.push(nameSpan.textContent.trim());
+                        });
+                        asistenName = names.join(', ');
+                    }
+                }
 
                 let jMulaiClean = jamInputs[0].value.substring(0, 5);
                 let jSelesaiClean = jamInputs[1].value.substring(0, 5);
@@ -891,6 +927,44 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     });
+});
+</script>
+
+<script>
+// ===== Multi-Asisten Dropdown Functions =====
+function toggleMultiAsisten(btn) {
+    // Tutup semua dropdown lain dulu
+    document.querySelectorAll('.multi-asisten-dropdown').forEach(d => {
+        if (d !== btn.nextElementSibling) {
+            d.classList.add('hidden');
+        }
+    });
+    const dropdown = btn.closest('.multi-asisten-wrapper').querySelector('.multi-asisten-dropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+function submitMultiAsisten(btn) {
+    const wrapper = btn.closest('.multi-asisten-wrapper');
+    const formId = wrapper.dataset.form;
+    const scopeId = wrapper.dataset.scope;
+    
+    if (scopeId) {
+        document.getElementById(scopeId).value = 'single';
+    }
+    document.getElementById(formId).submit();
+}
+
+function closeMultiAsisten(btn) {
+    btn.closest('.multi-asisten-dropdown').classList.add('hidden');
+}
+
+// Tutup dropdown jika klik di luar
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.multi-asisten-wrapper')) {
+        document.querySelectorAll('.multi-asisten-dropdown').forEach(d => {
+            d.classList.add('hidden');
+        });
+    }
 });
 </script>
 @endsection

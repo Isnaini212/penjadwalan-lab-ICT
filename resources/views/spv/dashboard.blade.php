@@ -64,7 +64,7 @@
                             @forelse($schedules as $s)
                                 @php
                                     $namaLab = $s->lab->nama_lab ?? $s->id_lab;
-                                    $namaAsisten = $s->assistantSchedule->nama_asisten ?? $s->assistantSchedule->nama ?? '-';
+                                    $namaAsisten = $s->assistant_names;
                                 @endphp
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-3 py-3">
@@ -125,7 +125,7 @@
                         <div>
                             <p class="text-sm font-medium text-slate-500">Asisten Bertugas</p>
                             <p class="mt-2 text-3xl font-black text-slate-900">
-                                {{ $daySchedules->whereNotNull('id_asisten')->unique('id_asisten')->count() }}
+                                {{ $daySchedules->flatMap(fn($s) => $s->assistants->pluck('nama_asisten'))->unique()->count() }}
                             </p>
                         </div>
                         <i class="fa-solid fa-users text-2xl text-sky-700/80"></i>
@@ -160,16 +160,26 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @php
-                    // 1. Ambil semua jadwal hari ini yang sudah ada asistennya
+                    // 1. Ambil semua jadwal hari ini yang sudah ada asistennya (via pivot)
                     $rawSchedules = $daySchedules->filter(function($item) {
-                        return !empty($item->id_asisten);
+                        return $item->assistants->isNotEmpty();
                     });
 
-                    // 2. Grouping berdasarkan ID Asisten untuk mencari jam berurutan per orang
-                    $groupedByAssistant = $rawSchedules->groupBy('id_asisten');
+                    // 2. Grouping berdasarkan Nama Asisten (karena sekarang many-to-many)
+                    $byAssistantName = collect();
+                    foreach ($rawSchedules as $schedule) {
+                        foreach ($schedule->assistants as $asisten) {
+                            $nama = $asisten->nama_asisten;
+                            if (!$byAssistantName->has($nama)) {
+                                $byAssistantName[$nama] = collect();
+                            }
+                            $byAssistantName[$nama]->push($schedule);
+                        }
+                    }
+
                     $mergedSchedules = collect();
 
-                    foreach ($groupedByAssistant as $asistenId => $slots) {
+                    foreach ($byAssistantName as $namaAsisten => $slots) {
                         // Urutkan slot waktu milik asisten ini dari yang paling pagi
                         $sortedSlots = $slots->sortBy('jam_mulai')->values();
                         
@@ -177,7 +187,7 @@
 
                         // Set cetakan blok sesi pertama untuk asisten ini
                         $currentBlock = [
-                            'assistantSchedule' => $sortedSlots[0]->assistantSchedule,
+                            'nama_asisten'      => $namaAsisten,
                             'jam_mulai'         => $sortedSlots[0]->jam_mulai,
                             'jam_selesai'       => $sortedSlots[0]->jam_selesai,
                             'matkul_list'       => [trim($sortedSlots[0]->matkul)],
@@ -191,28 +201,23 @@
                             $currentEnd = date('H:i', strtotime($currentBlock['jam_selesai']));
                             $nextStart  = date('H:i', strtotime($nextSlot->jam_mulai));
 
-                            // SYARAT MUTLAK: Jika jam selesai sesi ini SAMA DENGAN jam mulai sesi berikutnya (Berurutan)
                             if ($currentEnd === $nextStart) {
-                                // Perpanjang jam selesai blok saat ini
                                 $currentBlock['jam_selesai'] = $nextSlot->jam_selesai;
                                 
-                                // Gabungkan nama matkul (jika berbeda) ke array agar tidak duplikat teks
                                 $matkulTrimmed = trim($nextSlot->matkul);
                                 if (!in_array($matkulTrimmed, $currentBlock['matkul_list'])) {
                                     $currentBlock['matkul_list'][] = $matkulTrimmed;
                                 }
                                 
-                                // Gabungkan nama lab (jika dalam shift beruntun dia pindah lab)
                                 $labName = $nextSlot->lab->nama_lab ?? $nextSlot->id_lab;
                                 if (!in_array($labName, $currentBlock['labs_list'])) {
                                     $currentBlock['labs_list'][] = $labName;
                                 }
                             } else {
-                                // JIKA ADA JEDA: Simpan sesi sebelumnya sebagai baris mandiri, lalu buka lembaran sesi baru
                                 $mergedSchedules->push((object)$currentBlock);
                                 
                                 $currentBlock = [
-                                    'assistantSchedule' => $nextSlot->assistantSchedule,
+                                    'nama_asisten'      => $namaAsisten,
                                     'jam_mulai'         => $nextSlot->jam_mulai,
                                     'jam_selesai'       => $nextSlot->jam_selesai,
                                     'matkul_list'       => [trim($nextSlot->matkul)],
@@ -220,17 +225,16 @@
                                 ];
                             }
                         }
-                        // Amankan sisa blok terakhir milik asisten terpilih
                         $mergedSchedules->push((object)$currentBlock);
                     }
 
-                    // 3. Kembalikan urutan tampilan baris tabel secara kronologis (Berdasarkan Jam Mulai Terpagi)
+                    // 3. Kembalikan urutan tampilan baris tabel secara kronologis
                     $finalSchedules = $mergedSchedules->sortBy('jam_mulai');
                 @endphp
                 
                 @forelse($finalSchedules as $s)
                     @php
-                        $namaAsisten = $s->assistantSchedule->nama_asisten ?? $s->assistantSchedule->nama ?? 'Asisten';
+                        $namaAsisten = $s->nama_asisten ?? 'Asisten';
                         $inisial     = strtoupper(substr(trim($namaAsisten), 0, 1));
                         
                         // Satukan nama lab & matkul yang sudah berhasil dikompresi menggunakan koma

@@ -64,8 +64,8 @@
                         </td>
                         <td>{{ $sch->dosen }}</td>
                         <td class="center">
-                            @if($sch->assistantSchedule)
-                                <span style="font-weight: bold; color: #16a34a;">{{ $sch->assistantSchedule->nama_asisten }}</span>
+                            @if($sch->assistants->isNotEmpty())
+                                <span style="font-weight: bold; color: #16a34a;">{{ $sch->assistant_names }}</span>
                             @else
                                 <span class="text-muted">-</span>
                             @endif

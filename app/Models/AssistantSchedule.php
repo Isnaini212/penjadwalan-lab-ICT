@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class AssistantSchedule extends Model
 {
@@ -19,9 +19,18 @@ class AssistantSchedule extends Model
         'mata_kuliah',
     ];
 
-
-    public function schedules(): HasMany
+    /**
+     * Relasi many-to-many ke Schedule via pivot table schedule_assistant.
+     */
+    public function schedules(): BelongsToMany
     {
-        return $this->hasMany(Schedule::class, 'id_asisten', 'id_asisten');
+        return $this->belongsToMany(
+            Schedule::class,
+            'schedule_assistant',
+            'assistant_schedule_id',
+            'schedule_id',
+            'id_asisten',
+            'id_jadwal'
+        )->withTimestamps();
     }
 }

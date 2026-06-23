@@ -258,7 +258,7 @@ class AsistenController extends Controller
     );
 
     $coursesBySlot = [];
-    $allSchedules = \App\Models\Schedule::where('id_lab', '!=', $ruangRAObj->id_lab)->get();
+    $allSchedules = \App\Models\Schedule::with('assistants')->where('id_lab', '!=', $ruangRAObj->id_lab)->get();
 
     foreach ($allSchedules as $s) {
         $dayLower  = strtolower($s->hari);
@@ -289,12 +289,10 @@ class AsistenController extends Controller
             ->where('mata_kuliah', '!=', '')
             ->get();
 
-        $allAsistenIds = \App\Models\AssistantSchedule::where('nama_asisten', $selectedAsisten)
-            ->pluck('id_asisten')
-            ->toArray();
-
-        $assistantAllSchedules = \App\Models\Schedule::with('lab')
-            ->whereIn('id_asisten', $allAsistenIds)
+        $assistantAllSchedules = \App\Models\Schedule::with(['lab', 'assistants'])
+            ->whereHas('assistants', function($q) use ($selectedAsisten) {
+                $q->where('nama_asisten', $selectedAsisten);
+            })
             ->get();
     }
 
@@ -360,11 +358,21 @@ public function updateMatrixRA(Request $request)
             // (Dipindah ke atas agar jadwal Lab bisa mendeteksi RA baru yang terbentuk)
             // ==========================================
             if ($raChanged) {
-                // Hapus RA yang lama
-                Schedule::whereIn('id_asisten', $allAsistenIds)
+                // Hapus RA yang lama (cari jadwal RA yang ada asisten ini via pivot)
+                $oldRASchedules = Schedule::whereHas('assistants', function($q) use ($allAsistenIds) {
+                        $q->whereIn('assistant_schedules.id_asisten', $allAsistenIds);
+                    })
                     ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                     ->where('id_lab', $ruangRAObj->id_lab)
-                    ->delete();
+                    ->get();
+
+                foreach ($oldRASchedules as $oldRA) {
+                    $oldRA->assistants()->detach($allAsistenIds);
+                    // Hapus jadwal jika tidak ada asisten lain yang terhubung
+                    if ($oldRA->assistants()->count() === 0) {
+                        $oldRA->delete();
+                    }
+                }
 
                 $raBlocks = [];
                 $currentBlock = null;
@@ -405,8 +413,10 @@ public function updateMatrixRA(Request $request)
                     $bStart = $block['start'];
                     $bEnd = $block['end'];
 
-                    // 🚨 PROTEKSI 1: Cek apakah RA menabrak Lab Asli di Excel
-                    $isBusyInLab = Schedule::whereIn('id_asisten', $allAsistenIds)
+                    // 🚨 PROTEKSI 1: Cek apakah RA menabrak Lab Asli (via pivot)
+                    $isBusyInLab = Schedule::whereHas('assistants', function($q) use ($allAsistenIds) {
+                            $q->whereIn('assistant_schedules.id_asisten', $allAsistenIds);
+                        })
                         ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                         ->where('id_lab', '!=', $ruangRAObj->id_lab)
                         ->whereRaw('LEFT(jam_mulai, 5) < ?', [$bEnd])
@@ -435,17 +445,18 @@ public function updateMatrixRA(Request $request)
 
                     foreach ($period as $date) {
                         if (strtolower($date->locale('id')->translatedFormat('l')) === strtolower($day)) {
-                            Schedule::create([
+                            $raSchedule = Schedule::create([
                                 'tanggal'     => $date->format('Y-m-d'),
                                 'hari'        => $day,
                                 'id_lab'      => $ruangRAObj->id_lab,
-                                'id_asisten'  => $asistenObj->id_asisten,
                                 'jam_mulai'   => $bStart,
                                 'jam_selesai' => $bEnd,
                                 'matkul'      => 'RA',
                                 'sks'         => $calculatedSks,
                                 'dosen'       => '-',
                             ]);
+                            // Attach asisten via pivot table
+                            $raSchedule->assistants()->attach($asistenObj->id_asisten);
                         }
                     }
                 }
@@ -461,30 +472,40 @@ public function updateMatrixRA(Request $request)
                     continue;
                 }
 
-                // Hapus penugasan lab yang lama
+                // Hapus penugasan lab yang lama (detach asisten dari jadwal via pivot)
                 if ($statusLama !== 'KOSONG' && $statusLama !== 'RA') {
-                    Schedule::whereIn('id_asisten', $allAsistenIds)
+                    $oldLabSchedules = Schedule::whereHas('assistants', function($q) use ($allAsistenIds) {
+                            $q->whereIn('assistant_schedules.id_asisten', $allAsistenIds);
+                        })
                         ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                         ->where('matkul', $statusLama)
                         ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                        ->update(['id_asisten' => null]);
+                        ->get();
+
+                    foreach ($oldLabSchedules as $oldLab) {
+                        $oldLab->assistants()->detach($allAsistenIds);
+                    }
                 }
 
-                // Masukkan asisten ke penugasan lab yang baru
+                // Masukkan asisten ke penugasan lab yang baru (attach via pivot)
                 if ($statusBaru !== 'KOSONG' && $statusBaru !== 'RA') {
-                    $targetMatkul = Schedule::where('matkul', $statusBaru)
+                    $targetMatkulSchedules = Schedule::where('matkul', $statusBaru)
                         ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
                         ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                        ->first();
+                        ->get();
 
-                    if ($targetMatkul) {
-                        $timeStart = substr($targetMatkul->jam_mulai, 0, 5);
-                        $timeEnd   = substr($targetMatkul->jam_selesai, 0, 5);
+                    $firstTarget = $targetMatkulSchedules->first();
 
-                        // 🚨 PROTEKSI 3: Cek apakah Praktikum menabrak RA yang baru dibuat
-                        $bentrokLabRA = Schedule::whereIn('id_asisten', $allAsistenIds)
+                    if ($firstTarget) {
+                        $timeStart = substr($firstTarget->jam_mulai, 0, 5);
+                        $timeEnd   = substr($firstTarget->jam_selesai, 0, 5);
+
+                        // 🚨 PROTEKSI 3: Cek apakah Praktikum menabrak RA yang baru dibuat (via pivot)
+                        $bentrokLabRA = Schedule::whereHas('assistants', function($q) use ($allAsistenIds) {
+                                $q->whereIn('assistant_schedules.id_asisten', $allAsistenIds);
+                            })
                             ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                            ->where('id_lab', $ruangRAObj->id_lab) // Cek di ruang RA
+                            ->where('id_lab', $ruangRAObj->id_lab)
                             ->whereRaw('LEFT(jam_mulai, 5) < ?', [$timeEnd])
                             ->whereRaw('LEFT(jam_selesai, 5) > ?', [$timeStart])
                             ->exists();
@@ -506,10 +527,10 @@ public function updateMatrixRA(Request $request)
                             throw new \Exception("Gagal! Durasi praktikum {$statusBaru} BENTROK dengan jadwal kuliah asisten.");
                         }
 
-                        Schedule::where('matkul', $statusBaru)
-                            ->whereRaw('LOWER(hari) = ?', [strtolower($day)])
-                            ->where('id_lab', '!=', $ruangRAObj->id_lab)
-                            ->update(['id_asisten' => $asistenObj->id_asisten]);
+                        // Attach asisten ke semua jadwal matkul tersebut (multi-asisten support)
+                        foreach ($targetMatkulSchedules as $targetSchedule) {
+                            $targetSchedule->assistants()->syncWithoutDetaching([$asistenObj->id_asisten]);
+                        }
                     }
                 }
             }
@@ -659,8 +680,8 @@ public function cetakMatriks() {
 
         // 🌟 SAKTI 1: Tarik data jadwal penugasan beserta data LAB-nya
         // Kita cari id_asisten yang nama_asisten-nya cocok dengan yang lagi login
-        $assistantAllSchedules = \App\Models\Schedule::with('lab') // Tarik relasi 'lab'
-            ->whereHas('assistantSchedule', function($query) use ($nama) {
+        $assistantAllSchedules = \App\Models\Schedule::with(['lab', 'assistants'])
+            ->whereHas('assistants', function($query) use ($nama) {
                 $query->where('nama_asisten', $nama);
             })
             ->get();

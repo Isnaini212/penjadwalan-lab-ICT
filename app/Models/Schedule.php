@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,6 @@ class Schedule extends Model
         'tanggal', 
         'hari', 
         'id_lab',       
-        'id_asisten',   
         'jam_mulai', 
         'jam_selesai', 
         'matkul', 
@@ -38,9 +38,45 @@ class Schedule extends Model
         return $this->belongsTo(Lab::class, 'id_lab', 'id_lab');
     }
 
-    public function assistantSchedule(): BelongsTo
+    /**
+     * Relasi many-to-many ke AssistantSchedule via pivot table schedule_assistant.
+     */
+    public function assistants(): BelongsToMany
     {
-        return $this->belongsTo(AssistantSchedule::class, 'id_asisten', 'id_asisten');
+        return $this->belongsToMany(
+            AssistantSchedule::class,
+            'schedule_assistant',
+            'schedule_id',
+            'assistant_schedule_id',
+            'id_jadwal',
+            'id_asisten'
+        )->withTimestamps();
+    }
+
+    /**
+     * Backward-compatible accessor: mengambil asisten pertama (untuk kode lama yang masih pakai relasi tunggal).
+     * Gunakan $schedule->assistantSchedule untuk mendapatkan AssistantSchedule pertama.
+     */
+    public function getAssistantScheduleAttribute()
+    {
+        return $this->assistants->first();
+    }
+
+    /**
+     * Helper: mendapatkan semua nama asisten sebagai string (dipisah koma).
+     */
+    public function getAssistantNamesAttribute(): string
+    {
+        $names = $this->assistants->pluck('nama_asisten')->unique()->toArray();
+        return !empty($names) ? implode(', ', $names) : '-';
+    }
+
+    /**
+     * Helper: mendapatkan semua id_asisten yang terhubung.
+     */
+    public function getAssistantIdsAttribute(): array
+    {
+        return $this->assistants->pluck('id_asisten')->toArray();
     }
 
     public function getLabStatuses()
@@ -79,7 +115,7 @@ class Schedule extends Model
         $mulaiTarget = $this->jam_mulai;
         $selesaiTarget = $this->jam_selesai;
 
-
+        // Asisten yang sedang kuliah sendiri pada hari+jam tersebut
         $busyWithClass = \App\Models\AssistantSchedule::where('hari', $hariTarget)
             ->where(function($query) use ($mulaiTarget, $selesaiTarget) {
                 $query->where('jam_mulai', '<', $selesaiTarget)
@@ -88,17 +124,28 @@ class Schedule extends Model
             ->get(['nama_asisten', 'mata_kuliah'])
             ->keyBy('nama_asisten');
 
-        
-        $busyInOtherLab = \App\Models\Schedule::with(['lab', 'assistantSchedule'])
+        // Asisten yang sedang ditugaskan ke lab lain (cek via pivot table)
+        $busyInOtherLab = \App\Models\Schedule::with(['lab', 'assistants'])
             ->where('tanggal', $tanggalTarget)
             ->where('id_jadwal', '!=', $this->id_jadwal)
-            ->whereNotNull('id_asisten')
+            ->whereHas('assistants')
             ->get()
-            ->filter(fn($s) => $s->assistantSchedule !== null)
-            ->keyBy(fn($s) => $s->assistantSchedule->nama_asisten);
+            ->flatMap(function($s) {
+                // Untuk setiap jadwal, map semua asisten yang terhubung
+                return $s->assistants->map(function($asisten) use ($s) {
+                    return (object) [
+                        'nama_asisten' => $asisten->nama_asisten,
+                        'lab' => $s->lab,
+                        'schedule' => $s,
+                    ];
+                });
+            })
+            ->keyBy('nama_asisten');
 
-        
-        return $allAssistants->map(function ($asisten) use ($busyWithClass, $busyInOtherLab) {
+        // ID asisten yang sudah ditugaskan ke jadwal ini (via pivot)
+        $currentAssistantNames = $this->assistants->pluck('nama_asisten')->toArray();
+
+        return $allAssistants->map(function ($asisten) use ($busyWithClass, $busyInOtherLab, $currentAssistantNames) {
             $status = 'available';
             $label = '';
             $namaKey = $asisten->nama_asisten;
@@ -115,16 +162,20 @@ class Schedule extends Model
                 $label = "(Jaga: {$namaLabBentrok})";
             }
 
-            
             $idFinal = $asisten->id_asisten;
-            if ($this->assistantSchedule && $this->assistantSchedule->nama_asisten === $namaKey) {
-                $idFinal = $this->id_asisten;
+            // Jika asisten ini sudah ditugaskan ke jadwal ini, gunakan id dari relasi yang ada
+            if (in_array($namaKey, $currentAssistantNames)) {
+                $matchingAssistant = $this->assistants->firstWhere('nama_asisten', $namaKey);
+                if ($matchingAssistant) {
+                    $idFinal = $matchingAssistant->id_asisten;
+                }
             }
 
             return (object) [
                 'id_asisten' => $idFinal,
                 'nama'       => $namaKey,
                 'is_busy'    => ($status !== 'available'),
+                'is_assigned' => in_array($namaKey, $currentAssistantNames),
                 'label'      => $label
             ];
         });

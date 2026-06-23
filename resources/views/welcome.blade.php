@@ -197,7 +197,7 @@
 
             {{-- Kolom 5: Asisten Praktikum --}}
             <td class="px-6 py-5 text-center text-sm font-semibold italic text-slate-600">
-                {{ $s->assistantSchedule->nama_asisten ?? '-' }}
+                {{ $s->assistant_names }}
             </td>
         </tr>
     @empty
