@@ -224,7 +224,8 @@
                     <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                         <tr>
                             <th class="px-6 py-4">Tanggal & Hari</th>
-                            <th class="px-6 py-4">Lab & Waktu</th>
+                            <th class="px-6 py-4">Lab & Kapasitas</th>
+                            <th class="px-6 py-4">Waktu</th>
                             <th class="px-6 py-4 w-full">Keperluan</th>
                             <th class="px-6 py-4 text-center">Status</th>
                             <th class="px-6 py-4 min-w-[200px]">Alasan Penolakan</th>
@@ -241,23 +242,29 @@
                                     <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1">
+                                    <span class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1.5">
                                         {{ $book->lab }}
                                     </span>
-                                    <div class="text-xs font-bold text-indigo-600 mb-1">
+                                    <div class="text-[11px] font-bold text-indigo-600 mb-0.5">
                                         <i class="fas fa-door-open text-indigo-400 mr-1"></i> {{ $book->jumlah_lab }} Lab
                                     </div>
-                                    @if($book->alasan_perubahan)
-                                        <div class="text-[10px] font-semibold text-amber-600 italic max-w-[200px] whitespace-normal mb-1">
-                                            <i class="fas fa-info-circle mr-1"></i> Perubahan: {{ $book->alasan_perubahan }}
-                                        </div>
-                                    @endif
-                                    <div class="font-mono text-xs font-bold text-slate-500">
+                                    <div class="text-[11px] font-bold text-slate-500">
+                                        <i class="fas fa-users text-slate-400 mr-1"></i> {{ $book->kapasitas }} Orang
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-mono text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 w-fit">
                                         {{ substr($book->jam_mulai, 0, 5) }} - {{ substr($book->jam_selesai, 0, 5) }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-slate-700 whitespace-normal min-w-[200px]">
-                                    {{ $book->keperluan }}
+                                    <div>{{ $book->keperluan }}</div>
+                                    @if($book->alasan_perubahan)
+                                        <div class="text-[10px] font-bold text-amber-600 mt-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 w-fit flex items-center gap-1.5">
+                                            <i class="fas fa-info-circle text-amber-500 text-xs"></i> 
+                                            <span>Perubahan: {{ $book->alasan_perubahan }}</span>
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @if($book->status === 'pending')
@@ -324,7 +331,7 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
+                                <td colspan="7" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center text-slate-400">
                                         <i class="fas fa-clipboard-check text-4xl mb-3 text-slate-300"></i>
                                         <span class="font-bold">Anda belum pernah mengajukan peminjaman.</span>

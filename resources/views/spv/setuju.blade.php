@@ -47,7 +47,8 @@
                     <th class="px-6 py-4">Pengaju & Kontak</th>
                     <th class="px-4 py-4 text-center">Tipe Identitas</th>
                     <th class="px-4 py-4">Waktu Pelaksanaan</th>
-                    <th class="px-4 py-4">Kapasitas & Keperluan</th>
+                    <th class="px-4 py-4">Kapasitas & Lab</th>
+                    <th class="px-4 py-4 w-full">Keperluan</th>
                     <th class="px-4 py-4">Penempatan Lab</th>
                     <th class="px-4 py-4 text-center">Dokumen</th>
                     <th class="px-6 py-4 text-center">Aksi (Validasi)</th>
@@ -86,17 +87,25 @@
                         </div>
                     </td>
 
-                    {{-- Keperluan --}}
-                    <td class="px-4 py-4 whitespace-normal min-w-[200px]">
-                        <div class="font-bold text-slate-700 text-xs mb-1">
-                            <i class="fas fa-users text-slate-400 mr-1"></i> {{ $b->kapasitas }} Orang
+                    {{-- Kapasitas & Lab --}}
+                    <td class="px-4 py-4">
+                        <div class="font-bold text-slate-800 text-xs">
+                            <i class="fas fa-users text-slate-400 mr-1.5"></i>{{ $b->kapasitas }} Orang
                         </div>
                         @if($b->type === 'ormawa')
-                            <div class="mb-1 text-xs font-bold text-indigo-600">
-                                <i class="fas fa-door-open text-indigo-400 mr-1"></i> Butuh {{ $b->jumlah_lab }} Lab
+                            <div class="text-[11px] font-bold text-indigo-600 mt-1">
+                                <i class="fas fa-door-open text-indigo-400 mr-1.5"></i>{{ $b->jumlah_lab }} Lab
+                            </div>
+                        @else
+                            <div class="text-[11px] font-bold text-slate-400 mt-1">
+                                <i class="fas fa-door-open text-slate-300 mr-1.5"></i>1 Lab
                             </div>
                         @endif
-                        <div class="text-sm font-semibold text-slate-600">{{ $b->keperluan }}</div>
+                    </td>
+
+                    {{-- Keperluan --}}
+                    <td class="px-4 py-4 whitespace-normal min-w-[200px]">
+                        <div class="text-sm font-semibold text-slate-700">{{ $b->keperluan }}</div>
                     </td>
 
                     {{-- Dropdown Pilih LAB --}}
@@ -286,7 +295,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-16 text-center text-slate-400">
+                    <td colspan="8" class="px-6 py-16 text-center text-slate-400">
                         <i class="fas fa-coffee text-5xl mb-4 text-slate-300"></i><br>
                         <span class="font-bold text-lg">Semua Bersih!</span><br>
                         <span class="text-sm font-medium mt-1">Belum ada pengajuan booking yang perlu di-review.</span>
@@ -334,7 +343,8 @@
                         <th class="px-6 py-4">Pengaju & Kontak</th>
                         <th class="px-4 py-4 text-center">Tipe Identitas</th>
                         <th class="px-4 py-4">Waktu Pelaksanaan</th>
-                        <th class="px-4 py-4">Keperluan</th>
+                        <th class="px-4 py-4">Kapasitas & Lab</th>
+                        <th class="px-4 py-4 w-full">Keperluan</th>
                         <th class="px-4 py-4">Penempatan Lab</th>
                         <th class="px-4 py-4 min-w-[200px]">Alasan Penolakan</th>
                     </tr>
@@ -392,22 +402,31 @@
                             </div>
                         </td>
 
-                        {{-- Keperluan --}}
-                        <td class="px-4 py-4 whitespace-normal min-w-[180px]">
-                            <div class="font-bold text-slate-500 text-xs mb-1">
-                                <i class="fas fa-users text-slate-400 mr-1"></i> {{ $h->kapasitas }} Orang
+                        {{-- Kapasitas & Lab --}}
+                        <td class="px-4 py-4">
+                            <div class="font-bold text-slate-800 text-xs">
+                                <i class="fas fa-users text-slate-400 mr-1.5"></i>{{ $h->kapasitas }} Orang
                             </div>
                             @if($h->type === 'ormawa')
-                                <div class="mb-1 text-xs font-bold text-indigo-600">
-                                    <i class="fas fa-door-open text-indigo-400 mr-1"></i> {{ $h->jumlah_lab }} Lab
+                                <div class="text-[11px] font-bold text-indigo-600 mt-1">
+                                    <i class="fas fa-door-open text-indigo-400 mr-1.5"></i>{{ $h->jumlah_lab }} Lab
                                 </div>
-                                @if($h->alasan_perubahan)
-                                    <div class="mb-1 text-[11px] font-semibold text-amber-600 italic">
-                                        <i class="fas fa-info-circle mr-1"></i> Perubahan: {{ $h->alasan_perubahan }}
-                                    </div>
-                                @endif
+                            @else
+                                <div class="text-[11px] font-bold text-slate-400 mt-1">
+                                    <i class="fas fa-door-open text-slate-300 mr-1.5"></i>1 Lab
+                                </div>
                             @endif
-                            <div class="text-sm font-semibold text-slate-600">{{ $h->keperluan }}</div>
+                        </td>
+
+                        {{-- Keperluan --}}
+                        <td class="px-4 py-4 whitespace-normal min-w-[180px]">
+                            <div class="text-sm font-semibold text-slate-700">{{ $h->keperluan }}</div>
+                            @if($h->type === 'ormawa' && $h->alasan_perubahan)
+                                <div class="text-[10px] font-bold text-amber-600 mt-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 w-fit flex items-center gap-1.5">
+                                    <i class="fas fa-info-circle text-amber-500 text-xs"></i> 
+                                    <span>Perubahan: {{ $h->alasan_perubahan }}</span>
+                                </div>
+                            @endif
                         </td>
 
                         {{-- Lab --}}
@@ -437,7 +456,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                        <td colspan="9" class="px-6 py-12 text-center text-slate-400">
                             <i class="fas fa-history text-4xl mb-3 text-slate-300 block"></i>
                             <span class="text-sm font-bold">Belum ada riwayat persetujuan.</span>
                         </td>
