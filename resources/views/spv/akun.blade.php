@@ -223,7 +223,7 @@
                                         value="{{ $user->name }}"
                                         form="update-user-{{ $user->id }}"
                                         required
-                                        class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                                        class="h-9 w-full min-w-[240px] rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                                     >
                                 </td>
                                 <td class="px-6 py-4">
