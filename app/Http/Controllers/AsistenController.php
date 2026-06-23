@@ -636,7 +636,8 @@ public function hapusJadwal($id)
     $jadwal = AssistantSchedule::findOrFail($id);
 
     // 🔒 PROTEKSI SAKTI: Biar asisten nakal gak bisa ngehapus jadwal milik asisten lain lewat inspect element
-    if ($jadwal->user_id !== auth()->id()) {
+    $namaUser = strtoupper(trim(auth()->user()->name ?? auth()->user()->nama ?? 'ASISTEN'));
+    if (strtoupper(trim($jadwal->nama_asisten)) !== $namaUser) {
         return back()->with('error', 'Waduh, Anda tidak punya akses untuk menghapus jadwal asisten lain!');
     }
 

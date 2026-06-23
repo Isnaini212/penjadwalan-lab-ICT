@@ -128,6 +128,10 @@ class Schedule extends Model
         $busyInOtherLab = \App\Models\Schedule::with(['lab', 'assistants'])
             ->where('tanggal', $tanggalTarget)
             ->where('id_jadwal', '!=', $this->id_jadwal)
+            ->where(function($query) use ($mulaiTarget, $selesaiTarget) {
+                $query->where('jam_mulai', '<', $selesaiTarget)
+                      ->where('jam_selesai', '>', $mulaiTarget);
+            })
             ->whereHas('assistants')
             ->get()
             ->flatMap(function($s) {

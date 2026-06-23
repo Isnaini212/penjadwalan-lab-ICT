@@ -278,7 +278,7 @@
                         </td>
 
                         <td class="px-5 py-4 min-w-[190px]">
-                            <select name="id_lab" class="h-11 w-[170px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            <select name="id_lab" class="h-11 w-[170px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                                 @foreach($s->getLabStatuses() as $lab)
                                     @php
                                         $labJadwalSaatIni = $s->id_lab;
