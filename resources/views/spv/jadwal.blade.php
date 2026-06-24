@@ -902,7 +902,67 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    inputTanggal.addEventListener('change', updateJamTemplate);
+    function updateSksLimits() {
+        const dateVal = inputTanggal.value;
+        const jamVal = inputJam.value;
+        const day = getDayOfWeek(dateVal);
+
+        if (!dateVal || !jamVal || jamVal.length !== 5) {
+            inputSks.removeAttribute('max');
+            inputSks.readOnly = false;
+            return;
+        }
+
+        if (day === 0) { // Sunday
+            inputSks.value = '';
+            inputSks.readOnly = true;
+            return;
+        }
+
+        if (day === 6) { // Saturday
+            inputSks.readOnly = false;
+            inputSks.min = 1;
+            inputSks.max = 4;
+            if (parseInt(inputSks.value) > 4) {
+                inputSks.value = 4;
+            }
+            return;
+        }
+
+        // Weekday (Senin-Jumat)
+        if (jamVal === '18:45') {
+            inputSks.value = 2;
+            inputSks.readOnly = true;
+            inputSks.min = 2;
+            inputSks.max = 2;
+            return;
+        }
+
+        // Jam reguler weekdays
+        inputSks.readOnly = false;
+        inputSks.min = 1;
+
+        const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+        const idx = weekdayStarts.indexOf(jamVal);
+
+        if (idx !== -1) {
+            const maxSks = Math.min(4, 13 - idx);
+            inputSks.max = maxSks;
+            if (parseInt(inputSks.value) > maxSks) {
+                inputSks.value = maxSks;
+            }
+        } else {
+            inputSks.removeAttribute('max');
+        }
+    }
+
+    inputTanggal.addEventListener('change', function() {
+        updateJamTemplate();
+        updateSksLimits();
+    });
+    inputJam.addEventListener('change', updateSksLimits);
+    inputJam.addEventListener('input', updateSksLimits);
+
     if (selectJamTemplate) {
         selectJamTemplate.addEventListener('change', function() {
             if (this.value) {

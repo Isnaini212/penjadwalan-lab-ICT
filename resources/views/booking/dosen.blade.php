@@ -388,6 +388,101 @@
             });
         }
 
+        function updateSksOptions(dateInput, jamSelect, sksSelect) {
+            const dateVal = dateInput.value;
+            const day = getDayOfWeek(dateVal);
+            const selectedJam = jamSelect.value;
+            
+            // Simpan value SKS yang terpilih saat ini
+            const currentSelectedSks = sksSelect.value;
+            
+            sksSelect.innerHTML = '';
+            
+            if (!dateVal || !selectedJam) {
+                const optPlaceholder = document.createElement('option');
+                optPlaceholder.value = '';
+                optPlaceholder.textContent = '-- Pilih SKS --';
+                sksSelect.appendChild(optPlaceholder);
+                return;
+            }
+            
+            if (day === 0) { // Sunday
+                const optPlaceholder = document.createElement('option');
+                optPlaceholder.value = '';
+                optPlaceholder.textContent = '-- Hari Minggu Libur --';
+                sksSelect.appendChild(optPlaceholder);
+                return;
+            }
+            
+            if (day === 6) { // Saturday
+                // Hari sabtu bebas pilih 1-4 SKS
+                const optPlaceholder = document.createElement('option');
+                optPlaceholder.value = '';
+                optPlaceholder.textContent = '-- Pilih SKS --';
+                sksSelect.appendChild(optPlaceholder);
+                
+                const sksLabels = {
+                    1: '1 SKS (50 Menit)',
+                    2: '2 SKS (105 Menit)',
+                    3: '3 SKS (160 Menit)',
+                    4: '4 SKS (215 Menit)'
+                };
+                for (let i = 1; i <= 4; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = sksLabels[i];
+                    sksSelect.appendChild(opt);
+                }
+                
+                // Kembalikan value lama jika ada dan masih valid
+                if (currentSelectedSks && currentSelectedSks >= 1 && currentSelectedSks <= 4) {
+                    sksSelect.value = currentSelectedSks;
+                }
+                return;
+            }
+            
+            // Weekdays (Senin-Jumat)
+            if (selectedJam === '18:45') {
+                // Kelas Karyawan, hanya boleh 2 SKS dan tidak bisa pilih yang lain
+                const opt = document.createElement('option');
+                opt.value = '2';
+                opt.textContent = '2 SKS (Kelas Karyawan)';
+                sksSelect.appendChild(opt);
+                sksSelect.value = '2';
+                return;
+            }
+            
+            const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+            const idx = weekdayStarts.indexOf(selectedJam);
+            
+            const optPlaceholder = document.createElement('option');
+            optPlaceholder.value = '';
+            optPlaceholder.textContent = '-- Pilih SKS --';
+            sksSelect.appendChild(optPlaceholder);
+            
+            if (idx !== -1) {
+                const maxSks = Math.min(4, 13 - idx);
+                const sksLabels = {
+                    1: '1 SKS (50 Menit)',
+                    2: '2 SKS (105 Menit)',
+                    3: '3 SKS (160 Menit)',
+                    4: '4 SKS (215 Menit)'
+                };
+                
+                for (let i = 1; i <= maxSks; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = sksLabels[i];
+                    sksSelect.appendChild(opt);
+                }
+                
+                // Kembalikan value lama jika masih dalam batas maxSks
+                if (currentSelectedSks && parseInt(currentSelectedSks) <= maxSks) {
+                    sksSelect.value = currentSelectedSks;
+                }
+            }
+        }
+
         const inputTanggal = document.getElementById('input_tanggal');
         const inputJam = document.getElementById('input_jam');
         const inputSks = document.getElementById('input_sks');
@@ -400,6 +495,11 @@
 
         inputTanggal.addEventListener('change', function() {
             updateJamOptions(inputTanggal, inputJam);
+            updateSksOptions(inputTanggal, inputJam, inputSks);
+        });
+
+        inputJam.addEventListener('change', function() {
+            updateSksOptions(inputTanggal, inputJam, inputSks);
         });
 
         const triggers = document.querySelectorAll('.trigger-ajax');
@@ -563,10 +663,13 @@
             
             const editTanggalInput = document.getElementById('edit_input_tanggal');
             const editJamSelect = document.getElementById('edit_input_jam');
-            updateJamOptions(editTanggalInput, editJamSelect);
+            const editSksSelect = document.getElementById('edit_input_sks');
             
-            document.getElementById('edit_input_jam').value = data.jam_mulai;
-            document.getElementById('edit_input_sks').value = data.sks;
+            updateJamOptions(editTanggalInput, editJamSelect);
+            editJamSelect.value = data.jam_mulai;
+            
+            updateSksOptions(editTanggalInput, editJamSelect, editSksSelect);
+            editSksSelect.value = data.sks;
             document.getElementById('edit_input_kapasitas').value = data.kapasitas;
             document.getElementById('edit_input_keperluan').value = keperluanText;
             document.getElementById('edit_input_kode_matkul').value = kodeMatkul;
@@ -699,6 +802,11 @@
 
         document.getElementById('edit_input_tanggal').addEventListener('change', function() {
             updateJamOptions(this, document.getElementById('edit_input_jam'));
+            updateSksOptions(this, document.getElementById('edit_input_jam'), document.getElementById('edit_input_sks'));
+        });
+
+        document.getElementById('edit_input_jam').addEventListener('change', function() {
+            updateSksOptions(document.getElementById('edit_input_tanggal'), this, document.getElementById('edit_input_sks'));
         });
 
         const editTriggers = document.querySelectorAll('.trigger-edit-ajax');
