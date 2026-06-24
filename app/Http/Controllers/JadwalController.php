@@ -231,8 +231,25 @@ public function store(Request $request)
             'dosen'           => 'required',
         ]);
 
-        $menit = $request->sks * 50;
-        $jam_selesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
+        $dayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
+        if ($dayOfWeek === Carbon::SUNDAY && $request->repeat_type === 'single') {
+            return back()->withInput()->with('error', 'Gagal! Hari Minggu adalah hari libur, tidak bisa melakukan penjadwalan.');
+        }
+
+        $jam_mulai_formatted = Carbon::parse($request->jam_mulai)->format('H:i');
+        if ($dayOfWeek === Carbon::SATURDAY) {
+            $allowedSaturday = ['08:00', '10:00', '13:00', '15:00'];
+            if (!in_array($jam_mulai_formatted, $allowedSaturday)) {
+                return back()->withInput()->with('error', 'Gagal! Pada hari Sabtu, jam mulai harus salah satu dari: 08:00, 10:00, 13:00, 15:00.');
+            }
+        } else if ($dayOfWeek !== Carbon::SUNDAY) {
+            $allowedWeekday = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:45'];
+            if (!in_array($jam_mulai_formatted, $allowedWeekday)) {
+                return back()->withInput()->with('error', 'Gagal! Jam mulai tidak valid untuk hari kerja.');
+            }
+        }
+
+        $jam_selesai = $this->calculateEndTime($request->tanggal, $request->jam_mulai, $request->sks);
 
         $id_lab = $request->id_lab;
         if (!$id_lab && $request->lab) {
@@ -254,17 +271,19 @@ public function store(Request $request)
             if ($request->repeat_type === 'weekly') {
                 $startDayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
                 foreach ($period as $date) {
-                    if ($date->dayOfWeek === $startDayOfWeek) {
+                    if ($date->dayOfWeek === $startDayOfWeek && $date->dayOfWeek !== Carbon::SUNDAY) {
                         $dates[] = $date->format('Y-m-d');
                     }
                 }
             } elseif ($request->repeat_type === 'daily') {
                 foreach ($period as $date) {
-                    $dates[] = $date->format('Y-m-d');
+                    if ($date->dayOfWeek !== Carbon::SUNDAY) {
+                        $dates[] = $date->format('Y-m-d');
+                    }
                 }
             } elseif ($request->repeat_type === 'weekdays') {
                 foreach ($period as $date) {
-                    if ($date->isWeekday()) {
+                    if ($date->isWeekday() && $date->dayOfWeek !== Carbon::SUNDAY) {
                         $dates[] = $date->format('Y-m-d');
                     }
                 }
@@ -361,35 +380,40 @@ public function store(Request $request)
             'sks'             => 'required|numeric',
         ]);
 
-        $menit = $request->sks * 50;
-        $jam_selesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
+        $jam_selesai = $this->calculateEndTime($request->tanggal, $request->jam_mulai, $request->sks);
 
         // Tentukan tanggal-tanggal yang akan dicheck
         $dates = [];
         if ($request->repeat_type === 'single') {
-            $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+            if (Carbon::parse($request->tanggal)->dayOfWeek !== Carbon::SUNDAY) {
+                $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+            }
         } else if ($request->tanggal_selesai) {
             $period = CarbonPeriod::create($request->tanggal, $request->tanggal_selesai);
             if ($request->repeat_type === 'weekly') {
                 $startDayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
                 foreach ($period as $date) {
-                    if ($date->dayOfWeek === $startDayOfWeek) {
+                    if ($date->dayOfWeek === $startDayOfWeek && $date->dayOfWeek !== Carbon::SUNDAY) {
                         $dates[] = $date->format('Y-m-d');
                     }
                 }
             } elseif ($request->repeat_type === 'daily') {
                 foreach ($period as $date) {
-                    $dates[] = $date->format('Y-m-d');
+                    if ($date->dayOfWeek !== Carbon::SUNDAY) {
+                        $dates[] = $date->format('Y-m-d');
+                    }
                 }
             } elseif ($request->repeat_type === 'weekdays') {
                 foreach ($period as $date) {
-                    if ($date->isWeekday()) {
+                    if ($date->isWeekday() && $date->dayOfWeek !== Carbon::SUNDAY) {
                         $dates[] = $date->format('Y-m-d');
                     }
                 }
             }
         } else {
-            $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+            if (Carbon::parse($request->tanggal)->dayOfWeek !== Carbon::SUNDAY) {
+                $dates[] = Carbon::parse($request->tanggal)->format('Y-m-d');
+            }
         }
 
         $allLabs = Lab::where('nama_lab', '!=', 'RUANG ASISTEN')->get();
@@ -676,4 +700,48 @@ public function store(Request $request)
 
 
 
+    
+private function calculateEndTime($tanggal, $jam_mulai, $sks)
+{
+    $dayOfWeek = Carbon::parse($tanggal)->dayOfWeek;
+    $sks = (int) $sks;
+
+    if ($dayOfWeek === Carbon::SATURDAY) {
+        $saturdayEnds = [
+            '08:00' => ['08:50', '09:50', '10:40', '11:30'],
+            '10:00' => ['10:50', '11:50', '12:40', '13:30'],
+            '13:00' => ['13:50', '14:50', '15:40', '16:30'],
+            '15:00' => ['15:50', '16:50', '17:40', '18:30'],
+        ];
+        
+        $jam_mulai_formatted = Carbon::parse($jam_mulai)->format('H:i');
+        if (isset($saturdayEnds[$jam_mulai_formatted][$sks - 1])) {
+            return $saturdayEnds[$jam_mulai_formatted][$sks - 1];
+        }
+        
+        $minutes = $sks * 50;
+        return Carbon::parse($jam_mulai)->addMinutes($minutes)->format('H:i');
+    } else {
+        $jam_mulai_formatted = Carbon::parse($jam_mulai)->format('H:i');
+        if ($jam_mulai_formatted === '18:45') {
+            return '20:40';
+        }
+        
+        $weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+        $weekdayEnds   = ['08:00', '08:50', '09:40', '10:35', '11:30', '12:25', '13:20', '14:15', '15:10', '16:05', '17:00', '17:55', '18:50'];
+        
+        $startIndex = array_search($jam_mulai_formatted, $weekdayStarts);
+        if ($startIndex !== false) {
+            $endIndex = $startIndex + $sks - 1;
+            if ($endIndex < count($weekdayEnds)) {
+                return $weekdayEnds[$endIndex];
+            } else {
+                return end($weekdayEnds);
+            }
+        }
+        
+        $minutes = $sks * 50;
+        return Carbon::parse($jam_mulai)->addMinutes($minutes)->format('H:i');
     }
+}
+}

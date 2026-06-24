@@ -132,7 +132,9 @@
 
                     <div class="md:col-span-4">
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai <span class="text-red-500">*</span></label>
-                        <input type="text" name="jam_mulai" id="input_jam" class="time-formatter trigger-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required>
+                        <select name="jam_mulai" id="input_jam" required class="trigger-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 cursor-pointer">
+                            <option value="">-- Pilih Tanggal Dahulu --</option>
+                        </select>
                     </div>
 
                     <div class="md:col-span-4">
@@ -316,39 +318,75 @@
     </main>
 
     <script>
-        document.addEventListener('input', function (e) {
-            if (e.target.classList.contains('time-formatter')) {
-                let inputVal = e.target.value.replace(/\D/g, '');
-                if (inputVal.length > 4) inputVal = inputVal.substring(0, 4);
-                let formatted = inputVal;
-                if (inputVal.length > 2) {
-                    formatted = inputVal.substring(0, 2) + ':' + inputVal.substring(2, 4);
-                }
-                e.target.value = formatted;
-            }
-        });
+        const weekdaySlots = [
+            { start: '07:10', label: '07:10' },
+            { start: '08:00', label: '08:00' },
+            { start: '08:55', label: '08:55' },
+            { start: '09:45', label: '09:45' },
+            { start: '10:40', label: '10:40' },
+            { start: '11:35', label: '11:35' },
+            { start: '12:30', label: '12:30' },
+            { start: '13:25', label: '13:25' },
+            { start: '14:20', label: '14:20' },
+            { start: '15:15', label: '15:15' },
+            { start: '16:10', label: '16:10' },
+            { start: '17:05', label: '17:05' },
+            { start: '18:00', label: '18:00' },
+            { start: '18:45', label: '18:45 (Kelas Karyawan)' }
+        ];
 
-        document.addEventListener('change', function (e) {
-            if (e.target.classList.contains('time-formatter')) {
-                let val = e.target.value;
-                if (val.length === 5) {
-                    let parts = val.split(':');
-                    let hours = parseInt(parts[0], 10);
-                    let mins = parseInt(parts[1], 10);
-                    if (hours > 23) hours = 23;
-                    if (mins > 59) mins = 59;
-                    if (isNaN(hours)) hours = 0;
-                    if (isNaN(mins)) mins = 0;
-                    let hrStr = hours < 10 ? '0' + hours : hours;
-                    let mnStr = mins < 10 ? '0' + mins : mins;
-                    e.target.value = hrStr + ':' + mnStr;
-                    e.target.dispatchEvent(new Event('change'));
-                } else if (val.length > 0 && val.length < 5) {
-                    showCustomAlert('Format jam tidak valid. Ketik 4 angka (contoh: 0800)', 'Format Jam');
-                    e.target.value = '';
-                }
+        const saturdaySlots = [
+            { start: '08:00', label: '08:00' },
+            { start: '10:00', label: '10:00' },
+            { start: '13:00', label: '13:00' },
+            { start: '15:00', label: '15:00' }
+        ];
+
+        function getDayOfWeek(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return null;
+            const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
+            return dateVal.getDay();
+        }
+
+        function updateJamOptions(dateInput, jamSelect, placeholderText = "-- Pilih Jam Mulai --") {
+            const dateVal = dateInput.value;
+            const day = getDayOfWeek(dateVal);
+            
+            jamSelect.innerHTML = '';
+            
+            if (day === null) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '-- Pilih Tanggal Dahulu --';
+                jamSelect.appendChild(opt);
+                return;
             }
-        });
+            
+            if (day === 0) { // Sunday
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Hari Minggu Libur';
+                jamSelect.appendChild(opt);
+                showCustomAlert('Hari Minggu adalah hari libur. Tidak dapat melakukan reservasi.', 'Hari Libur');
+                dateInput.value = '';
+                return;
+            }
+            
+            const optPlaceholder = document.createElement('option');
+            optPlaceholder.value = '';
+            optPlaceholder.textContent = placeholderText;
+            jamSelect.appendChild(optPlaceholder);
+            
+            const slots = (day === 6) ? saturdaySlots : weekdaySlots;
+            slots.forEach(slot => {
+                const opt = document.createElement('option');
+                opt.value = slot.start;
+                opt.textContent = slot.label;
+                jamSelect.appendChild(opt);
+            });
+        }
 
         const inputTanggal = document.getElementById('input_tanggal');
         const inputJam = document.getElementById('input_jam');
@@ -359,6 +397,11 @@
         const textJamSelesai = document.getElementById('text_jam_selesai');
         const infoFasilitas = document.getElementById('info_fasilitas');
         const textFasilitas = document.getElementById('text_fasilitas');
+
+        inputTanggal.addEventListener('change', function() {
+            updateJamOptions(inputTanggal, inputJam);
+        });
+
         const triggers = document.querySelectorAll('.trigger-ajax');
         let lastCreateTriggerValues = '';
         triggers.forEach(el => {
@@ -367,7 +410,7 @@
                     const currentValues = `${inputTanggal.value}-${inputJam.value}-${inputSks.value}-${inputKapasitas.value}`;
                     if (currentValues === lastCreateTriggerValues) return;
 
-                    if(inputTanggal.value && inputJam.value.length === 5 && inputSks.value && inputKapasitas.value) {
+                    if(inputTanggal.value && inputJam.value && inputSks.value && inputKapasitas.value) {
                         lastCreateTriggerValues = currentValues;
                         selectLab.disabled = true;
                         selectLab.innerHTML = '<option value="">⏳ Mencari Lab yang Sesuai...</option>';
@@ -517,6 +560,11 @@
 
             document.getElementById('edit_booking_id').value = data.id;
             document.getElementById('edit_input_tanggal').value = data.tanggal;
+            
+            const editTanggalInput = document.getElementById('edit_input_tanggal');
+            const editJamSelect = document.getElementById('edit_input_jam');
+            updateJamOptions(editTanggalInput, editJamSelect);
+            
             document.getElementById('edit_input_jam').value = data.jam_mulai;
             document.getElementById('edit_input_sks').value = data.sks;
             document.getElementById('edit_input_kapasitas').value = data.kapasitas;
@@ -572,7 +620,7 @@
                 editOriginalLabId = selectedLabId;
             }
 
-            if (editTanggal && editJam.length === 5 && editSks && editKapasitas) {
+            if (editTanggal && editJam && editSks && editKapasitas) {
                 selectEditLab.disabled = true;
                 selectEditLab.innerHTML = '<option value="">⏳ Mencari Lab yang Sesuai...</option>';
                 selectEditLab.classList.replace('bg-white', 'bg-slate-200');
@@ -649,6 +697,10 @@
             }
         }
 
+        document.getElementById('edit_input_tanggal').addEventListener('change', function() {
+            updateJamOptions(this, document.getElementById('edit_input_jam'));
+        });
+
         const editTriggers = document.querySelectorAll('.trigger-edit-ajax');
         editTriggers.forEach(el => {
             ['input', 'change'].forEach(evt => {
@@ -661,7 +713,7 @@
                     const currentValues = `${editTanggal}-${editJam}-${editSks}-${editKapasitas}`;
                     if (currentValues === lastEditTriggerValues) return;
 
-                    if (editTanggal && editJam.length === 5 && editSks && editKapasitas) {
+                    if (editTanggal && editJam && editSks && editKapasitas) {
                         lastEditTriggerValues = currentValues;
                         checkEditAvailableLabs();
                     }
@@ -733,7 +785,9 @@
                     <div class="md:col-span-6">
                         <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input type="text" name="jam_mulai" id="edit_input_jam" class="time-formatter trigger-edit-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 pl-11 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required>
+                            <select name="jam_mulai" id="edit_input_jam" required class="trigger-edit-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 pl-11 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 cursor-pointer">
+                                <option value="">-- Pilih Tanggal Dahulu --</option>
+                            </select>
                             <i class="fas fa-clock absolute left-4 top-3.5 text-slate-400"></i>
                         </div>
                     </div>

@@ -363,6 +363,24 @@
 
             function checkAvailableLabsCount() {
                 const tanggal = inputTanggal.value;
+
+                // Cek hari Minggu
+                if (tanggal) {
+                    const parts = tanggal.split('-');
+                    if (parts.length === 3) {
+                        const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
+                        if (dateVal.getDay() === 0) { // Sunday
+                            showCustomAlert('Hari Minggu adalah hari libur. Tidak dapat melakukan reservasi.', 'Hari Libur');
+                            inputTanggal.value = '';
+                            selectJumlahLab.disabled = true;
+                            selectJumlahLab.innerHTML = '<option value="">Isi Info Tanggal & Waktu Dahulu</option>';
+                            selectJumlahLab.classList.replace('bg-slate-50', 'bg-slate-100');
+                            selectJumlahLab.classList.remove('bg-red-100');
+                            return;
+                        }
+                    }
+                }
+
                 const jamMulai = inputJamMulai.value;
                 const jamSelesai = inputJamSelesai.value;
 

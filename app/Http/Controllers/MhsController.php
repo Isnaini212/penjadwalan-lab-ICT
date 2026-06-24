@@ -40,6 +40,11 @@ class MhsController extends Controller
         return back()->withInput()->withErrors(['tanggal' => 'Gagal! Tanggal dan jam peminjaman tidak boleh di masa lalu.']);
     }
 
+    $dayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
+    if ($dayOfWeek === Carbon::SUNDAY) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Hari Minggu adalah hari libur, tidak bisa melakukan reservasi.']);
+    }
+
     // 1.5 Validasi kebutuhan lab Ormawa: standar maksimal 36 peserta per lab.
     $maksimalPesertaPerLab = 36;
     $minimalLab = (int) ceil($request->kapasitas / $maksimalPesertaPerLab);
@@ -56,8 +61,8 @@ class MhsController extends Controller
     $tanggal = $request->tanggal;
     $hari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
 
-    // 1. Cek schedule kuliah (berdasarkan HARI)
-    $busySchedules = Schedule::where('hari', $hari)
+    // 1. Cek schedule kuliah (berdasarkan TANGGAL)
+    $busySchedules = Schedule::whereDate('tanggal', $tanggal)
         ->where(function($q) use ($mulai, $selesai) {
             $q->where('jam_mulai', '<', $selesai)
               ->where('jam_selesai', '>', $mulai);
@@ -189,8 +194,14 @@ class MhsController extends Controller
         Carbon::setLocale('id');
         $hari = Carbon::parse($tanggal)->translatedFormat('l');
 
-        // 1. Cek schedule kuliah (berdasarkan HARI)
-        $busySchedules = Schedule::where('hari', $hari)
+        if (Carbon::parse($tanggal)->dayOfWeek === Carbon::SUNDAY) {
+            return response()->json([
+                'available_labs_count' => 0
+            ]);
+        }
+
+        // 1. Cek schedule kuliah (berdasarkan TANGGAL)
+        $busySchedules = Schedule::whereDate('tanggal', $tanggal)
             ->where(function($q) use ($mulai, $selesai) {
                 $q->where('jam_mulai', '<', $selesai)
                   ->where('jam_selesai', '>', $mulai);

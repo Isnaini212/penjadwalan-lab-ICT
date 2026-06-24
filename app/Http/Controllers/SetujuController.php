@@ -354,7 +354,7 @@ class SetujuController extends Controller
     
     private function getLabAvailability($tanggal, $hari, $mulai, $selesai, $allLabs, $kapasitas)
     {
-        $busySchedules = Schedule::where('hari', $hari)->where(function($q) use ($mulai, $selesai) {
+        $busySchedules = Schedule::whereDate('tanggal', $tanggal)->where(function($q) use ($mulai, $selesai) {
             $q->where('jam_mulai', '<', $selesai)->where('jam_selesai', '>', $mulai);
         })->pluck('id_lab')->toArray();
 

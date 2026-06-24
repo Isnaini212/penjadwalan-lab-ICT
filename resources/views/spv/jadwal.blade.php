@@ -202,7 +202,12 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Jam Mulai (Format 24 Jam)</label>
-                    <input type="text" name="jam_mulai" id="input_jam" class="time-formatter trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold font-mono text-slate-700 outline-none focus:border-blue-500 text-center tracking-widest" placeholder="08:00" maxlength="5" required>
+                    <div class="flex gap-2">
+                        <input type="text" name="jam_mulai" id="input_jam" class="time-formatter trigger-ajax h-11 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold font-mono text-slate-700 outline-none focus:border-blue-500 text-center tracking-widest" placeholder="08:00" maxlength="5" required>
+                        <select id="select_jam_template" class="h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-500 outline-none focus:border-blue-500 cursor-pointer">
+                            <option value="">-- Template (Pilih Tanggal Dahulu) --</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Jumlah SKS</label>
@@ -841,6 +846,72 @@ document.addEventListener("DOMContentLoaded", function () {
     const inputJam = document.getElementById('input_jam');
     const inputSks = document.getElementById('input_sks');
     const selectLab = document.getElementById('select_lab');
+    const selectJamTemplate = document.getElementById('select_jam_template');
+
+    const weekdaySlots = [
+        { start: '07:10', label: '07:10' },
+        { start: '08:00', label: '08:00' },
+        { start: '08:55', label: '08:55' },
+        { start: '09:45', label: '09:45' },
+        { start: '10:40', label: '10:40' },
+        { start: '11:35', label: '11:35' },
+        { start: '12:30', label: '12:30' },
+        { start: '13:25', label: '13:25' },
+        { start: '14:20', label: '14:20' },
+        { start: '15:15', label: '15:15' },
+        { start: '16:10', label: '16:10' },
+        { start: '17:05', label: '17:05' },
+        { start: '18:00', label: '18:00' },
+        { start: '18:45', label: '18:45 (Kelas Karyawan)' }
+    ];
+
+    const saturdaySlots = [
+        { start: '08:00', label: '08:00' },
+        { start: '10:00', label: '10:00' },
+        { start: '13:00', label: '13:00' },
+        { start: '15:00', label: '15:00' }
+    ];
+
+    function getDayOfWeek(dateStr) {
+        if (!dateStr) return null;
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return null;
+        const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
+        return dateVal.getDay();
+    }
+
+    function updateJamTemplate() {
+        if (!inputTanggal.value) {
+            selectJamTemplate.innerHTML = '<option value="">-- Template (Pilih Tanggal Dahulu) --</option>';
+            return;
+        }
+        const day = getDayOfWeek(inputTanggal.value);
+        if (day === 0) { // Sunday
+            selectJamTemplate.innerHTML = '<option value="">Minggu Libur</option>';
+            showCustomAlert('Hari Minggu adalah hari libur. Tidak dapat melakukan penjadwalan.', 'Hari Libur');
+            inputTanggal.value = '';
+            return;
+        }
+        selectJamTemplate.innerHTML = '<option value="">-- Pilih Template --</option>';
+        const slots = (day === 6) ? saturdaySlots : weekdaySlots;
+        slots.forEach(slot => {
+            const opt = document.createElement('option');
+            opt.value = slot.start;
+            opt.textContent = slot.label;
+            selectJamTemplate.appendChild(opt);
+        });
+    }
+
+    inputTanggal.addEventListener('change', updateJamTemplate);
+    if (selectJamTemplate) {
+        selectJamTemplate.addEventListener('change', function() {
+            if (this.value) {
+                inputJam.value = this.value;
+                inputJam.dispatchEvent(new Event('input'));
+                inputJam.dispatchEvent(new Event('change'));
+            }
+        });
+    }
 
     const triggers = document.querySelectorAll('.trigger-ajax');
     let lastTriggerValues = '';

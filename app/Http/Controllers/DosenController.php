@@ -27,13 +27,20 @@ class DosenController extends Controller
         $sks = $request->sks;
         $kapasitas = $request->kapasitas;
 
-        $jamSelesai = Carbon::createFromFormat('H:i', $mulai)->addMinutes($sks * 53.3334)->format('H:i');
+        if (Carbon::parse($tanggal)->dayOfWeek === Carbon::SUNDAY) {
+            return response()->json([
+                'jam_selesai' => '00:00',
+                'labs' => []
+            ]);
+        }
+
+        $jamSelesai = $this->calculateEndTime($tanggal, $mulai, $sks);
 
         Carbon::setLocale('id');
         $hari = Carbon::parse($tanggal)->translatedFormat('l');
 
         
-        $busySchedules = Schedule::where('hari', $hari)
+        $busySchedules = Schedule::whereDate('tanggal', $tanggal)
             ->where(function($q) use ($mulai, $jamSelesai) {
                 $q->where('jam_mulai', '<', $jamSelesai)
                   ->where('jam_selesai', '>', $mulai);
@@ -93,21 +100,33 @@ public function store(Request $request)
         return back()->withInput()->withErrors(['tanggal' => 'Gagal! Tanggal dan jam peminjaman tidak boleh di masa lalu.']);
     }
 
+    $dayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
+    if ($dayOfWeek === Carbon::SUNDAY) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Hari Minggu adalah hari libur, tidak bisa melakukan reservasi.']);
+    }
+
+    $jam_mulai_formatted = Carbon::parse($request->jam_mulai)->format('H:i');
+    if ($dayOfWeek === Carbon::SATURDAY) {
+        $allowedSaturday = ['08:00', '10:00', '13:00', '15:00'];
+        if (!in_array($jam_mulai_formatted, $allowedSaturday)) {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Gagal! Pada hari Sabtu, jam mulai harus salah satu dari: 08:00, 10:00, 13:00, 15:00.']);
+        }
+    } else {
+        $allowedWeekday = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:45'];
+        if (!in_array($jam_mulai_formatted, $allowedWeekday)) {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Gagal! Jam mulai tidak valid untuk hari kerja.']);
+        }
+    }
+
     // Cek kapasitas lab di backend
     $lab = Lab::find($request->id_lab);
     if ($lab && $request->kapasitas > $lab->kapasitas) {
         return back()->with('error', "Gagal! Kapasitas peserta ({$request->kapasitas}) melebihi kapasitas {$lab->nama_lab} ({$lab->kapasitas} kursi).");
     }
 
-    
     $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');
 
-    
-    
-    $total_menit = $request->sks * 53.3334; 
-    $jam_selesai_otomatis = Carbon::createFromFormat('H:i', $request->jam_mulai)
-                                  ->addMinutes($total_menit)
-                                  ->format('H:i');
+    $jam_selesai_otomatis = $this->calculateEndTime($request->tanggal, $request->jam_mulai, $request->sks);
 
     // Validasi tabrakan jadwal untuk dosen yang sama (status pending/approved)
     $hasOverlap = Dosen::where('user_id', auth()->id())
@@ -174,6 +193,24 @@ public function update(Request $request, $id)
         return back()->withInput()->withErrors(['tanggal' => 'Gagal! Tanggal dan jam peminjaman tidak boleh di masa lalu.']);
     }
 
+    $dayOfWeek = Carbon::parse($request->tanggal)->dayOfWeek;
+    if ($dayOfWeek === Carbon::SUNDAY) {
+        return back()->withInput()->withErrors(['tanggal' => 'Gagal! Hari Minggu adalah hari libur, tidak bisa melakukan reservasi.']);
+    }
+
+    $jam_mulai_formatted = Carbon::parse($request->jam_mulai)->format('H:i');
+    if ($dayOfWeek === Carbon::SATURDAY) {
+        $allowedSaturday = ['08:00', '10:00', '13:00', '15:00'];
+        if (!in_array($jam_mulai_formatted, $allowedSaturday)) {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Gagal! Pada hari Sabtu, jam mulai harus salah satu dari: 08:00, 10:00, 13:00, 15:00.']);
+        }
+    } else {
+        $allowedWeekday = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:45'];
+        if (!in_array($jam_mulai_formatted, $allowedWeekday)) {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Gagal! Jam mulai tidak valid untuk hari kerja.']);
+        }
+    }
+
     // Cek kapasitas lab
     $lab = Lab::find($request->id_lab);
     if ($lab && $request->kapasitas > $lab->kapasitas) {
@@ -181,10 +218,7 @@ public function update(Request $request, $id)
     }
 
     $hari_otomatis = Carbon::parse($request->tanggal)->locale('id')->isoFormat('dddd');
-    $total_menit = $request->sks * 53.3334;
-    $jam_selesai_otomatis = Carbon::createFromFormat('H:i', $request->jam_mulai)
-                                  ->addMinutes($total_menit)
-                                  ->format('H:i');
+    $jam_selesai_otomatis = $this->calculateEndTime($request->tanggal, $request->jam_mulai, $request->sks);
 
     // Cek apakah waktu booking berubah
     $original_mulai = Carbon::parse($booking->jam_mulai)->format('H:i');
@@ -245,5 +279,49 @@ public function destroy($id)
     $booking->delete();
 
     return redirect()->back()->with('success', 'Reservasi laboratorium berhasil dihapus!');
+}
+
+private function calculateEndTime($tanggal, $jam_mulai, $sks)
+{
+    $dayOfWeek = Carbon::parse($tanggal)->dayOfWeek;
+    $sks = (int) $sks;
+
+    if ($dayOfWeek === Carbon::SATURDAY) {
+        $saturdayEnds = [
+            '08:00' => ['08:50', '09:50', '10:40', '11:30'],
+            '10:00' => ['10:50', '11:50', '12:40', '13:30'],
+            '13:00' => ['13:50', '14:50', '15:40', '16:30'],
+            '15:00' => ['15:50', '16:50', '17:40', '18:30'],
+        ];
+        
+        $jam_mulai_formatted = Carbon::parse($jam_mulai)->format('H:i');
+        if (isset($saturdayEnds[$jam_mulai_formatted][$sks - 1])) {
+            return $saturdayEnds[$jam_mulai_formatted][$sks - 1];
+        }
+        
+        $minutes = $sks * 50;
+        return Carbon::parse($jam_mulai)->addMinutes($minutes)->format('H:i');
+    } else {
+        $jam_mulai_formatted = Carbon::parse($jam_mulai)->format('H:i');
+        if ($jam_mulai_formatted === '18:45') {
+            return '20:40';
+        }
+        
+        $weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+        $weekdayEnds   = ['08:00', '08:50', '09:40', '10:35', '11:30', '12:25', '13:20', '14:15', '15:10', '16:05', '17:00', '17:55', '18:50'];
+        
+        $startIndex = array_search($jam_mulai_formatted, $weekdayStarts);
+        if ($startIndex !== false) {
+            $endIndex = $startIndex + $sks - 1;
+            if ($endIndex < count($weekdayEnds)) {
+                return $weekdayEnds[$endIndex];
+            } else {
+                return end($weekdayEnds);
+            }
+        }
+        
+        $minutes = $sks * 50;
+        return Carbon::parse($jam_mulai)->addMinutes($minutes)->format('H:i');
+    }
 }
 }

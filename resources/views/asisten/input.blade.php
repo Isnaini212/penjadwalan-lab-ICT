@@ -161,8 +161,27 @@
 
   function hitungJamSelesai(jamMulai, sksText) {
     if (!jamMulai || jamMulai.length < 5) return '';
-    const sksTotal = parseInt(sksText) || 2;
-    const tambahanMenit = sksTotal * 50;
+    const sks = parseInt(sksText) || 2;
+
+    if (jamMulai === '18:45') {
+        return '20:40';
+    }
+
+    const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+    const weekdayEnds =   ['08:00', '08:50', '09:40', '10:35', '11:30', '12:25', '13:20', '14:15', '15:10', '16:05', '17:00', '17:55', '18:50'];
+
+    const startIndex = weekdayStarts.indexOf(jamMulai);
+    if (startIndex !== -1) {
+        const endIndex = startIndex + sks - 1;
+        if (endIndex < weekdayEnds.length) {
+            return weekdayEnds[endIndex];
+        } else {
+            return weekdayEnds[weekdayEnds.length - 1];
+        }
+    }
+
+    // fallback
+    const tambahanMenit = sks * 50;
     const [h, m] = jamMulai.split(':').map(Number);
     let totalMenit = Math.round(h * 60 + m + tambahanMenit);
     let endH = Math.floor(totalMenit / 60) % 24;
