@@ -25,7 +25,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('tv_announcements');
-        Schema::dropIfExists('tv_slides');
+        Schema::dropIfExists('pengunguman');
+        Schema::dropIfExists('slide_tv');
     }
 };
