@@ -38,21 +38,21 @@
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div x-show="open" 
+                <div x-show="open"
                      x-transition:enter="transition ease-out duration-100"
                      x-transition:enter-start="transform opacity-0 scale-95"
                      x-transition:enter-end="transform opacity-100 scale-100"
                      x-transition:leave="transition ease-in duration-75"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" 
+                     class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                      style="display: none;">
                     <div class="px-4 py-2 border-b border-slate-100 text-left">
                         <p class="text-xs font-semibold text-slate-400">Masuk sebagai</p>
                         <p class="text-sm font-bold text-slate-800 truncate">{{ auth()->user()->name }}</p>
                         <p class="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{{ auth()->user()->role }}</p>
                     </div>
-                    
+
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition">
                         <i class="fas fa-user-cog text-slate-400 text-base"></i> Edit Profil
                     </a>
@@ -151,8 +151,8 @@
                     </div>
 
                     <div class="md:col-span-4">
-                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Kapasitas Mahasiswa <span class="text-red-500">*</span></label>
-                        <input type="number" name="kapasitas" id="input_kapasitas" required placeholder="Cth: 40" value="{{ old('kapasitas') }}"
+                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Mahasiswa <span class="text-red-500">*</span></label>
+                        <input type="number" name="kapasitas" id="input_kapasitas" required placeholder="Cth: 36" value="{{ old('kapasitas') }}"
                                class="trigger-ajax w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
                     </div>
 
@@ -264,7 +264,7 @@
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         @if($book->status !== 'approved')
-                                            <button type="button" 
+                                            <button type="button"
                                                     onclick="openEditModal({{ json_encode([
                                                         'id' => $book->id_booking,
                                                         'tanggal' => $book->tanggal,
@@ -281,7 +281,7 @@
                                             <form action="{{ route('dosen.booking.delete', $book->id_booking) }}" method="POST" class="m-0 inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus reservasi ini?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" 
+                                                <button type="submit"
                                                         class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 transition duration-200 hover:bg-red-600 hover:text-white hover:scale-105 transform">
                                                     <i class="fas fa-trash text-[10px]"></i> Hapus
                                                 </button>
@@ -674,7 +674,7 @@
             const selectedOption = this.options[this.selectedIndex];
             const infoEditFasilitas = document.getElementById('info_edit_fasilitas');
             const textEditFasilitas = document.getElementById('text_edit_fasilitas');
-            
+
             if (selectedOption) {
                 const fasilitasText = selectedOption.getAttribute('data-fasilitas');
                 if (this.value && fasilitasText) {
