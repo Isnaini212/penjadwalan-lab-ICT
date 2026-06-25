@@ -222,7 +222,7 @@
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-slate-800">{{ \Carbon\Carbon::parse($book->tanggal)->translatedFormat('d F Y') }}</div>
-                                    <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}</div>
+                                    <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}{{ strtolower($book->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1">
@@ -332,7 +332,7 @@
             { start: '16:10', label: '16:10' },
             { start: '17:05', label: '17:05' },
             { start: '18:00', label: '18:00' },
-            { start: '18:45', label: '18:45 (Kelas Karyawan)' }
+            { start: '18:55', label: '18:55' }
         ];
 
         const saturdaySlots = [
@@ -442,17 +442,7 @@
             }
             
             // Weekdays (Senin-Jumat)
-            if (selectedJam === '18:45') {
-                // Kelas Karyawan, hanya boleh 2 SKS dan tidak bisa pilih yang lain
-                const opt = document.createElement('option');
-                opt.value = '2';
-                opt.textContent = '2 SKS (Kelas Karyawan)';
-                sksSelect.appendChild(opt);
-                sksSelect.value = '2';
-                return;
-            }
-            
-            const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+            const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:55', '19:50'];
             const idx = weekdayStarts.indexOf(selectedJam);
             
             const optPlaceholder = document.createElement('option');
@@ -461,7 +451,6 @@
             sksSelect.appendChild(optPlaceholder);
             
             if (idx !== -1) {
-                const maxSks = Math.min(4, 13 - idx);
                 const sksLabels = {
                     1: '1 SKS (50 Menit)',
                     2: '2 SKS (105 Menit)',
@@ -469,6 +458,7 @@
                     4: '4 SKS (215 Menit)'
                 };
                 
+                const maxSks = Math.min(4, 15 - idx);
                 for (let i = 1; i <= maxSks; i++) {
                     const opt = document.createElement('option');
                     opt.value = i;

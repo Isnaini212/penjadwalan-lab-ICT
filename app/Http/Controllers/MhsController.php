@@ -45,6 +45,23 @@ class MhsController extends Controller
         return back()->withInput()->withErrors(['tanggal' => 'Gagal! Hari Minggu adalah hari libur, tidak bisa melakukan reservasi.']);
     }
 
+    $mulai_formatted = Carbon::parse($request->jam_mulai)->format('H:i');
+    $selesai_formatted = Carbon::parse($request->jam_selesai)->format('H:i');
+
+    if ($mulai_formatted >= $selesai_formatted) {
+        return back()->withInput()->withErrors(['jam_selesai' => 'Gagal! Jam selesai harus lebih lambat dari jam mulai.']);
+    }
+
+    if ($dayOfWeek === Carbon::SATURDAY) {
+        if ($mulai_formatted < '07:10' || $selesai_formatted > '16:50') {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Gagal! Pada hari Sabtu, peminjaman hanya diperbolehkan antara pukul 07:10 s/d 16:50.']);
+        }
+    } else {
+        if ($mulai_formatted < '07:10' || $selesai_formatted > '18:55') {
+            return back()->withInput()->withErrors(['jam_mulai' => 'Gagal! Pada hari kerja, peminjaman hanya diperbolehkan antara pukul 07:10 s/d 18:55.']);
+        }
+    }
+
     // 1.5 Validasi kebutuhan lab Ormawa: standar maksimal 36 peserta per lab.
     $maksimalPesertaPerLab = 36;
     $minimalLab = (int) ceil($request->kapasitas / $maksimalPesertaPerLab);
@@ -194,7 +211,25 @@ class MhsController extends Controller
         Carbon::setLocale('id');
         $hari = Carbon::parse($tanggal)->translatedFormat('l');
 
-        if (Carbon::parse($tanggal)->dayOfWeek === Carbon::SUNDAY) {
+        $dayOfWeek = Carbon::parse($tanggal)->dayOfWeek;
+        $mulai_formatted = Carbon::parse($mulai)->format('H:i');
+        $selesai_formatted = Carbon::parse($selesai)->format('H:i');
+
+        if ($mulai_formatted >= $selesai_formatted) {
+            return response()->json(['available_labs_count' => 0]);
+        }
+
+        if ($dayOfWeek === Carbon::SATURDAY) {
+            if ($mulai_formatted < '07:10' || $selesai_formatted > '16:50') {
+                return response()->json(['available_labs_count' => 0]);
+            }
+        } else {
+            if ($mulai_formatted < '07:10' || $selesai_formatted > '18:55') {
+                return response()->json(['available_labs_count' => 0]);
+            }
+        }
+
+        if ($dayOfWeek === Carbon::SUNDAY) {
             return response()->json([
                 'available_labs_count' => 0
             ]);

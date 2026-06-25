@@ -36,7 +36,7 @@
         @endphp
         
         <div class="day-separator">
-            {{ $hari }}, {{ $tanggalFormat }}
+            {{ $hari }}{{ strtolower($hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}, {{ $tanggalFormat }}
         </div>
 
         <table class="day-table">

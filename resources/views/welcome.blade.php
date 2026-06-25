@@ -157,7 +157,7 @@
                     {{ date('H:i', strtotime($s->jam_mulai)) }} - {{ date('H:i', strtotime($s->jam_selesai)) }}
                 </span>
                 <small class="mt-1 block text-xs font-semibold text-slate-500">
-                    {{ $s->hari }}, {{ date('d M Y', strtotime($s->tanggal)) }}
+                    {{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}, {{ date('d M Y', strtotime($s->tanggal)) }}
                 </small>
             </td>
 

@@ -137,7 +137,9 @@
                 <select name="hari" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" onchange="this.form.submit()">
                     <option value="">-- Semua Hari --</option>
                     @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $hariOption)
-                        <option value="{{ $hariOption }}" {{ $hariDicari == $hariOption ? 'selected' : '' }}>{{ $hariOption }}</option>
+                        <option value="{{ $hariOption }}" {{ $hariDicari == $hariOption ? 'selected' : '' }}>
+                            {{ $hariOption }}{{ $hariOption === 'Sabtu' ? ' (Kelas Karyawan)' : '' }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -197,7 +199,9 @@
                                     <div class="px-4 py-3.5">
                                         <select name="hari" class="h-9 w-full rounded-lg border border-slate-200 px-2 font-semibold text-slate-700 outline-none focus:border-blue-500">
                                             @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
-                                                <option value="{{ $h }}" {{ strtolower($a->hari) == strtolower($h) ? 'selected' : '' }}>{{ $h }}</option>
+                                                <option value="{{ $h }}" {{ strtolower($a->hari) == strtolower($h) ? 'selected' : '' }}>
+                                                    {{ $h }}{{ $h === 'Sabtu' ? ' (Kelas Karyawan)' : '' }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -265,7 +269,9 @@
                                     <div class="px-4 py-4">
                                         <select name="hari" class="h-9 w-full rounded-lg border border-emerald-300 px-2 font-semibold text-slate-700 outline-none focus:border-emerald-500" required>
                                             @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
-                                                <option value="{{ $h }}" {{ $hariDicari == $h ? 'selected' : '' }}>{{ $h }}</option>
+                                                <option value="{{ $h }}" {{ $hariDicari == $h ? 'selected' : '' }}>
+                                                    {{ $h }}{{ $h === 'Sabtu' ? ' (Kelas Karyawan)' : '' }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>

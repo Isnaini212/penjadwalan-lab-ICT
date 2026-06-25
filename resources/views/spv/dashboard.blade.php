@@ -56,7 +56,7 @@
                             <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5">
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
-                                        <span class="block text-[11px] font-extrabold uppercase tracking-wide text-sky-700">{{ $s->hari }}</span>
+                                        <span class="block text-[11px] font-extrabold uppercase tracking-wide text-sky-700">{{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}</span>
                                         <span class="text-sm font-bold text-slate-700">{{ \Carbon\Carbon::parse($s->tanggal)->format('d M Y') }}</span>
                                     </div>
                                     <span class="shrink-0 rounded-lg bg-sky-50 px-3 py-1 text-xs font-black text-sky-700 ring-1 ring-sky-100">
@@ -112,7 +112,7 @@
                                     @endphp
                                     <tr class="align-top hover:bg-slate-50">
                                         <td class="px-2 py-3">
-                                            <span class="block text-[10px] font-extrabold uppercase text-sky-700">{{ $s->hari }}</span>
+                                            <span class="block text-[10px] font-extrabold uppercase text-sky-700">{{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}</span>
                                             <span class="text-slate-600">{{ \Carbon\Carbon::parse($s->tanggal)->format('d M Y') }}</span>
                                         </td>
                                         <td class="px-2 py-3 font-bold leading-snug text-slate-700">{{ $namaLab }}</td>

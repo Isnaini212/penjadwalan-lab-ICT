@@ -99,7 +99,7 @@
                             <tr class="hover:bg-red-100/40 transition font-bold">
                                 <td class="px-5 py-3 text-slate-700">
                                     {{ \Carbon\Carbon::parse($c->tanggal)->format('d M Y') }}
-                                    <span class="text-[10px] bg-red-100 text-red-700 rounded p-0.5 px-1.5 ml-1">{{ strtoupper($c->hari) }}</span>
+                                    <span class="text-[10px] bg-red-100 text-red-700 rounded p-0.5 px-1.5 ml-1">{{ strtoupper($c->hari) }}{{ strtolower($c->hari) === 'sabtu' ? ' (KELAS KARYAWAN)' : '' }}</span>
                                 </td>
                                 <td class="px-5 py-3 text-red-700 font-extrabold">
                                     {{ $c->lab->nama_lab ?? 'LAB TANPA NAMA' }}
@@ -277,7 +277,7 @@
                                 <input type="hidden" name="scope" id="scope-field-{{ $s->id_jadwal }}" value="single">
                             </form>
                             <div class="text-[10px] font-extrabold tracking-wider text-blue-600 uppercase mb-1">
-                                {{ $s->hari }}
+                                {{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}
                             </div>
                             <input type="date" name="tanggal" value="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}" class="h-11 w-[190px] rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
                         </td>
@@ -580,8 +580,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 let jMulaiClean = jamInputs[0].value.substring(0, 5);
                 let jSelesaiClean = jamInputs[1].value.substring(0, 5);
 
+                let hariDisplay = hariAttribute;
+                if (hariAttribute && hariAttribute.toLowerCase() === 'sabtu') {
+                    hariDisplay = 'Sabtu (Kelas Karyawan)';
+                }
+
                 rawEntries.push({
-                    hariTanggal: hariAttribute + ', ' + inputTgl.value,
+                    hariTanggal: hariDisplay + ', ' + inputTgl.value,
                     labName: labName,
                     jamMulaiStr: jMulaiClean,
                     jamSelesaiStr: jSelesaiClean,
@@ -862,7 +867,7 @@ document.addEventListener("DOMContentLoaded", function () {
         { start: '16:10', label: '16:10' },
         { start: '17:05', label: '17:05' },
         { start: '18:00', label: '18:00' },
-        { start: '18:45', label: '18:45 (Kelas Karyawan)' }
+        { start: '18:55', label: '18:55' }
     ];
 
     const saturdaySlots = [
@@ -929,30 +934,20 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Weekday (Senin-Jumat)
-        if (jamVal === '18:45') {
-            inputSks.value = 2;
-            inputSks.readOnly = true;
-            inputSks.min = 2;
-            inputSks.max = 2;
-            return;
-        }
-
         // Jam reguler weekdays
         inputSks.readOnly = false;
         inputSks.min = 1;
 
-        const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
+        const weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:55', '19:50'];
         const idx = weekdayStarts.indexOf(jamVal);
 
+        let maxSks = 4;
         if (idx !== -1) {
-            const maxSks = Math.min(4, 13 - idx);
-            inputSks.max = maxSks;
-            if (parseInt(inputSks.value) > maxSks) {
-                inputSks.value = maxSks;
-            }
-        } else {
-            inputSks.removeAttribute('max');
+            maxSks = Math.min(4, 15 - idx);
+        }
+        inputSks.max = maxSks;
+        if (parseInt(inputSks.value) > maxSks) {
+            inputSks.value = maxSks;
         }
     }
 

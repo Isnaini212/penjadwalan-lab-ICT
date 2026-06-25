@@ -149,7 +149,7 @@
                     {{-- Jam Mulai & Jam Selesai --}}
                     <div>
                         <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai <span class="text-red-500">*</span></label>
-                        <input type="text" name="jam_mulai" id="input_jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="08:00" maxlength="5" required value="{{ old('jam_mulai') }}">
+                        <input type="text" name="jam_mulai" id="input_jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-3 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="07:10" maxlength="5" required value="{{ old('jam_mulai') }}">
                     </div>
 
                     <div>
@@ -239,7 +239,7 @@
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-slate-800">{{ \Carbon\Carbon::parse($book->tanggal)->translatedFormat('d F Y') }}</div>
-                                    <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}</div>
+                                    <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}{{ strtolower($book->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1.5">
@@ -363,13 +363,16 @@
 
             function checkAvailableLabsCount() {
                 const tanggal = inputTanggal.value;
+                const jamMulai = inputJamMulai.value;
+                const jamSelesai = inputJamSelesai.value;
 
                 // Cek hari Minggu
                 if (tanggal) {
                     const parts = tanggal.split('-');
                     if (parts.length === 3) {
                         const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
-                        if (dateVal.getDay() === 0) { // Sunday
+                        const day = dateVal.getDay();
+                        if (day === 0) { // Sunday
                             showCustomAlert('Hari Minggu adalah hari libur. Tidak dapat melakukan reservasi.', 'Hari Libur');
                             inputTanggal.value = '';
                             selectJumlahLab.disabled = true;
@@ -378,11 +381,34 @@
                             selectJumlahLab.classList.remove('bg-red-100');
                             return;
                         }
+
+                        // Validasi range waktu jika jamMulai dan jamSelesai diisi lengkap
+                        if (jamMulai.length === 5 && jamSelesai.length === 5) {
+                            if (jamMulai >= jamSelesai) {
+                                showCustomAlert('Jam selesai harus lebih lambat dari jam mulai.', 'Waktu Tidak Valid');
+                                selectJumlahLab.disabled = true;
+                                selectJumlahLab.innerHTML = '<option value="">Jam Selesai Tidak Valid</option>';
+                                return;
+                            }
+
+                            if (day === 6) { // Saturday
+                                if (jamMulai < '07:10' || jamSelesai > '16:50') {
+                                    showCustomAlert('Peminjaman hari Sabtu hanya diperbolehkan dari pukul 07:10 s/d 16:50.', 'Waktu Tidak Valid');
+                                    selectJumlahLab.disabled = true;
+                                    selectJumlahLab.innerHTML = '<option value="">Waktu Di Luar Batas Sabtu</option>';
+                                    return;
+                                }
+                            } else { // Weekdays
+                                if (jamMulai < '07:10' || jamSelesai > '18:55') {
+                                    showCustomAlert('Peminjaman hari kerja hanya diperbolehkan dari pukul 07:10 s/d 18:55.', 'Waktu Tidak Valid');
+                                    selectJumlahLab.disabled = true;
+                                    selectJumlahLab.innerHTML = '<option value="">Waktu Di Luar Batas Hari Kerja</option>';
+                                    return;
+                                }
+                            }
+                        }
                     }
                 }
-
-                const jamMulai = inputJamMulai.value;
-                const jamSelesai = inputJamSelesai.value;
 
                 if (tanggal && jamMulai.length === 5 && jamSelesai.length === 5) {
                     const currentValues = `${tanggal}-${jamMulai}-${jamSelesai}`;
@@ -480,7 +506,43 @@
             showCustomAlert('Data pengajuan lama telah disalin ke formulir. Silakan sesuaikan tanggal/waktu dan unggah ulang surat resmi (.PDF) Anda.', 'Pengajuan Ulang');
         }
 
-        document.getElementById('booking-form').addEventListener('submit', function() {
+        document.getElementById('booking-form').addEventListener('submit', function(e) {
+            const tanggal = inputTanggal.value;
+            const jamMulai = inputJamMulai.value;
+            const jamSelesai = inputJamSelesai.value;
+
+            if (tanggal && jamMulai.length === 5 && jamSelesai.length === 5) {
+                const parts = tanggal.split('-');
+                if (parts.length === 3) {
+                    const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
+                    const day = dateVal.getDay();
+
+                    if (jamMulai >= jamSelesai) {
+                        e.preventDefault();
+                        showCustomAlert('Jam selesai harus lebih lambat dari jam mulai.', 'Waktu Tidak Valid');
+                        return;
+                    }
+
+                    if (day === 6) { // Saturday
+                        if (jamMulai < '07:10' || jamSelesai > '16:50') {
+                            e.preventDefault();
+                            showCustomAlert('Peminjaman hari Sabtu hanya diperbolehkan dari pukul 07:10 s/d 16:50.', 'Waktu Tidak Valid');
+                            return;
+                        }
+                    } else if (day === 0) { // Sunday
+                        e.preventDefault();
+                        showCustomAlert('Hari Minggu libur.', 'Hari Libur');
+                        return;
+                    } else { // Weekdays
+                        if (jamMulai < '07:10' || jamSelesai > '18:55') {
+                            e.preventDefault();
+                            showCustomAlert('Peminjaman hari kerja hanya diperbolehkan dari pukul 07:10 s/d 18:55.', 'Waktu Tidak Valid');
+                            return;
+                        }
+                    }
+                }
+            }
+
             const btn = document.getElementById('btn-submit');
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses Pengajuan...';
             btn.classList.add('opacity-70', 'pointer-events-none');

@@ -243,24 +243,22 @@ public function store(Request $request)
                 return back()->withInput()->with('error', 'Gagal! Pada hari Sabtu, jam mulai harus salah satu dari: 08:00, 10:00, 13:00, 15:00.');
             }
         } else if ($dayOfWeek !== Carbon::SUNDAY) {
-            $allowedWeekday = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:45'];
+            $allowedWeekday = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:55'];
             if (!in_array($jam_mulai_formatted, $allowedWeekday)) {
                 return back()->withInput()->with('error', 'Gagal! Jam mulai tidak valid untuk hari kerja.');
             }
 
             // Validasi SKS untuk weekdays
-            if ($jam_mulai_formatted === '18:45') {
-                if ((int)$request->sks !== 2) {
-                    return back()->withInput()->with('error', 'Gagal! Untuk Kelas Karyawan (18:45), SKS harus bernilai 2.');
+            $weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:55', '19:50'];
+            $startIndex = array_search($jam_mulai_formatted, $weekdayStarts);
+            if ($startIndex !== false) {
+                $maxSks = min(4, 15 - $startIndex);
+                if ((int)$request->sks > $maxSks) {
+                    return back()->withInput()->with('error', "Gagal! Untuk jam mulai {$jam_mulai_formatted}, SKS maksimal yang diperbolehkan adalah {$maxSks} agar waktu selesai tidak melewati 20:40.");
                 }
             } else {
-                $weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
-                $startIndex = array_search($jam_mulai_formatted, $weekdayStarts);
-                if ($startIndex !== false) {
-                    $maxSks = min(4, 13 - $startIndex);
-                    if ((int)$request->sks > $maxSks) {
-                        return back()->withInput()->with('error', "Gagal! Untuk jam mulai {$jam_mulai_formatted}, SKS maksimal yang diperbolehkan adalah {$maxSks}.");
-                    }
+                if ((int)$request->sks < 1 || (int)$request->sks > 4) {
+                    return back()->withInput()->with('error', 'Gagal! SKS harus bernilai antara 1 sampai 4.');
                 }
             }
         }
@@ -739,12 +737,9 @@ private function calculateEndTime($tanggal, $jam_mulai, $sks)
         return Carbon::parse($jam_mulai)->addMinutes($minutes)->format('H:i');
     } else {
         $jam_mulai_formatted = Carbon::parse($jam_mulai)->format('H:i');
-        if ($jam_mulai_formatted === '18:45') {
-            return '20:40';
-        }
         
-        $weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00'];
-        $weekdayEnds   = ['08:00', '08:50', '09:40', '10:35', '11:30', '12:25', '13:20', '14:15', '15:10', '16:05', '17:00', '17:55', '18:50'];
+        $weekdayStarts = ['07:10', '08:00', '08:55', '09:45', '10:40', '11:35', '12:30', '13:25', '14:20', '15:15', '16:10', '17:05', '18:00', '18:55', '19:50'];
+        $weekdayEnds   = ['08:00', '08:50', '09:40', '10:35', '11:30', '12:25', '13:20', '14:15', '15:10', '16:05', '17:00', '17:55', '18:50', '19:45', '20:40'];
         
         $startIndex = array_search($jam_mulai_formatted, $weekdayStarts);
         if ($startIndex !== false) {
