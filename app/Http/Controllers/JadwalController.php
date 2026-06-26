@@ -516,6 +516,28 @@ public function store(Request $request)
         'jam_selesai' => 'required',
     ]);
 
+    $dayOfWeek = \Carbon\Carbon::parse($request->tanggal)->dayOfWeek;
+    $jam_mulai_formatted = \Carbon\Carbon::parse($request->jam_mulai)->format('H:i');
+    $jam_selesai_formatted = \Carbon\Carbon::parse($request->jam_selesai)->format('H:i');
+
+    if ($dayOfWeek === \Carbon\Carbon::SUNDAY) {
+        return back()->withInput()->with('error', 'Gagal! Hari Minggu adalah hari libur, tidak bisa melakukan penjadwalan.');
+    }
+
+    if ($jam_mulai_formatted >= $jam_selesai_formatted) {
+        return back()->withInput()->with('error', 'Gagal! Jam mulai harus lebih awal daripada jam selesai.');
+    }
+
+    if ($dayOfWeek === \Carbon\Carbon::SATURDAY) {
+        if ($jam_mulai_formatted < '08:00' || $jam_selesai_formatted > '18:30') {
+            return back()->withInput()->with('error', 'Gagal! Untuk hari Sabtu, jadwal harus berada antara pukul 08:00 s/d 18:30.');
+        }
+    } else {
+        if ($jam_mulai_formatted < '07:10' || $jam_selesai_formatted > '20:40') {
+            return back()->withInput()->with('error', 'Gagal! Untuk hari kerja, jadwal harus berada antara pukul 07:10 s/d 20:40.');
+        }
+    }
+
     $schedule = Schedule::findOrFail($id);
 
     
@@ -570,7 +592,8 @@ public function store(Request $request)
 }
     public function bersihin()
     {
-        Schedule::truncate();
+        \Illuminate\Support\Facades\DB::table('schedule_assistant')->delete();
+        Schedule::query()->delete();
         return back()->with('success', 'Wusss! Semua jadwal tetap berhasil disapu bersih.');
     }
 

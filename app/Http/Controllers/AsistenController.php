@@ -53,6 +53,28 @@ class AsistenController extends Controller
         $menit = $request->sks * 50;
         $jam_selesai = date('H:i', strtotime($request->jam_mulai . " + $menit minutes"));
 
+        $hari = strtolower($request->hari);
+        $jam_mulai_formatted = \Carbon\Carbon::parse($request->jam_mulai)->format('H:i');
+        $jam_selesai_formatted = \Carbon\Carbon::parse($jam_selesai)->format('H:i');
+
+        if ($hari === 'minggu') {
+            return back()->withInput()->with('error', 'Gagal! Hari Minggu adalah hari libur, tidak ada jadwal asisten.');
+        }
+
+        if ($jam_mulai_formatted >= $jam_selesai_formatted) {
+            return back()->withInput()->with('error', 'Gagal! Jam mulai harus lebih awal daripada jam selesai.');
+        }
+
+        if ($hari === 'sabtu') {
+            if ($jam_mulai_formatted < '08:00' || $jam_selesai_formatted > '18:30') {
+                return back()->withInput()->with('error', 'Gagal! Untuk hari Sabtu, jadwal asisten harus berada antara pukul 08:00 s/d 18:30.');
+            }
+        } else {
+            if ($jam_mulai_formatted < '07:10' || $jam_selesai_formatted > '20:40') {
+                return back()->withInput()->with('error', 'Gagal! Untuk hari kerja, jadwal asisten harus berada antara pukul 07:10 s/d 20:40.');
+            }
+        }
+
         AssistantSchedule::create([
             'nama_asisten' => $request->nama_asisten,
             'hari'         => $request->hari,
@@ -77,6 +99,27 @@ class AsistenController extends Controller
         'mata_kuliah'  => 'required|string|max:255',
     ]);
 
+    $hari = strtolower($request->hari);
+    $jam_mulai_formatted = \Carbon\Carbon::parse($request->jam_mulai)->format('H:i');
+    $jam_selesai_formatted = \Carbon\Carbon::parse($request->jam_selesai)->format('H:i');
+
+    if ($hari === 'minggu') {
+        return back()->with('error', 'Gagal! Hari Minggu adalah hari libur, tidak ada jadwal asisten.');
+    }
+
+    if ($jam_mulai_formatted >= $jam_selesai_formatted) {
+        return back()->with('error', 'Gagal! Jam mulai harus lebih awal daripada jam selesai.');
+    }
+
+    if ($hari === 'sabtu') {
+        if ($jam_mulai_formatted < '08:00' || $jam_selesai_formatted > '18:30') {
+            return back()->with('error', 'Gagal! Untuk hari Sabtu, jadwal asisten harus berada antara pukul 08:00 s/d 18:30.');
+        }
+    } else {
+        if ($jam_mulai_formatted < '07:10' || $jam_selesai_formatted > '20:40') {
+            return back()->with('error', 'Gagal! Untuk hari kerja, jadwal asisten harus berada antara pukul 07:10 s/d 20:40.');
+        }
+    }
 
     $jadwal = AssistantSchedule::where('id_asisten', $id)->first();
 

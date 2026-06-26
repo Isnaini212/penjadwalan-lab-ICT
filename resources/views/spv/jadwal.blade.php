@@ -8,8 +8,7 @@
     {{-- Menggunakan aset Tailwind & JS bawaan proyek --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
      <link rel="icon" type="image/LogoICT.png" href="{{ asset('images/LogoICT.png') }}">
-    <script defer src="{{ asset('js/spv-table.js') }}"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Manajemen Jadwal - Lab ICT</title>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100 font-sans text-slate-800 antialiased">
@@ -19,7 +18,6 @@
 @section('title', 'Manajemen Jadwal')
 
 @section('content')
-<script defer src="{{ asset('js/spv-table.js') }}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="space-y-6">
