@@ -183,15 +183,15 @@
                 </h3>
                 <span class="text-xs font-bold text-slate-400">{{ $users->count() }} akun</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <div class="overflow-hidden">
+                <table class="w-full table-fixed text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-400 text-[11px] uppercase tracking-widest">
-                            <th class="px-6 py-4 font-extrabold border-b border-slate-100">Nama Lengkap</th>
-                            <th class="px-6 py-4 font-extrabold border-b border-slate-100">Email Login</th>
-                            <th class="px-6 py-4 font-extrabold border-b border-slate-100">Role</th>
-                            <th class="px-6 py-4 font-extrabold border-b border-slate-100 text-center">Status Sandi</th>
-                            <th class="px-6 py-4 font-extrabold border-b border-slate-100 text-right">Aksi</th>
+                            <th class="w-[30%] px-4 py-4 font-extrabold border-b border-slate-100">Nama Lengkap</th>
+                            <th class="w-[32%] px-4 py-4 font-extrabold border-b border-slate-100">Email Login</th>
+                            <th class="w-[15%] px-4 py-4 font-extrabold border-b border-slate-100">Role</th>
+                            <th class="w-[10%] px-4 py-4 font-extrabold border-b border-slate-100 text-center">Sandi</th>
+                            <th class="w-[13%] px-4 py-4 font-extrabold border-b border-slate-100 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -216,55 +216,53 @@
                                     @method('DELETE')
                                 </form>
 
-                                <td class="px-6 py-4">
-                                    <input
-                                        type="text"
+                                <td class="px-4 py-4 align-top">
+                                    <textarea
                                         name="name"
-                                        value="{{ $user->name }}"
                                         form="update-user-{{ $user->id }}"
                                         required
-                                        class="h-9 w-full min-w-[320px] rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
-                                    >
+                                        rows="2"
+                                        class="min-h-10 w-full resize-y rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm font-bold leading-snug text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                                    >{{ $user->name }}</textarea>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4 align-top">
                                     <input
                                         type="email"
-    name="email"
-    value="{{ $user->email }}"
-    form="update-user-{{ $user->id }}"
-    required
-                                        class="h-10 w-full min-w-[210px] rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                                        name="email"
+                                        value="{{ $user->email }}"
+                                        form="update-user-{{ $user->id }}"
+                                        required
+                                        class="min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                                     >
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md {{ $badge['classes'] }} text-xs font-black">
+                                <td class="px-4 py-4 align-top">
+                                    <span class="inline-flex max-w-full items-center gap-1.5 rounded-md px-2 py-1 {{ $badge['classes'] }} text-[11px] font-black">
                                         <i class="fas {{ $badge['icon'] }} text-[10px]"></i> {{ $badge['label'] }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center gap-1 text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded border border-slate-200" title="Password dienkripsi (Hash)">
-                                        <i class="fas fa-lock text-[10px]"></i> Terlindungi
+                                <td class="px-4 py-4 text-center align-top">
+                                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-400" title="Password dienkripsi (Hash)">
+                                        <i class="fas fa-lock text-xs"></i>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="inline-flex gap-2">
+                                <td class="px-4 py-4 text-center align-top">
+                                    <div class="flex items-center justify-center gap-2">
                                         <button
                                             type="submit"
                                             form="update-user-{{ $user->id }}"
-                                            class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700"
+                                            title="Perbarui Akun"
                                         >
                                             <i class="fas fa-save"></i>
-                                            Perbarui
                                         </button>
                                         <button
                                             type="button"
-                                            class="btn-delete inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700"
+                                            class="btn-delete inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white shadow-md shadow-red-600/15 transition hover:bg-red-700"
                                             data-name="{{ $user->name }}"
                                             data-form="delete-form-{{ $user->id }}"
                                             title="Hapus Akun"
                                         >
                                             <i class="fas fa-trash-alt"></i>
-                                            Hapus
                                         </button>
                                     </div>
                                 </td>
@@ -300,14 +298,15 @@
                     ];
                     $badge = $roleMap[$user->role] ?? ['label' => ucfirst($user->role), 'icon' => 'fa-user', 'classes' => 'bg-slate-100 text-slate-600'];
                 @endphp
-                <div class="p-4 border-b border-slate-100 last:border-b-0">
+                <div class="border-b border-slate-100 bg-slate-50/60 p-3 last:border-b-0">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <form id="update-user-m-{{ $user->id }}" action="{{ route('akun.update', $user) }}" method="POST" class="hidden">
                         @csrf
                         @method('PATCH')
                     </form>
 
                     {{-- Top row: badges --}}
-                    <div class="mb-3 flex items-center justify-between gap-2">
+                    <div class="mb-4 flex items-center justify-between gap-2">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md {{ $badge['classes'] }} text-xs font-black">
                             <i class="fas {{ $badge['icon'] }} text-[10px]"></i> {{ $badge['label'] }}
                         </span>
@@ -321,15 +320,14 @@
                         <label for="name-m-{{ $user->id }}" class="mb-1 block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                             Nama / Organisasi
                         </label>
-                        <input
-                            type="text"
+                        <textarea
                             id="name-m-{{ $user->id }}"
                             name="name"
-                            value="{{ old('name', $user->name) }}"
                             form="update-user-m-{{ $user->id }}"
                             required
-                            class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
-                        >
+                            rows="2"
+                            class="min-h-11 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold leading-relaxed text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                        >{{ old('name', $user->name) }}</textarea>
                     </div>
 
                     {{-- Email --}}
@@ -344,12 +342,12 @@
                             value="{{ old('email', $user->email) }}"
                             form="update-user-m-{{ $user->id }}"
                             required
-                            class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-600 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                            class="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-600 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                         >
                     </div>
 
                     {{-- Actions --}}
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 border-t border-slate-100 pt-3">
                         <button
                             type="submit"
                             form="update-user-m-{{ $user->id }}"
@@ -367,6 +365,7 @@
                         >
                             <i class="fas fa-trash-alt"></i>
                         </button>
+                    </div>
                     </div>
                 </div>
             @empty

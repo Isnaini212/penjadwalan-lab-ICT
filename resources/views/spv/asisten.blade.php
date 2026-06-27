@@ -164,40 +164,42 @@
                 <span class="text-xs font-medium italic text-slate-400">*Gunakan tombol aksi di sebelah kanan untuk memperbarui data.</span>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[1000px] border-collapse text-left text-sm" id="asistenTable">
-                    <thead class="bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider">
+            <div class="overflow-hidden">
+                <table class="w-full border-collapse text-left text-sm" id="asistenTable">
+                    <thead class="hidden bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider lg:table-header-group">
                         <tr>
-                            <th class="px-6 py-4">Nama Asisten</th>
-                            <th class="px-6 py-4 w-40">Hari</th>
-                            <th class="px-6 py-4 w-64">Jam (Mulai - Selesai)</th>
-                            <th class="px-6 py-4">Mata Kuliah Kelolaan</th>
-                            <th class="px-6 py-4 text-right w-44">Aksi</th>
+                            <th class="px-4 py-4 sm:px-6">Nama Asisten</th>
+                            <th class="px-4 py-4 sm:px-6">Hari</th>
+                            <th class="px-4 py-4 sm:px-6">Jam (Mulai - Selesai)</th>
+                            <th class="px-4 py-4 sm:px-6">Mata Kuliah Kelolaan</th>
+                            <th class="px-4 py-4 text-right sm:px-6">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
+                    <tbody class="block space-y-3 bg-slate-50 p-3 lg:table-row-group lg:space-y-0 lg:bg-white lg:p-0 lg:divide-y lg:divide-slate-100">
                         @forelse($asistenSchedules as $a)
-                        <tr class="transition hover:bg-blue-50/40">
-                            <td colspan="5" class="p-0">
-                                <form action="{{ route('asisten.update', $a->id_asisten) }}" method="POST" class="grid grid-cols-[1fr_10rem_16rem_1fr_11rem] items-center px-0 m-0">
+                        <tr class="block transition lg:table-row lg:hover:bg-blue-50/40">
+                            <td colspan="5" class="block rounded-2xl border border-slate-200 bg-white p-0 shadow-sm lg:table-cell lg:rounded-none lg:border-0 lg:shadow-none">
+                                <form action="{{ route('asisten.update', $a->id_asisten) }}" method="POST" class="grid gap-4 p-4 m-0 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.1fr)_9rem_15rem_minmax(0,1.6fr)_9rem] lg:items-center lg:gap-0 lg:p-0">
                                     @csrf
 
                                     @method('PATCH')
 
-                                    <div class="px-6 py-3.5">
+                                    <div class="space-y-1 sm:col-span-2 lg:col-span-1 lg:px-6 lg:py-3.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Nama Asisten</span>
                                         @if($namaDicari)
                                             <input type="hidden" name="nama_asisten" value="{{ $a->nama_asisten }}">
-                                            <div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-500 cursor-not-allowed">
+                                            <div class="inline-flex w-full items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500 cursor-not-allowed lg:w-auto lg:py-1.5">
                                                 <i class="fas fa-lock text-[10px]"></i> {{ $a->nama_asisten }}
                                             </div>
                                         @else
                                             <input type="text" name="nama_asisten" value="{{ $a->nama_asisten }}"
-                                                   class="h-9 w-full rounded-lg border border-slate-200 px-3 font-bold text-blue-900 outline-none focus:border-blue-500 focus:bg-blue-50/30">
+                                                   class="min-h-9 w-full rounded-lg border border-slate-200 px-3 py-2 font-bold text-blue-900 outline-none focus:border-blue-500 focus:bg-blue-50/30">
                                         @endif
                                     </div>
 
-                                    <div class="px-4 py-3.5">
-                                        <select name="hari" class="h-9 w-full rounded-lg border border-slate-200 px-2 font-semibold text-slate-700 outline-none focus:border-blue-500">
+                                    <div class="space-y-1 lg:px-4 lg:py-3.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Hari</span>
+                                        <select name="hari" class="min-h-9 w-full rounded-lg border border-slate-200 px-2 py-2 font-semibold text-slate-700 outline-none focus:border-blue-500">
                                             @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
                                                 <option value="{{ $h }}" {{ strtolower($a->hari) == strtolower($h) ? 'selected' : '' }}>
                                                     {{ $h }}{{ $h === 'Sabtu' ? ' (Kelas Karyawan)' : '' }}
@@ -206,21 +208,25 @@
                                         </select>
                                     </div>
 
-                                    <div class="px-4 py-3.5 flex items-center gap-2">
-                                        <input type="time" name="jam_mulai" value="{{ \Carbon\Carbon::parse($a->jam_mulai)->format('H:i') }}"
-                                               class="h-9 w-24 rounded-lg border border-slate-200 px-2 text-center font-medium text-slate-700 outline-none focus:border-blue-500">
-                                        <span class="text-slate-400 font-bold">-</span>
-                                        <input type="time" name="jam_selesai" value="{{ \Carbon\Carbon::parse($a->jam_selesai)->format('H:i') }}"
-                                               class="h-9 w-24 rounded-lg border border-slate-200 px-2 text-center font-medium text-slate-700 outline-none focus:border-blue-500">
+                                    <div class="space-y-1 lg:px-4 lg:py-3.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Jam</span>
+                                        <div class="flex items-center gap-2">
+                                            <input type="time" name="jam_mulai" value="{{ \Carbon\Carbon::parse($a->jam_mulai)->format('H:i') }}"
+                                                   class="min-h-9 w-full rounded-lg border border-slate-200 px-2 py-2 text-center font-medium text-slate-700 outline-none focus:border-blue-500 lg:w-24">
+                                            <span class="text-slate-400 font-bold">-</span>
+                                            <input type="time" name="jam_selesai" value="{{ \Carbon\Carbon::parse($a->jam_selesai)->format('H:i') }}"
+                                                   class="min-h-9 w-full rounded-lg border border-slate-200 px-2 py-2 text-center font-medium text-slate-700 outline-none focus:border-blue-500 lg:w-24">
+                                        </div>
                                     </div>
 
-                                    <div class="px-4 py-3.5">
-                                        <input type="text" name="mata_kuliah" value="{{ $a->mata_kuliah }}"
-                                               class="h-9 w-full rounded-lg border border-slate-200 px-3 font-semibold text-slate-700 outline-none focus:border-blue-500">
+                                    <div class="space-y-1 sm:col-span-2 lg:col-span-1 lg:px-4 lg:py-3.5">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Mata Kuliah Kelolaan</span>
+                                        <textarea name="mata_kuliah" rows="2"
+                                                  class="min-h-10 w-full resize-y rounded-lg border border-slate-200 px-3 py-2 font-semibold leading-relaxed text-slate-700 outline-none focus:border-blue-500">{{ $a->mata_kuliah }}</textarea>
                                     </div>
 
-                                    <div class="px-6 py-3.5 flex items-center justify-end gap-2">
-                                        <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-blue-50 px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-100">
+                                    <div class="flex items-center justify-end gap-2 border-t border-slate-100 pt-3 sm:col-span-2 lg:col-span-1 lg:border-t-0 lg:px-6 lg:py-3.5 lg:pt-0">
+                                        <button type="submit" class="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-blue-50 px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-100 lg:h-8 lg:flex-none">
                                             Simpan
                                         </button>
                                 </form>
@@ -228,7 +234,7 @@
                                         <form method="POST" action="{{ route('asisten.destroy', $a->id_asisten) }}" class="inline" onsubmit="return handleCustomConfirmSubmit(event, 'Yakin ingin menghapus jadwal ini?', 'Konfirmasi Hapus')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100">
+                                            <button type="submit" class="inline-flex h-9 flex-1 items-center justify-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 lg:h-8 lg:flex-none">
                                                 Hapus
                                             </button>
                                         </form>
@@ -245,19 +251,20 @@
                         @endforelse
 
                         {{-- Form Baris Input Baru --}}
-                        <tr class="bg-slate-50/80 border-t-2 border-slate-200">
-                            <td colspan="5" class="p-0">
-                                <form action="{{ route('asisten.store') }}" method="POST" class="grid grid-cols-[1fr_10rem_16rem_1fr_11rem] items-center px-0 m-0">
+                        <tr class="block lg:table-row lg:border-t-2 lg:border-slate-200 lg:bg-slate-50/80">
+                            <td colspan="5" class="block rounded-2xl border border-emerald-200 bg-emerald-50/40 p-0 shadow-sm lg:table-cell lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none">
+                                <form action="{{ route('asisten.store') }}" method="POST" class="grid gap-4 p-4 m-0 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.1fr)_9rem_15rem_minmax(0,1.6fr)_9rem] lg:items-center lg:gap-0 lg:p-0">
                                     @csrf
 
-                                    <div class="px-6 py-4">
+                                    <div class="space-y-1 sm:col-span-2 lg:col-span-1 lg:px-6 lg:py-4">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Nama Asisten</span>
                                         @if($namaDicari)
                                             <input type="hidden" name="nama_asisten" value="{{ $namaDicari }}">
-                                            <div class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
+                                            <div class="inline-flex w-full items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 lg:w-auto lg:py-1.5">
                                                 <i class="fas fa-lock text-[10px]"></i> {{ $namaDicari }}
                                             </div>
                                         @else
-                                            <select name="nama_asisten" class="h-9 w-full rounded-lg border border-emerald-300 px-3 font-semibold text-slate-700 outline-none focus:border-emerald-500" required>
+                                            <select name="nama_asisten" class="min-h-9 w-full rounded-lg border border-emerald-300 px-3 py-2 font-semibold text-slate-700 outline-none focus:border-emerald-500" required>
                                                 <option value="">-- Pilih Asisten --</option>
                                                 @foreach($semuaAsisten as $asisten)
                                                     <option value="{{ $asisten->nama_asisten }}">{{ $asisten->nama_asisten }}</option>
@@ -266,8 +273,9 @@
                                         @endif
                                     </div>
 
-                                    <div class="px-4 py-4">
-                                        <select name="hari" class="h-9 w-full rounded-lg border border-emerald-300 px-2 font-semibold text-slate-700 outline-none focus:border-emerald-500" required>
+                                    <div class="space-y-1 lg:px-4 lg:py-4">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Hari</span>
+                                        <select name="hari" class="min-h-9 w-full rounded-lg border border-emerald-300 px-2 py-2 font-semibold text-slate-700 outline-none focus:border-emerald-500" required>
                                             @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $h)
                                                 <option value="{{ $h }}" {{ $hariDicari == $h ? 'selected' : '' }}>
                                                     {{ $h }}{{ $h === 'Sabtu' ? ' (Kelas Karyawan)' : '' }}
@@ -276,24 +284,28 @@
                                         </select>
                                     </div>
 
-                                    <div class="px-4 py-4 flex items-center gap-2">
-                                        <input type="time" name="jam_mulai" class="h-9 w-24 rounded-lg border border-emerald-300 px-2 text-center font-medium text-slate-700 outline-none focus:border-emerald-500" required>
-                                        <span class="text-emerald-500 font-extrabold">+</span>
-                                        <select name="sks" class="h-9 w-20 rounded-lg border border-emerald-300 px-2 font-semibold text-slate-700 outline-none focus:border-emerald-500" required>
-                                            <option value="1">1 SKS</option>
-                                            <option value="2">2 SKS</option>
-                                            <option value="3">3 SKS</option>
-                                            <option value="4">4 SKS</option>
-                                        </select>
+                                    <div class="space-y-1 lg:px-4 lg:py-4">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Jam & SKS</span>
+                                        <div class="flex items-center gap-2">
+                                            <input type="time" name="jam_mulai" class="min-h-9 w-full rounded-lg border border-emerald-300 px-2 py-2 text-center font-medium text-slate-700 outline-none focus:border-emerald-500 lg:w-24" required>
+                                            <span class="text-emerald-500 font-extrabold">+</span>
+                                            <select name="sks" class="min-h-9 w-24 rounded-lg border border-emerald-300 px-2 py-2 font-semibold text-slate-700 outline-none focus:border-emerald-500 lg:w-20" required>
+                                                <option value="1">1 SKS</option>
+                                                <option value="2">2 SKS</option>
+                                                <option value="3">3 SKS</option>
+                                                <option value="4">4 SKS</option>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    <div class="px-4 py-4">
-                                        <input type="text" name="mata_kuliah" placeholder="Ketik nama matkul baru..." required
-                                               class="h-9 w-full rounded-lg border border-emerald-300 px-3 font-semibold text-slate-700 outline-none focus:border-emerald-500">
+                                    <div class="space-y-1 sm:col-span-2 lg:col-span-1 lg:px-4 lg:py-4">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Mata Kuliah Kelolaan</span>
+                                        <textarea name="mata_kuliah" rows="2" placeholder="Ketik nama matkul baru..." required
+                                                  class="min-h-10 w-full resize-y rounded-lg border border-emerald-300 px-3 py-2 font-semibold leading-relaxed text-slate-700 outline-none focus:border-emerald-500"></textarea>
                                     </div>
 
-                                    <div class="px-6 py-4 text-right">
-                                        <button type="submit" class="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-emerald-600/10 transition hover:bg-emerald-700">
+                                    <div class="border-t border-emerald-100 pt-3 text-right sm:col-span-2 lg:col-span-1 lg:border-t-0 lg:px-6 lg:py-4 lg:pt-0">
+                                        <button type="submit" class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-md shadow-emerald-600/10 transition hover:bg-emerald-700 lg:h-9 lg:w-auto">
                                             <i class="fas fa-plus"></i> Tambah
                                         </button>
                                     </div>

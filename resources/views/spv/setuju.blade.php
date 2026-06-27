@@ -161,6 +161,10 @@
         $availableCount = collect($b->lab_options)->where('is_colliding', false)->count();
         $savedCount = count($b->current_lab_ids ?? []);
         $maxLabs = max(1, $availableCount, $savedCount, (int)$b->jumlah_lab);
+        $initialSelectedLabs = array_map('strval', $b->current_lab_ids ?? []);
+        for ($slot = count($initialSelectedLabs); $slot < $maxLabs; $slot++) {
+            $initialSelectedLabs[] = '';
+        }
     @endphp
     <div id="pending-detail-{{ $b->type }}-{{ $b->id_booking }}" class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
         <div class="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl">
@@ -212,7 +216,7 @@
                             <form action="{{ route('spv.booking.update_lab', ['type' => $b->type, 'id' => $b->id_booking]) }}"
                                   method="POST"
                                   x-data="{ 
-                                      selectedLabs: @js(array_map('strval', $b->current_lab_ids ?? [])), 
+                                      selectedLabs: @js($initialSelectedLabs), 
                                       requiredLabs: {{ count($b->current_lab_ids ?? []) ?: (int) $b->jumlah_lab }}, 
                                       originalLabs: {{ (int) $b->jumlah_lab }},
                                       kapasitasTotal: {{ (int) $b->kapasitas }},
@@ -225,7 +229,7 @@
                                           return false;
                                       },
                                       getLabStatusText(namaLab, kapasitasLab, isColliding) {
-                                          if (isColliding) return 'Pilih Lab';
+                                          if (isColliding) return namaLab + ' sudah dipakai/penuh';
                                           let kapasitasPerLabRequired = Math.ceil(this.kapasitasTotal / parseInt(this.requiredLabs));
                                           if (kapasitasLab < kapasitasPerLabRequired) return namaLab + ' (Kapasitas Kurang: ' + kapasitasLab + ' < ' + kapasitasPerLabRequired + ')';
                                           return namaLab + ' (Tersedia)';
@@ -252,7 +256,7 @@
                                                     x-model="selectedLabs[{{ $i }}]"
                                                     :disabled="{{ $i }} >= parseInt(requiredLabs)"
                                                     class="h-11 w-full appearance-none rounded-xl border border-slate-300 bg-white px-3 pr-9 text-xs font-bold text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
-                                                <option value="" {{ $selectedLabId ? '' : 'selected' }} disabled class="font-bold text-red-500">-- Pilih Lab {{ $i + 1 }} --</option>
+                                                <option value="" {{ $selectedLabId ? '' : 'selected' }} class="font-bold text-slate-400">Pilih Lab</option>
                                                 @foreach($b->lab_options as $opt)
                                                     @continue(! str_contains(strtoupper($opt['nama_lab']), 'LAB'))
                                                     @php $isSelected = (int) $selectedLabId === (int) $opt['id_lab']; @endphp
@@ -291,15 +295,15 @@
                                 @csrf @method('PATCH')
                                 <select name="lab_id" onchange="this.form.submit()" class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 cursor-pointer">
                                     @if($b->current_lab === 'TBD' || empty($b->current_id_lab))
-                                        <option value="" selected disabled class="font-bold text-red-500">-- Pilih Lab (Wajib) --</option>
+                                        <option value="" selected class="font-bold text-slate-400">Pilih Lab</option>
                                     @endif
                                     @foreach($b->lab_options as $opt)
                                         @continue(! str_contains(strtoupper($opt['nama_lab']), 'LAB'))
                                         @php $isSelected = ($b->current_id_lab == $opt['id_lab'] || $b->current_lab == $opt['nama_lab']); @endphp
                                         @if($opt['is_busy'])
-                                            <option value="" disabled class="bg-red-50 font-bold text-red-500">Pilih Lab</option>
+                                            <option value="" disabled class="bg-red-50 font-bold text-red-500">{{ $opt['nama_lab'] }} sudah dipakai/penuh</option>
                                         @else
-                                            <option value="{{ $opt['id_lab'] }}" {{ $isSelected ? 'selected' : '' }} class="font-bold text-emerald-700">âœ… {{ $opt['nama_lab'] }} (Tersedia)</option>
+                                            <option value="{{ $opt['id_lab'] }}" {{ $isSelected ? 'selected' : '' }} class="font-bold text-emerald-700">{{ $opt['nama_lab'] }} (Tersedia)</option>
                                         @endif
                                     @endforeach
                                 </select>
