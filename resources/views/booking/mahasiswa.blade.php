@@ -312,6 +312,21 @@
                                             </button>
                                         @endif
                                         @if($book->status !== 'approved')
+                                            <button type="button"
+                                                    onclick="openEditModal({{ json_encode([
+                                                        'id' => $book->id_booking,
+                                                        'penanggung_jawab' => $book->penanggung_jawab,
+                                                        'tanggal' => $book->tanggal,
+                                                        'jam_mulai' => substr($book->jam_mulai, 0, 5),
+                                                        'jam_selesai' => substr($book->jam_selesai, 0, 5),
+                                                        'kapasitas' => $book->kapasitas,
+                                                        'jumlah_lab' => $book->jumlah_lab,
+                                                        'keperluan' => $book->keperluan
+                                                    ]) }})"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600 border border-amber-200 transition duration-200 hover:bg-amber-600 hover:text-white hover:scale-105 transform">
+                                                <i class="fas fa-edit text-[10px]"></i> Edit
+                                            </button>
+
                                             <form action="{{ route('ormawa.booking.delete', $book->id_booking) }}" method="POST" class="m-0 inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -599,6 +614,235 @@
             }
         });
 
+        // --- EDIT BOOKING MODAL FUNCTIONS ---
+        let lastEditTriggerValues = '';
+
+        function openEditModal(data) {
+            document.getElementById('edit_booking_id').value = data.id;
+            document.getElementById('edit_input_penanggung_jawab').value = data.penanggung_jawab;
+            document.getElementById('edit_input_tanggal').value = data.tanggal;
+            document.getElementById('edit_input_jam_mulai').value = data.jam_mulai;
+            document.getElementById('edit_input_jam_selesai').value = data.jam_selesai;
+            document.getElementById('edit_input_kapasitas').value = data.kapasitas;
+            document.getElementById('edit_input_keperluan').value = data.keperluan;
+
+            const selectEditJumlahLab = document.getElementById('select_edit_jumlah_lab');
+            selectEditJumlahLab.innerHTML = '<option value="">⏳ Memuat...</option>';
+            selectEditJumlahLab.disabled = true;
+
+            // Set action URL
+            document.getElementById('edit-booking-form').action = `/ormawa/booking/update/${data.id}`;
+
+            // Open modal
+            const modal = document.getElementById('edit-booking-modal');
+            const box = document.getElementById('edit-booking-box');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+
+            // Trigger check available labs for edit modal
+            checkEditAvailableLabsCount(data.jumlah_lab);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('edit-booking-modal');
+            const box = document.getElementById('edit-booking-box');
+
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function checkEditAvailableLabsCount(selectedValue = null) {
+            const editTanggalInput = document.getElementById('edit_input_tanggal');
+            const editJamMulaiInput = document.getElementById('edit_input_jam_mulai');
+            const editJamSelesaiInput = document.getElementById('edit_input_jam_selesai');
+            const selectEditJumlahLab = document.getElementById('select_edit_jumlah_lab');
+
+            const tanggal = editTanggalInput.value;
+            const jamMulai = editJamMulaiInput.value;
+            const jamSelesai = editJamSelesaiInput.value;
+
+            if (tanggal) {
+                const parts = tanggal.split('-');
+                if (parts.length === 3) {
+                    const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
+                    const day = dateVal.getDay();
+                    if (day === 0) { // Sunday
+                        showCustomAlert('Hari Minggu adalah hari libur. Tidak dapat melakukan reservasi.', 'Hari Libur');
+                        editTanggalInput.value = '';
+                        selectEditJumlahLab.disabled = true;
+                        selectEditJumlahLab.innerHTML = '<option value="">Isi Info Tanggal & Waktu Dahulu</option>';
+                        selectEditJumlahLab.classList.replace('bg-slate-50', 'bg-slate-100');
+                        selectEditJumlahLab.classList.remove('bg-red-100');
+                        return;
+                    }
+
+                    if (jamMulai.length === 5 && jamSelesai.length === 5) {
+                        if (jamMulai >= jamSelesai) {
+                            showCustomAlert('Jam selesai harus lebih lambat dari jam mulai.', 'Waktu Tidak Valid');
+                            selectEditJumlahLab.disabled = true;
+                            selectEditJumlahLab.innerHTML = '<option value="">Jam Selesai Tidak Valid</option>';
+                            return;
+                        }
+
+                        if (day === 6) { // Saturday
+                            if (jamMulai < '07:10' || jamSelesai > '16:50') {
+                                showCustomAlert('Peminjaman hari Sabtu hanya diperbolehkan dari pukul 07:10 s/d 16:50.', 'Waktu Tidak Valid');
+                                selectEditJumlahLab.disabled = true;
+                                selectEditJumlahLab.innerHTML = '<option value="">Waktu Di Luar Batas Sabtu</option>';
+                                return;
+                            }
+                        } else { // Weekdays
+                            if (jamMulai < '07:10' || jamSelesai > '18:55') {
+                                showCustomAlert('Peminjaman hari kerja hanya diperbolehkan dari pukul 07:10 s/d 18:55.', 'Waktu Tidak Valid');
+                                selectEditJumlahLab.disabled = true;
+                                selectEditJumlahLab.innerHTML = '<option value="">Waktu Di Luar Batas Hari Kerja</option>';
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (tanggal && jamMulai.length === 5 && jamSelesai.length === 5) {
+                const currentValues = `${tanggal}-${jamMulai}-${jamSelesai}`;
+                if (currentValues === lastEditTriggerValues && selectedValue === null) return;
+                lastEditTriggerValues = currentValues;
+
+                selectEditJumlahLab.disabled = true;
+                selectEditJumlahLab.innerHTML = '<option value="">⏳ Mencari Lab Tersedia...</option>';
+                selectEditJumlahLab.classList.replace('bg-slate-50', 'bg-slate-100');
+                selectEditJumlahLab.classList.add('cursor-not-allowed');
+
+                fetch('{{ route('ormawa.booking.check_available_labs_count') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tanggal: tanggal,
+                        jam_mulai: jamMulai,
+                        jam_selesai: jamSelesai
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response error');
+                    return response.json();
+                })
+                .then(data => {
+                    selectEditJumlahLab.innerHTML = '';
+                    const count = data.available_labs_count;
+
+                    if (count > 0) {
+                        for (let i = 1; i <= count; i++) {
+                            let option = document.createElement('option');
+                            option.value = i;
+                            option.textContent = `${i} Lab`;
+                            if (selectedValue !== null && parseInt(selectedValue) === i) {
+                                option.selected = true;
+                            }
+                            selectEditJumlahLab.appendChild(option);
+                        }
+                        selectEditJumlahLab.disabled = false;
+                        selectEditJumlahLab.classList.replace('bg-slate-100', 'bg-slate-50');
+                        selectEditJumlahLab.classList.remove('cursor-not-allowed', 'bg-red-100');
+                    } else {
+                        let option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = '⚠️ Semua Lab Penuh/Bentrok';
+                        selectEditJumlahLab.appendChild(option);
+                        selectEditJumlahLab.disabled = true;
+                        selectEditJumlahLab.classList.replace('bg-slate-50', 'bg-red-100');
+                        selectEditJumlahLab.classList.replace('bg-slate-100', 'bg-red-100');
+                    }
+                })
+                .catch(error => {
+                    console.error('AJAX Error:', error);
+                    selectEditJumlahLab.innerHTML = '<option value="">❌ Terjadi Kesalahan (Cek Console)</option>';
+                });
+            } else {
+                selectEditJumlahLab.disabled = true;
+                selectEditJumlahLab.innerHTML = '<option value="">Isi Info Tanggal & Waktu Dahulu</option>';
+                selectEditJumlahLab.classList.replace('bg-slate-50', 'bg-slate-100');
+                selectEditJumlahLab.classList.remove('bg-red-100');
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const editTanggalInput = document.getElementById('edit_input_tanggal');
+            const editJamMulaiInput = document.getElementById('edit_input_jam_mulai');
+            const editJamSelesaiInput = document.getElementById('edit_input_jam_selesai');
+
+            [editTanggalInput, editJamMulaiInput, editJamSelesaiInput].forEach(el => {
+                if (el) {
+                    ['input', 'change'].forEach(evt => {
+                        el.addEventListener(evt, () => checkEditAvailableLabsCount());
+                    });
+                }
+            });
+
+            const editForm = document.getElementById('edit-booking-form');
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    const tanggal = editTanggalInput.value;
+                    const jamMulai = editJamMulaiInput.value;
+                    const jamSelesai = editJamSelesaiInput.value;
+
+                    if (tanggal && jamMulai.length === 5 && jamSelesai.length === 5) {
+                        const parts = tanggal.split('-');
+                        if (parts.length === 3) {
+                            const dateVal = new Date(parts[0], parts[1] - 1, parts[2]);
+                            const day = dateVal.getDay();
+
+                            if (jamMulai >= jamSelesai) {
+                                e.preventDefault();
+                                showCustomAlert('Jam selesai harus lebih lambat dari jam mulai.', 'Waktu Tidak Valid');
+                                return;
+                            }
+
+                            if (day === 6) { // Saturday
+                                if (jamMulai < '07:10' || jamSelesai > '16:50') {
+                                    e.preventDefault();
+                                    showCustomAlert('Peminjaman hari Sabtu hanya diperbolehkan dari pukul 07:10 s/d 16:50.', 'Waktu Tidak Valid');
+                                    return;
+                                }
+                            } else if (day === 0) { // Sunday
+                                e.preventDefault();
+                                showCustomAlert('Hari Minggu libur.', 'Hari Libur');
+                                return;
+                            } else { // Weekdays
+                                if (jamMulai < '07:10' || jamSelesai > '18:55') {
+                                    e.preventDefault();
+                                    showCustomAlert('Peminjaman hari kerja hanya diperbolehkan dari pukul 07:10 s/d 18:55.', 'Waktu Tidak Valid');
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
+                    const btn = document.getElementById('btn-edit-submit');
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...';
+                        btn.classList.add('opacity-70', 'pointer-events-none');
+                    }
+                });
+            }
+        });
+
         function showCustomAlert(message, title = 'Perhatian!') {
             document.getElementById('custom-alert-title').innerText = title;
             document.getElementById('custom-alert-message').innerText = message;
@@ -632,6 +876,127 @@
             }, 300);
         }
     </script>
+
+    {{-- Edit Booking Modal --}}
+    <div id="edit-booking-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
+        <div class="relative w-full max-w-2xl rounded-2xl bg-white p-6 md:p-8 shadow-2xl transform transition-transform scale-95 max-h-[90vh] overflow-y-auto" id="edit-booking-box" style="transition: transform 0.3s ease;">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                <h3 class="text-lg font-extrabold text-slate-800"><i class="fas fa-edit text-indigo-500 mr-2"></i> Edit Pengajuan Booking</h3>
+                <button type="button" onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form action="" method="POST" id="edit-booking-form" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="booking_id" id="edit_booking_id">
+
+                {{-- 🌟 LOGIC: Default value Lab dikirim tersembunyi biar validasi tembus --}}
+                <input type="hidden" name="lab" value="Belum ditentukan">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {{-- Nama Ormawa (Terkunci & Otomatis) --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Organisasi</label>
+                        <div class="relative">
+                            <input type="text" name="nama_ormawa" required readonly value="{{ auth()->user()->name }}"
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-100 py-2.5 px-4 pl-11 text-sm font-bold text-slate-500 outline-none cursor-not-allowed uppercase">
+                            <i class="fas fa-users absolute left-4 top-3.5 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    {{-- Penanggung Jawab --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Penanggung Jawab <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="text" name="penanggung_jawab" id="edit_input_penanggung_jawab" required placeholder="Cth: Budi Santoso"
+                                   class="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 pl-11 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                            <i class="fas fa-user-tie absolute left-4 top-3.5 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    {{-- Tanggal --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Tanggal Peminjaman <span class="text-red-500">*</span></label>
+                        <input type="date" name="tanggal" id="edit_input_tanggal" required min="{{ date('Y-m-d') }}"
+                               class="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                    </div>
+
+                    {{-- Lab (Disabled Visual) --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Laboratorium</label>
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-100 py-2.5 px-4 text-sm font-bold text-slate-400 cursor-not-allowed text-center tracking-wider">
+                            <i class="fas fa-lock mr-1"></i> DITENTUKAN OLEH SPV
+                        </div>
+                    </div>
+
+                    {{-- Jam Mulai & Jam Selesai --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai <span class="text-red-500">*</span></label>
+                        <input type="text" name="jam_mulai" id="edit_input_jam_mulai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="07:10" maxlength="5" required>
+                    </div>
+
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Selesai <span class="text-red-500">*</span></label>
+                        <input type="text" name="jam_selesai" id="edit_input_jam_selesai" class="time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 text-sm font-bold font-mono text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-center tracking-widest" placeholder="10:30" maxlength="5" required>
+                    </div>
+
+                    {{-- Kapasitas --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Peserta <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="number" name="kapasitas" id="edit_input_kapasitas" required placeholder="Cth: 30" min="1"
+                                   class="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                            <i class="fas fa-chair absolute left-4 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    {{-- Jumlah Lab --}}
+                    <div>
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Lab Dibutuhkan <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select name="jumlah_lab" id="select_edit_jumlah_lab" required disabled
+                                    class="w-full appearance-none rounded-xl border border-slate-300 bg-slate-100 py-2.5 px-4 pl-12 pr-10 text-sm font-bold text-slate-400 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 cursor-not-allowed">
+                                <option value="">Isi Info Tanggal & Waktu Dahulu</option>
+                            </select>
+                            <i class="fas fa-door-open absolute left-4 top-3 text-slate-400"></i>
+                            <i class="fas fa-chevron-down pointer-events-none absolute right-4 top-3 text-xs text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    {{-- Keperluan --}}
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara & Kebutuhan Software <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <input type="text" name="keperluan" id="edit_input_keperluan" required placeholder="Cth: Pelatihan Desain (Butuh Photoshop)"
+                                   class="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 px-4 pl-12 text-sm font-bold text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10">
+                            <i class="fas fa-info-circle absolute left-4 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+
+                    {{-- Upload Surat PDF --}}
+                    <div class="md:col-span-2 rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-5 text-center transition hover:bg-indigo-50">
+                        <label class="mb-2 block text-sm font-extrabold text-indigo-700">
+                            <i class="fas fa-file-pdf mr-2 text-red-500 text-lg"></i> Unggah Surat Peminjaman Resmi (Baru)
+                        </label>
+                        <input type="file" name="file_surat" accept="application/pdf" onchange="checkFileExtensionPdf(this)"
+                               class="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-100 file:px-4 file:py-2 file:text-sm file:font-bold file:text-indigo-700 hover:file:bg-indigo-200 mx-auto max-w-sm cursor-pointer">
+                        <p class="mt-1 text-xs font-semibold text-slate-400">Biarkan kosong jika tidak ingin mengubah surat resmi (.pdf)</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                    <button type="button" onclick="closeEditModal()" class="rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 px-6 text-sm font-bold shadow-sm transition">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-edit-submit" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 text-sm font-black uppercase tracking-wider shadow-lg shadow-indigo-600/20 transition">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     {{-- Custom Alert Modal --}}
     <div id="custom-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" style="transition: opacity 0.3s ease;">
