@@ -341,6 +341,13 @@
                             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Aksi</p>
                                 <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                                    @if($book->status === 'pending')
+                                        <button type="button"
+                                                onclick="closeHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}'); openOrmawaEditModal('ormawa-edit-modal-{{ $book->id_booking }}')"
+                                                class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-bold text-blue-600 transition hover:bg-blue-600 hover:text-white">
+                                            <i class="fas fa-pen text-[10px]"></i> Edit Booking
+                                        </button>
+                                    @endif
                                     @if($book->status === 'rejected')
                                         <button type="button"
                                                 onclick="closeHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}'); reapplyBooking({{ json_encode([
@@ -380,6 +387,95 @@
                         </div>
                     </div>
                 </div>
+
+                @if($book->status === 'pending')
+                    <div id="ormawa-edit-modal-{{ $book->id_booking }}" class="fixed inset-0 z-[90] hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+                        <div class="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+                            <div class="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4">
+                                <div>
+                                    <p class="text-xs font-black uppercase tracking-wider text-blue-500">Edit Booking Pending</p>
+                                    <h3 class="mt-1 text-lg font-black text-slate-900">Ubah Pengajuan Ormawa</h3>
+                                    <p class="mt-1 text-xs font-semibold text-slate-500">Perubahan akan langsung terlihat di halaman Approve Booking SPV.</p>
+                                </div>
+                                <button type="button" onclick="closeOrmawaEditModal('ormawa-edit-modal-{{ $book->id_booking }}')" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-100">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <form action="{{ route('ormawa.booking.update', $book->id_booking) }}" method="POST" enctype="multipart/form-data" class="ormawa-edit-form">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="grid grid-cols-1 gap-5 p-5 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Penanggung Jawab</label>
+                                        <input type="text" name="penanggung_jawab" required value="{{ old('penanggung_jawab', $book->penanggung_jawab) }}"
+                                               class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Tanggal Peminjaman</label>
+                                        <input type="date" name="tanggal" required min="{{ date('Y-m-d') }}" value="{{ old('tanggal', $book->tanggal) }}"
+                                               class="ormawa-edit-tanggal w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Mulai</label>
+                                        <input type="text" name="jam_mulai" maxlength="5" required value="{{ old('jam_mulai', substr($book->jam_mulai, 0, 5)) }}"
+                                               class="ormawa-edit-jam-mulai time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-center font-mono text-sm font-bold tracking-widest text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jam Selesai</label>
+                                        <input type="text" name="jam_selesai" maxlength="5" required value="{{ old('jam_selesai', substr($book->jam_selesai, 0, 5)) }}"
+                                               class="ormawa-edit-jam-selesai time-formatter w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-center font-mono text-sm font-bold tracking-widest text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Peserta</label>
+                                        <input type="number" name="kapasitas" required min="1" value="{{ old('kapasitas', $book->kapasitas) }}"
+                                               class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Jumlah Lab Dibutuhkan</label>
+                                        <select name="jumlah_lab" required
+                                                class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                            @for($i = 1; $i <= 11; $i++)
+                                                <option value="{{ $i }}" {{ (int) old('jumlah_lab', $book->jumlah_lab) === $i ? 'selected' : '' }}>{{ $i }} Lab</option>
+                                            @endfor
+                                        </select>
+                                        <p class="mt-1 text-[10px] font-bold text-blue-500">Sistem tetap memvalidasi kapasitas dan ketersediaan lab saat disimpan.</p>
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Nama Acara & Kebutuhan Software</label>
+                                        <input type="text" name="keperluan" required value="{{ old('keperluan', $book->keperluan) }}"
+                                               class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                                    </div>
+
+                                    <div class="md:col-span-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 p-5">
+                                        <label class="mb-2 block text-sm font-extrabold text-blue-700">
+                                            <i class="fas fa-file-pdf mr-2 text-red-500"></i> Ganti Surat Peminjaman
+                                        </label>
+                                        <input type="file" name="file_surat" accept="application/pdf" onchange="checkFileExtensionPdf(this)"
+                                               class="block w-full cursor-pointer text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-100 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700 hover:file:bg-blue-200">
+                                        <p class="mt-2 text-xs font-semibold text-slate-500">Opsional. Kosongkan jika tetap memakai surat PDF sebelumnya.</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end">
+                                    <button type="button" onclick="closeOrmawaEditModal('ormawa-edit-modal-{{ $book->id_booking }}')" class="inline-flex h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100">
+                                        Batal
+                                    </button>
+                                    <button type="submit" class="ormawa-edit-submit inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700">
+                                        <i class="fas fa-save"></i> Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endif
             @endforeach
         @endif
 
@@ -545,11 +641,7 @@
             showCustomAlert('Data pengajuan lama telah disalin ke formulir. Silakan sesuaikan tanggal/waktu dan unggah ulang surat resmi (.PDF) Anda.', 'Pengajuan Ulang');
         }
 
-        document.getElementById('booking-form').addEventListener('submit', function(e) {
-            const tanggal = inputTanggal.value;
-            const jamMulai = inputJamMulai.value;
-            const jamSelesai = inputJamSelesai.value;
-
+        function validateOrmawaBookingTime(tanggal, jamMulai, jamSelesai) {
             if (tanggal && jamMulai.length === 5 && jamSelesai.length === 5) {
                 const parts = tanggal.split('-');
                 if (parts.length === 3) {
@@ -557,34 +649,60 @@
                     const day = dateVal.getDay();
 
                     if (jamMulai >= jamSelesai) {
-                        e.preventDefault();
                         showCustomAlert('Jam selesai harus lebih lambat dari jam mulai.', 'Waktu Tidak Valid');
-                        return;
+                        return false;
                     }
 
                     if (day === 6) { // Saturday
                         if (jamMulai < '07:10' || jamSelesai > '16:50') {
-                            e.preventDefault();
                             showCustomAlert('Peminjaman hari Sabtu hanya diperbolehkan dari pukul 07:10 s/d 16:50.', 'Waktu Tidak Valid');
-                            return;
+                            return false;
                         }
                     } else if (day === 0) { // Sunday
-                        e.preventDefault();
                         showCustomAlert('Hari Minggu libur.', 'Hari Libur');
-                        return;
+                        return false;
                     } else { // Weekdays
                         if (jamMulai < '07:10' || jamSelesai > '18:55') {
-                            e.preventDefault();
                             showCustomAlert('Peminjaman hari kerja hanya diperbolehkan dari pukul 07:10 s/d 18:55.', 'Waktu Tidak Valid');
-                            return;
+                            return false;
                         }
                     }
                 }
             }
 
+            return true;
+        }
+
+        document.getElementById('booking-form').addEventListener('submit', function(e) {
+            const tanggal = document.getElementById('input_tanggal').value;
+            const jamMulai = document.getElementById('input_jam_mulai').value;
+            const jamSelesai = document.getElementById('input_jam_selesai').value;
+
+            if (!validateOrmawaBookingTime(tanggal, jamMulai, jamSelesai)) {
+                e.preventDefault();
+                return;
+            }
+
             const btn = document.getElementById('btn-submit');
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses Pengajuan...';
             btn.classList.add('opacity-70', 'pointer-events-none');
+        });
+
+        document.querySelectorAll('.ormawa-edit-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const tanggal = form.querySelector('.ormawa-edit-tanggal').value;
+                const jamMulai = form.querySelector('.ormawa-edit-jam-mulai').value;
+                const jamSelesai = form.querySelector('.ormawa-edit-jam-selesai').value;
+
+                if (!validateOrmawaBookingTime(tanggal, jamMulai, jamSelesai)) {
+                    e.preventDefault();
+                    return;
+                }
+
+                const btn = form.querySelector('.ormawa-edit-submit');
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...';
+                btn.classList.add('opacity-70', 'pointer-events-none');
+            });
         });
 
         function checkFileExtensionPdf(input) {
@@ -685,9 +803,27 @@
             modal.classList.add('hidden');
         }
 
+        function openOrmawaEditModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeOrmawaEditModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
         document.addEventListener('click', function (event) {
             if (event.target.classList && event.target.classList.contains('fixed') && event.target.id.startsWith('ormawa-history-detail-')) {
                 closeHistoryDetailModal(event.target.id);
+            }
+
+            if (event.target.classList && event.target.classList.contains('fixed') && event.target.id.startsWith('ormawa-edit-modal-')) {
+                closeOrmawaEditModal(event.target.id);
             }
         });
     </script>

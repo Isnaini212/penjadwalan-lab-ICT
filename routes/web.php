@@ -107,6 +107,7 @@ Route::prefix('ormawa')->group(function () {
     Route::get('/booking', [MhsController::class, 'index'])->name('ormawa.booking.index');
     Route::post('/booking/store', [MhsController::class, 'store'])->name('ormawa.booking.store');
     Route::post('/booking/check-available-labs-count', [MhsController::class, 'checkAvailableLabsCount'])->name('ormawa.booking.check_available_labs_count');
+    Route::put('/booking/update/{id}', [MhsController::class, 'update'])->name('ormawa.booking.update');
     Route::delete('/booking/delete/{id}', [MhsController::class, 'destroy'])->name('ormawa.booking.delete');
 });});
 
