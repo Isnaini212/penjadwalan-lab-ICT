@@ -60,7 +60,7 @@
                 </ul>
             </div>
         </div>
-        
+
         {{-- Munculkan alert pop-up khusus agar lebih terlihat --}}
         <script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -251,152 +251,99 @@
     </div>
 
     <div class="overflow-hidden rounded-2xl border border-white bg-white shadow-2xl shadow-blue-950/5">
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[1500px] border-collapse text-left text-sm" id="scheduleTable">
-                <thead class="bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider">
+        <div class="overflow-visible">
+            <table class="w-full table-fixed border-collapse text-left text-[13px] 2xl:text-sm" id="scheduleTable">
+                <thead class="hidden bg-blue-900 text-white text-xs font-extrabold uppercase tracking-wider lg:table-header-group">
                     <tr>
-                        <th class="px-6 py-4 min-w-[220px]">Tanggal</th>
-                        <th class="px-6 py-4 min-w-[190px]">Lab</th>
-                        <th class="px-6 py-4 min-w-[260px]">Jam (Mulai - Selesai)</th>
-                        <th class="px-6 py-4 min-w-[300px]">Mata Kuliah</th>
-                        <th class="px-6 py-4 min-w-[130px]">Kode Matkul</th>
-                        <th class="px-6 py-4 min-w-[280px]">Dosen</th>
-                        <th class="px-6 py-4 min-w-[260px]">Asisten</th>
-                        <th class="px-6 py-4">Aksi</th>
+                        <th class="w-[11%] px-5 py-4">Lab</th>
+                        <th class="w-[15%] px-4 py-4">Jam</th>
+                        <th class="w-[24%] px-4 py-4">Mata Kuliah</th>
+                        <th class="w-[7%] px-3 py-4 text-center">Kode</th>
+                        <th class="w-[18%] px-4 py-4">Dosen</th>
+                        <th class="w-[14%] px-4 py-4">Asisten</th>
+                        <th class="w-[11%] px-5 py-4 text-center">Detail</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-white">
+                <tbody class="block space-y-3 bg-slate-50 p-3 lg:table-row-group lg:space-y-0 lg:bg-white lg:p-0 lg:divide-y lg:divide-slate-100">
+                    @php $lastScheduleDate = null; @endphp
                     @foreach($schedules as $s)
-                    <tr data-hari="{{ $s->hari }}" class="transition hover:bg-slate-50/60">
-                        <td class="px-6 py-4 min-w-[220px]">
+                    @php $currentScheduleDate = \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d'); @endphp
+                    @if($lastScheduleDate !== $currentScheduleDate)
+                        <tr class="schedule-date-row block lg:table-row lg:bg-slate-50/90" data-date="{{ $currentScheduleDate }}">
+                            <td colspan="7" class="block px-1 py-1 lg:table-cell lg:px-4 lg:py-3">
+                                <div class="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-wide text-blue-700">
+                                    <i class="fas fa-calendar-day text-blue-500"></i>
+                                    <span>{{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}</span>
+                                    <span class="text-slate-300">/</span>
+                                    <span class="text-slate-600">{{ \Carbon\Carbon::parse($s->tanggal)->translatedFormat('d M Y') }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        @php $lastScheduleDate = $currentScheduleDate; @endphp
+                    @endif
+
+                    <tr data-hari="{{ $s->hari }}"
+                        data-tanggal="{{ $currentScheduleDate }}"
+                        data-lab="{{ $s->lab->nama_lab ?? '' }}"
+                        data-jam-mulai="{{ date('H:i', strtotime($s->jam_mulai)) }}"
+                        data-jam-selesai="{{ date('H:i', strtotime($s->jam_selesai)) }}"
+                        data-matkul="{{ $s->matkul }}"
+                        data-kode="{{ \Illuminate\Support\Str::substr($s->matkul, -4) }}"
+                        data-dosen="{{ $s->dosen }}"
+                        data-asisten="{{ $s->assistant_names }}"
+                        class="schedule-row block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition lg:table-row lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:hover:bg-slate-50/60">
+                        <td class="block align-middle sm:inline-block sm:w-[48%] lg:table-cell lg:w-auto lg:px-5 lg:py-4">
                             <form action="{{ route('spv.update', $s->id_jadwal) }}" method="POST" id="update-form-{{ $s->id_jadwal }}" class="hidden">
                                 @csrf
                                 @method('PUT')
                                 <input type="hidden" name="scope" id="scope-field-{{ $s->id_jadwal }}" value="single">
+                                <input type="hidden" name="tanggal" id="tanggal-field-{{ $s->id_jadwal }}" value="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}">
                             </form>
-                            <div class="text-[10px] font-extrabold tracking-wider text-blue-600 uppercase mb-1">
-                                {{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}
-                            </div>
-                            <input type="date" name="tanggal" value="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}" class="h-11 w-[190px] rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            <span class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Lab</span>
+                            <span class="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-800">
+                                {{ $s->lab->nama_lab ?? '-' }}
+                            </span>
                         </td>
 
-                        <td class="px-5 py-4 min-w-[190px]">
-                            <select name="id_lab" class="h-11 w-[170px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-                                @foreach($s->getLabStatuses() as $lab)
-                                    @php
-                                        $labJadwalSaatIni = $s->id_lab;
-                                        $labDalamLoop = $lab['id_lab'];
-                                        $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
-
-                                        $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
-                                    @endphp
-
-                                    @if($apakahLabSendiri)
-                                        <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
-                                            {{ $lab['nama_lab'] }} (Aktif)
-                                        </option>
-                                    @elseif($lab['status'] === 'busy' && !$isRuangRa)
-                                        <option value="" disabled class="text-red-500 bg-red-50 cursor-not-allowed">
-                                            {{ $lab['nama_lab'] }} (Dipakai)
-                                        </option>
-                                    @else
-                                        <option value="{{ $lab['id_lab'] }}" class="text-slate-700">
-                                            {{ $lab['nama_lab'] }} {{ $isRuangRa && $lab['status'] === 'busy' ? '(Tersedia)' : '' }}
-                                        </option>
-                                    @endif
-                                @endforeach
-                            </select>
+                        <td class="mt-3 block align-middle sm:mt-0 sm:inline-block sm:w-[50%] sm:pl-2 lg:table-cell lg:w-auto lg:px-4 lg:py-4">
+                            <span class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Jam</span>
+                            <span class="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-3 font-mono text-xs font-black tracking-widest text-slate-800">
+                                {{ date('H:i', strtotime($s->jam_mulai)) }} - {{ date('H:i', strtotime($s->jam_selesai)) }}
+                            </span>
                         </td>
 
-                        <td class="px-5 py-4 min-w-[260px]">
-                            <div class="flex items-center gap-3 font-mono">
-                                <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-11 w-28 rounded-xl border border-slate-200 px-4 text-center text-sm font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-
-                                <span class="text-slate-400 font-bold text-sm">-</span>
-
-                                <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-11 w-28 rounded-xl border border-slate-200 px-4 text-center text-sm font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
-                            </div>
+                        <td class="mt-3 block align-middle lg:table-cell lg:px-4 lg:py-4">
+                            <span class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Mata Kuliah</span>
+                            <span class="line-clamp-2 block rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-black leading-relaxed text-slate-800" title="{{ $s->matkul }}">
+                                {{ $s->matkul }}
+                            </span>
                         </td>
 
-                        <td class="px-5 py-4 min-w-[300px]">
-                            <input type="text" name="matkul" value="{{ $s->matkul }}" class="h-11 w-[280px] rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="mt-3 block text-left text-xs font-black uppercase tracking-wide text-blue-700 align-middle sm:inline-block sm:w-[34%] lg:table-cell lg:w-auto lg:px-3 lg:py-4 lg:text-center">
+                            <span class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Kode</span>
+                            <span class="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-3 text-xs font-black text-blue-700 lg:min-h-0 lg:border-0 lg:bg-transparent lg:p-0">
+                                {{ \Illuminate\Support\Str::substr($s->matkul, -4) }}
+                            </span>
                         </td>
 
-                        <td class="px-5 py-4 text-center text-xs font-black uppercase tracking-wide text-blue-700 min-w-[130px]">
-                            {{ \Illuminate\Support\Str::substr($s->matkul, -4) }}
+                        <td class="mt-3 block align-middle sm:inline-block sm:w-[64%] sm:pl-2 lg:table-cell lg:w-auto lg:px-4 lg:py-4">
+                            <span class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Dosen</span>
+                            <span class="line-clamp-2 block rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold leading-relaxed text-slate-700" title="{{ $s->dosen }}">
+                                {{ $s->dosen }}
+                            </span>
                         </td>
 
-                        <td class="px-5 py-4 min-w-[280px]">
-                            <input type="text" name="dosen" value="{{ $s->dosen }}" class="h-11 w-[260px] rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        <td class="mt-3 block align-middle lg:table-cell lg:px-4 lg:py-4">
+                            <span class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400 lg:hidden">Asisten</span>
+                            <span class="line-clamp-2 block rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold leading-relaxed text-slate-700" title="{{ $s->assistant_names }}">
+                                {{ $s->assistant_names ?: '-' }}
+                            </span>
                         </td>
 
-                        <td class="px-5 py-4 min-w-[260px]">
-                            {{-- Multi-Asisten Checkbox Dropdown --}}
-                            @php $assignedIds = $s->assistant_ids; @endphp
-                            <div class="multi-asisten-wrapper relative" data-form="update-form-{{ $s->id_jadwal }}" data-scope="scope-field-{{ $s->id_jadwal }}">
-                                <button type="button" onclick="toggleMultiAsisten(this)" class="h-11 w-[240px] rounded-xl border border-slate-200 bg-white px-4 pr-8 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer text-left truncate relative">
-                                    @if(count($assignedIds) > 0)
-                                        <span class="text-blue-600 font-bold">{{ count($assignedIds) }} asisten dipilih</span>
-                                    @else
-                                        <span class="text-slate-400">-- Pilih Asisten --</span>
-                                    @endif
-                                    <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                                </button>
-
-                                <div class="multi-asisten-dropdown hidden absolute z-50 mt-1 w-[280px] rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/50 overflow-hidden" style="max-height: 320px;">
-                                    <div class="overflow-y-auto" style="max-height: 260px;">
-                                        @foreach($s->getAssistantStatuses() as $asisten)
-                                            <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 {{ $asisten->is_busy && !$asisten->is_assigned ? 'opacity-50' : '' }}">
-                                                <input type="checkbox"
-                                                       name="id_asisten[]"
-                                                       value="{{ $asisten->id_asisten }}"
-                                                       form="update-form-{{ $s->id_jadwal }}"
-                                                       {{ $asisten->is_assigned ? 'checked' : '' }}
-                                                       {{ $asisten->is_busy && !$asisten->is_assigned ? 'disabled' : '' }}
-                                                       class="asisten-checkbox h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                                >
-                                                <div class="flex-1 min-w-0">
-                                                    <span class="text-sm font-bold text-slate-700 block truncate {{ $asisten->is_assigned ? 'text-blue-600' : '' }}">{{ $asisten->nama }}</span>
-                                                    @if($asisten->is_busy)
-                                                        <span class="text-[10px] font-bold text-red-500">{{ $asisten->label }}</span>
-                                                    @endif
-                                                </div>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                    <div class="border-t border-slate-200 bg-slate-50 p-2 flex gap-2">
-                                        <button type="button" onclick="submitMultiAsisten(this)" class="flex-1 h-8 rounded-lg bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 transition">
-                                            <i class="fas fa-save mr-1"></i> Simpan
-                                        </button>
-                                        <button type="button" onclick="closeMultiAsisten(this)" class="h-8 px-3 rounded-lg bg-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-300 transition">
-                                            Batal
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td class="px-6 py-3.5 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <button type="button" title="Simpan Perubahan Seterusnya (Minggu-Minggu Berikutnya)"
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm transition hover:bg-blue-100"
-                                        onclick="
-                                            showCustomConfirm('Menerapkan perubahan ini ke semua jadwal yang sama di minggu-minggu berikutnya?', 'Konfirmasi Perubahan Massal', () => {
-                                                document.getElementById('scope-field-{{ $s->id_jadwal }}').value = 'all';
-                                                document.getElementById('update-form-{{ $s->id_jadwal }}').submit();
-                                            });
-                                        ">
-                                    <i class="fas fa-layer-group text-xs"></i>
-                                </button>
-
-                                <form method="POST" action="{{ route('spv.delete', $s->id_jadwal) }}" class="inline m-0" id="form-delete-{{ $s->id_jadwal }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" onclick="showCustomConfirm('Hapus jadwal ini?', 'Konfirmasi Hapus', () => document.getElementById('form-delete-{{ $s->id_jadwal }}').submit())" class="inline-flex h-8 items-center rounded-lg bg-red-50 px-3 text-xs font-bold text-red-600 shadow-sm transition hover:bg-red-100">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </div>
+                        <td class="mt-4 block border-t border-slate-100 pt-3 text-center align-middle lg:table-cell lg:mt-0 lg:border-t-0 lg:px-5 lg:py-4 lg:pt-0">
+                            <button type="button" onclick="openScheduleDetailModal('schedule-detail-{{ $s->id_jadwal }}')" class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-blue-700 px-3 text-xs font-black uppercase text-white shadow-md shadow-blue-700/20 transition hover:bg-blue-800 lg:max-w-[7rem]">
+                                <i class="fas fa-eye"></i> Detail
+                            </button>
                         </td>
                     </tr>
                     @endforeach
@@ -405,9 +352,153 @@
         </div>
     </div>
 
+    @foreach($schedules as $s)
+        <div id="schedule-detail-{{ $s->id_jadwal }}" class="fixed inset-0 z-[90] hidden items-start justify-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-sm sm:items-center">
+            <div class="my-6 w-full max-w-4xl overflow-visible rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-wider text-slate-400">Detail Jadwal</p>
+                        <h3 class="mt-1 text-lg font-black text-slate-900">{{ $s->matkul }}</h3>
+                        <p class="mt-1 text-xs font-semibold text-slate-500">
+                            {{ $s->hari }}{{ strtolower($s->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }} - {{ \Carbon\Carbon::parse($s->tanggal)->translatedFormat('d M Y') }}
+                        </p>
+                    </div>
+                    <button type="button" onclick="closeScheduleDetailModal('schedule-detail-{{ $s->id_jadwal }}')" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-100">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Tanggal</p>
+                        <input type="date" value="{{ \Carbon\Carbon::parse($s->tanggal)->format('Y-m-d') }}"
+                               class="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500"
+                               onchange="document.getElementById('tanggal-field-{{ $s->id_jadwal }}').value=this.value; document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Lab</p>
+                        <select name="id_lab" class="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 cursor-pointer" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='today_only'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            @foreach($s->getLabStatuses() as $lab)
+                                @php
+                                    $labJadwalSaatIni = $s->id_lab;
+                                    $labDalamLoop = $lab['id_lab'];
+                                    $apakahLabSendiri = ($labJadwalSaatIni == $labDalamLoop);
+                                    $isRuangRa = str_contains(strtoupper($lab['nama_lab']), 'RA');
+                                @endphp
+
+                                @if($apakahLabSendiri)
+                                    <option value="{{ $lab['id_lab'] }}" selected class="font-extrabold text-blue-600 bg-blue-50">
+                                        {{ $lab['nama_lab'] }} (Aktif)
+                                    </option>
+                                @elseif($lab['status'] === 'busy' && !$isRuangRa)
+                                    <option value="" disabled class="text-red-500 bg-red-50 cursor-not-allowed">
+                                        {{ $lab['nama_lab'] }} (Dipakai)
+                                    </option>
+                                @else
+                                    <option value="{{ $lab['id_lab'] }}" class="text-slate-700">
+                                        {{ $lab['nama_lab'] }} {{ $isRuangRa && $lab['status'] === 'busy' ? '(Tersedia)' : '' }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Jam</p>
+                        <div class="mt-2 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 font-mono">
+                            <input type="text" name="jam_mulai" value="{{ date('H:i', strtotime($s->jam_mulai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                            <span class="text-sm font-bold text-slate-400">-</span>
+                            <input type="text" name="jam_selesai" value="{{ date('H:i', strtotime($s->jam_selesai)) }}" placeholder="00:00" maxlength="5" class="time-formatter h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-center text-xs font-bold text-slate-700 tracking-widest outline-none focus:border-blue-500" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                        </div>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Kode Matkul</p>
+                        <p class="mt-2 text-sm font-black uppercase tracking-wide text-blue-700">{{ \Illuminate\Support\Str::substr($s->matkul, -4) }}</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2 lg:col-span-3">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Mata Kuliah</p>
+                        <input type="text" name="matkul" value="{{ $s->matkul }}" class="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:col-span-1">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Dosen</p>
+                        <input type="text" name="dosen" value="{{ $s->dosen }}" class="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-blue-50/20" form="update-form-{{ $s->id_jadwal }}" onchange="document.getElementById('scope-field-{{ $s->id_jadwal }}').value='single'; document.getElementById('update-form-{{ $s->id_jadwal }}').submit();">
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2 lg:col-span-3">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Asisten</p>
+                        @php $modalAssignedIds = $s->assistant_ids; @endphp
+                        <div class="multi-asisten-wrapper relative mt-2" data-form="update-form-{{ $s->id_jadwal }}" data-scope="scope-field-{{ $s->id_jadwal }}">
+                            <button type="button" onclick="toggleMultiAsisten(this)" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500 cursor-pointer text-left truncate relative">
+                                @if(count($modalAssignedIds) > 0)
+                                    <span class="text-blue-600 font-bold">{{ count($modalAssignedIds) }} asisten dipilih</span>
+                                @else
+                                    <span class="text-slate-400">-- Pilih Asisten --</span>
+                                @endif
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                            </button>
+
+                            <div class="multi-asisten-dropdown hidden absolute left-0 right-0 z-[120] mt-2 rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/60 overflow-hidden">
+                                <div class="overflow-y-auto" style="max-height: 280px;">
+                                    @foreach($s->getAssistantStatuses() as $asisten)
+                                        <label class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 {{ $asisten->is_busy && !$asisten->is_assigned ? 'opacity-50' : '' }}">
+                                            <input type="checkbox"
+                                                   name="id_asisten[]"
+                                                   value="{{ $asisten->id_asisten }}"
+                                                   form="update-form-{{ $s->id_jadwal }}"
+                                                   {{ $asisten->is_assigned ? 'checked' : '' }}
+                                                   {{ $asisten->is_busy && !$asisten->is_assigned ? 'disabled' : '' }}
+                                                   class="asisten-checkbox h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            >
+                                            <div class="flex-1 min-w-0">
+                                                <span class="block truncate text-sm font-bold text-slate-700 {{ $asisten->is_assigned ? 'text-blue-600' : '' }}">{{ $asisten->nama }}</span>
+                                                @if($asisten->is_busy)
+                                                    <span class="text-[10px] font-bold text-red-500">{{ $asisten->label }}</span>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                <div class="flex gap-2 border-t border-slate-200 bg-slate-50 p-2">
+                                    <button type="button" onclick="submitMultiAsisten(this)" class="flex-1 h-9 rounded-lg bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 transition">
+                                        <i class="fas fa-save mr-1"></i> Simpan
+                                    </button>
+                                    <button type="button" onclick="closeMultiAsisten(this)" class="h-9 px-4 rounded-lg bg-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-300 transition">
+                                        Batal
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+                    <button type="button" onclick="closeScheduleDetailModal('schedule-detail-{{ $s->id_jadwal }}')" class="inline-flex h-10 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100">
+                        Tutup
+                    </button>
+                    <button type="button"
+                            class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-50 px-5 text-sm font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-700 hover:text-white"
+                            onclick="
+                                closeScheduleDetailModal('schedule-detail-{{ $s->id_jadwal }}');
+                                showCustomConfirm('Menerapkan perubahan ini ke semua jadwal yang sama di minggu-minggu berikutnya?', 'Konfirmasi Perubahan Massal', () => {
+                                    document.getElementById('scope-field-{{ $s->id_jadwal }}').value = 'all';
+                                    document.getElementById('update-form-{{ $s->id_jadwal }}').submit();
+                                });
+                            ">
+                        <i class="fas fa-layer-group text-xs"></i> Update
+                    </button>
+                    <form method="POST" action="{{ route('spv.delete', $s->id_jadwal) }}" class="m-0" id="form-delete-{{ $s->id_jadwal }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" onclick="closeScheduleDetailModal('schedule-detail-{{ $s->id_jadwal }}'); showCustomConfirm('Hapus jadwal ini?', 'Konfirmasi Hapus', () => document.getElementById('form-delete-{{ $s->id_jadwal }}').submit())" class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-5 text-sm font-black text-red-600 ring-1 ring-red-100 transition hover:bg-red-600 hover:text-white sm:w-auto">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
     <div id="noDataMessage" class="hidden flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-400">
         <i class="fas fa-calendar-times text-3xl mb-2 text-slate-300"></i>
-        <p class="text-sm font-semibold">Tidak ada jadwal yang cocok.</p>
+        <p class="text-sm font-semibold">Tidak ada jadwal.</p>
     </div>
 </div>
 
@@ -453,7 +544,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const filterType = document.getElementById('filterType');
     const limitSelect = document.querySelector('.limitSelect');
     const tableBody = document.querySelector('#scheduleTable tbody');
-    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    const rows = Array.from(tableBody.querySelectorAll('tr.schedule-row'));
+    const dateRows = Array.from(tableBody.querySelectorAll('tr.schedule-date-row'));
     const noDataMessage = document.getElementById('noDataMessage');
 
     let currentPage = 1;
@@ -472,8 +564,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const limit = parseInt(limitSelect.value, 10);
 
         let filteredRows = rows.filter(tr => {
-            const labSelect = tr.cells[1].querySelector('select');
-            let labName = labSelect ? labSelect.options[labSelect.selectedIndex].text : '';
+            let labName = tr.dataset.lab || '';
             labName = labName.replace(/[🟢|🔒]/g, '').replace('(Aktif)', '').replace('(Dipakai)', '').trim();
 
             const matchLab = !selectedLab || labName.toUpperCase().includes(selectedLab.toUpperCase());
@@ -502,8 +593,20 @@ document.addEventListener("DOMContentLoaded", function () {
         const startIdx = (currentPage - 1) * limit;
         const endIdx = startIdx + limit;
 
+        const visibleDates = new Set();
         rows.forEach(tr => tr.style.display = 'none');
-        filteredRows.slice(startIdx, endIdx).forEach(tr => tr.style.display = '');
+        dateRows.forEach(tr => tr.style.display = 'none');
+
+        filteredRows.slice(startIdx, endIdx).forEach(tr => {
+            tr.style.display = '';
+            visibleDates.add(tr.dataset.tanggal);
+        });
+
+        dateRows.forEach(tr => {
+            if (visibleDates.has(tr.dataset.date)) {
+                tr.style.display = '';
+            }
+        });
 
         buatNavigasiPagination(totalPages);
     }
@@ -543,11 +646,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const rawEntries = [];
         rows.forEach(tr => {
             const hariAttribute = tr.getAttribute('data-hari');
-            const inputTgl = tr.cells[0].querySelector('input[type="date"]');
-            if (!inputTgl) return;
+            const tanggalValue = tr.getAttribute('data-tanggal');
+            if (!tanggalValue) return;
 
-            const labSelect = tr.cells[1].querySelector('select');
-            let labName = labSelect ? labSelect.options[labSelect.selectedIndex].text : '';
+            let labName = tr.dataset.lab || '';
             labName = labName.replace(/[🟢|🔒]/g, '').replace('(Aktif)', '').replace('(Dipakai)', '').trim();
 
             const matchLab = !selectedLab || labName.toUpperCase().includes(selectedLab.toUpperCase());
@@ -557,26 +659,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (matchLab && matchType) {
                 // 🌟 FIX PDF: Cari class "time-formatter" karena tipe inputnya sekarang "text" bukan "time"
-                const jamInputs = tr.cells[2].querySelectorAll('.time-formatter');
-                
-                // Multi-Asisten: Baca semua checkbox yang terceklis
-                const asistenWrapper = tr.cells[6].querySelector('.multi-asisten-wrapper');
-                let asistenName = '-';
-                if (asistenWrapper) {
-                    const checkedBoxes = asistenWrapper.querySelectorAll('.asisten-checkbox:checked');
-                    if (checkedBoxes.length > 0) {
-                        const names = [];
-                        checkedBoxes.forEach(cb => {
-                            const label = cb.closest('label');
-                            const nameSpan = label ? label.querySelector('.text-sm.font-bold') : null;
-                            if (nameSpan) names.push(nameSpan.textContent.trim());
-                        });
-                        asistenName = names.join(', ');
-                    }
-                }
+                let asistenName = (tr.dataset.asisten || '-').trim() || '-';
 
-                let jMulaiClean = jamInputs[0].value.substring(0, 5);
-                let jSelesaiClean = jamInputs[1].value.substring(0, 5);
+                let jMulaiClean = (tr.dataset.jamMulai || '').substring(0, 5);
+                let jSelesaiClean = (tr.dataset.jamSelesai || '').substring(0, 5);
 
                 let hariDisplay = hariAttribute;
                 if (hariAttribute && hariAttribute.toLowerCase() === 'sabtu') {
@@ -584,15 +670,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 rawEntries.push({
-                    hariTanggal: hariDisplay + ', ' + inputTgl.value,
+                    hariTanggal: hariDisplay + ', ' + tanggalValue,
                     labName: labName,
                     jamMulaiStr: jMulaiClean,
                     jamSelesaiStr: jSelesaiClean,
                     menitMulai: hitungTotalMenit(jMulaiClean),
                     menitSelesai: hitungTotalMenit(jSelesaiClean),
-                    matkul: tr.cells[3].querySelector('input[type="text"]').value,
-                    kodeMatkul: tr.cells[4].innerText.trim(),
-                    dosen: tr.cells[5].querySelector('input[type="text"]').value,
+                    matkul: tr.dataset.matkul || '',
+                    kodeMatkul: tr.dataset.kode || tr.cells[3].innerText.trim(),
+                    dosen: tr.dataset.dosen || '',
                     asistenName: asistenName
                 });
             }
@@ -681,16 +767,36 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 let currentConfirmCallback = null;
 
+function openScheduleDetailModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeScheduleDetailModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+}
+
+document.addEventListener('click', function (event) {
+    if (event.target.classList && event.target.classList.contains('fixed') && event.target.id.startsWith('schedule-detail-')) {
+        closeScheduleDetailModal(event.target.id);
+    }
+});
+
 function showCustomAlert(message, title = 'Perhatian!') {
     document.getElementById('custom-alert-title').innerText = title;
     document.getElementById('custom-alert-message').innerText = message;
-    
+
     const modal = document.getElementById('custom-alert-modal');
     const box = document.getElementById('custom-alert-box');
-    
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
+
     setTimeout(() => {
         modal.classList.remove('opacity-0');
         modal.classList.add('opacity-100');
@@ -702,12 +808,12 @@ function showCustomAlert(message, title = 'Perhatian!') {
 function closeCustomAlert() {
     const modal = document.getElementById('custom-alert-modal');
     const box = document.getElementById('custom-alert-box');
-    
+
     modal.classList.remove('opacity-100');
     modal.classList.add('opacity-0');
     box.classList.remove('scale-100');
     box.classList.add('scale-95');
-    
+
     setTimeout(() => {
         modal.classList.remove('flex');
         modal.classList.add('hidden');
@@ -718,20 +824,20 @@ function showCustomConfirm(message, title, onConfirm) {
     document.getElementById('custom-confirm-title').innerText = title;
     document.getElementById('custom-confirm-message').innerText = message;
     currentConfirmCallback = onConfirm;
-    
+
     const modal = document.getElementById('custom-confirm-modal');
     const box = document.getElementById('custom-confirm-box');
-    
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
+
     setTimeout(() => {
         modal.classList.remove('opacity-0');
         modal.classList.add('opacity-100');
         box.classList.remove('scale-95');
         box.classList.add('scale-100');
     }, 10);
-    
+
     document.getElementById('custom-confirm-yes-btn').onclick = function() {
         closeCustomConfirm();
         if (currentConfirmCallback) currentConfirmCallback();
@@ -741,12 +847,12 @@ function showCustomConfirm(message, title, onConfirm) {
 function closeCustomConfirm() {
     const modal = document.getElementById('custom-confirm-modal');
     const box = document.getElementById('custom-confirm-box');
-    
+
     modal.classList.remove('opacity-100');
     modal.classList.add('opacity-0');
     box.classList.remove('scale-100');
     box.classList.add('scale-95');
-    
+
     setTimeout(() => {
         modal.classList.remove('flex');
         modal.classList.add('hidden');
@@ -777,7 +883,7 @@ function triggerAutoSubmit() {
         const file = fileInput.files[0];
         const validExtensions = ['.xlsx', '.xls', '.csv'];
         const fileName = file.name.toLowerCase();
-        
+
         const isValid = validExtensions.some(ext => fileName.endsWith(ext));
 
         if (!isValid) {
@@ -1071,7 +1177,7 @@ function submitMultiAsisten(btn) {
     const wrapper = btn.closest('.multi-asisten-wrapper');
     const formId = wrapper.dataset.form;
     const scopeId = wrapper.dataset.scope;
-    
+
     if (scopeId) {
         document.getElementById(scopeId).value = 'single';
     }

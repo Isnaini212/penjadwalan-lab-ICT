@@ -211,25 +211,24 @@
         </div>
 
         {{-- CARD RIWAYAT BOOKING TERBARU --}}
-        <div class="mt-10 rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xl shadow-slate-200/40">
+        <div class="mt-10 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/40 sm:p-6 md:p-8">
 
-            <div class="mb-6 flex items-center justify-between">
-                <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h3 class="flex items-center gap-2 text-lg font-extrabold text-slate-900">
                     <i class="fas fa-history text-indigo-500"></i> Riwayat Pengajuan Anda
                 </h3>
+                <p class="text-xs font-semibold text-slate-400">Pantau status peminjaman dan keputusan SPV.</p>
             </div>
 
-            <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-200">
-                <table class="w-full text-left text-sm whitespace-nowrap">
+            <div class="overflow-hidden rounded-2xl border border-slate-200">
+                <table class="w-full table-fixed text-left text-sm">
                     <thead class="bg-slate-50 text-xs font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-4">Tanggal & Hari</th>
-                            <th class="px-6 py-4">Lab & Kapasitas</th>
-                            <th class="px-6 py-4">Waktu</th>
-                            <th class="px-6 py-4 w-full">Keperluan</th>
-                            <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4 min-w-[200px]">Alasan Penolakan</th>
-                            <th class="px-6 py-4 text-center">Aksi</th>
+                            <th class="w-[23%] px-4 py-4 sm:px-5">Tanggal & Hari</th>
+                            <th class="w-[26%] px-4 py-4 sm:px-5">Lab & Kapasitas</th>
+                            <th class="w-[18%] px-4 py-4 sm:px-5">Waktu</th>
+                            <th class="w-[16%] px-4 py-4 text-center sm:px-5">Status</th>
+                            <th class="w-[17%] px-4 py-4 text-center sm:px-5">Detail</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -237,11 +236,11 @@
                         @if(isset($myBookings) && $myBookings->count() > 0)
                             @foreach($myBookings as $book)
                             <tr class="hover:bg-slate-50 transition">
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4 align-top sm:px-5">
                                     <div class="font-bold text-slate-800">{{ \Carbon\Carbon::parse($book->tanggal)->translatedFormat('d F Y') }}</div>
                                     <div class="text-xs font-semibold text-slate-400 mt-0.5">{{ $book->hari }}{{ strtolower($book->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }}</div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4 align-top sm:px-5">
                                     <span class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-600 border border-slate-200 mb-1.5">
                                         {{ $book->lab }}
                                     </span>
@@ -252,21 +251,12 @@
                                         <i class="fas fa-users text-slate-400 mr-1"></i> {{ $book->kapasitas }} Orang
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-4 align-top sm:px-5">
                                     <div class="font-mono text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 w-fit">
                                         {{ substr($book->jam_mulai, 0, 5) }} - {{ substr($book->jam_selesai, 0, 5) }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 font-semibold text-slate-700 whitespace-normal min-w-[200px]">
-                                    <div>{{ $book->keperluan }}</div>
-                                    @if($book->alasan_perubahan)
-                                        <div class="text-[10px] font-bold text-amber-600 mt-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 w-fit flex items-center gap-1.5">
-                                            <i class="fas fa-info-circle text-amber-500 text-xs"></i> 
-                                            <span>Perubahan: {{ $book->alasan_perubahan }}</span>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-4 py-4 text-center align-top sm:px-5">
                                     @if($book->status === 'pending')
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800 border border-amber-300">
                                             <i class="fas fa-hourglass-half"></i> Menunggu
@@ -281,72 +271,18 @@
                                         </span>
                                     @endif
                                 </td>
-                                {{-- Alasan Penolakan --}}
-                                <td class="px-6 py-4 whitespace-normal min-w-[200px]">
-                                    @if($book->status === 'rejected' && !empty($book->alasan_penolakan))
-                                        <div class="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">
-                                            <i class="fas fa-comment-slash mr-1 text-red-400"></i>
-                                            {{ $book->alasan_penolakan }}
-                                        </div>
-                                    @elseif($book->status === 'rejected')
-                                        <span class="text-xs text-slate-400 italic">Tidak ada keterangan.</span>
-                                    @else
-                                        <span class="text-xs text-slate-300">-</span>
-                                    @endif
-                                </td>
-                                {{-- Aksi --}}
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        @if($book->status === 'rejected')
-                                            <button type="button" 
-                                                    onclick="reapplyBooking({{ json_encode([
-                                                        'penanggung_jawab' => $book->penanggung_jawab,
-                                                        'tanggal' => $book->tanggal,
-                                                        'jam_mulai' => substr($book->jam_mulai, 0, 5),
-                                                        'jam_selesai' => substr($book->jam_selesai, 0, 5),
-                                                        'kapasitas' => $book->kapasitas,
-                                                        'keperluan' => $book->keperluan
-                                                    ]) }})"
-                                                    class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-600 border border-indigo-200 transition duration-200 hover:bg-indigo-600 hover:text-white hover:scale-105 transform">
-                                                <i class="fas fa-redo text-[10px]"></i> Ulang
-                                            </button>
-                                        @endif
-                                        @if($book->status !== 'approved')
-                                            <button type="button"
-                                                    onclick="openEditModal({{ json_encode([
-                                                        'id' => $book->id_booking,
-                                                        'penanggung_jawab' => $book->penanggung_jawab,
-                                                        'tanggal' => $book->tanggal,
-                                                        'jam_mulai' => substr($book->jam_mulai, 0, 5),
-                                                        'jam_selesai' => substr($book->jam_selesai, 0, 5),
-                                                        'kapasitas' => $book->kapasitas,
-                                                        'jumlah_lab' => $book->jumlah_lab,
-                                                        'keperluan' => $book->keperluan
-                                                    ]) }})"
-                                                    class="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600 border border-amber-200 transition duration-200 hover:bg-amber-600 hover:text-white hover:scale-105 transform">
-                                                <i class="fas fa-edit text-[10px]"></i> Edit
-                                            </button>
-
-                                            <form action="{{ route('ormawa.booking.delete', $book->id_booking) }}" method="POST" class="m-0 inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 transition duration-200 hover:bg-red-600 hover:text-white hover:scale-105 transform">
-                                                    <i class="fas fa-trash text-[10px]"></i> Hapus
-                                                </button>
-                                            </form>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-400 border border-slate-200">
-                                                <i class="fas fa-lock text-[9px]"></i> Terkunci
-                                            </span>
-                                        @endif
-                                    </div>
+                                <td class="px-4 py-4 text-center align-top sm:px-5">
+                                    <button type="button"
+                                            onclick="openHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}')"
+                                            class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-900">
+                                        <i class="fas fa-eye text-[10px]"></i> Detail
+                                    </button>
                                 </td>
                             </tr>
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center">
+                                <td colspan="5" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center text-slate-400">
                                         <i class="fas fa-clipboard-check text-4xl mb-3 text-slate-300"></i>
                                         <span class="font-bold">Anda belum pernah mengajukan peminjaman.</span>
@@ -358,6 +294,109 @@
                 </table>
             </div>
         </div>
+
+        @if(isset($myBookings) && $myBookings->count() > 0)
+            @foreach($myBookings as $book)
+                <div id="ormawa-history-detail-{{ $book->id_booking }}" class="fixed inset-0 z-[80] hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+                    <div class="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        <div class="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-5 py-4">
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-wider text-slate-400">Detail Riwayat Pengajuan</p>
+                                <h3 class="mt-1 text-lg font-black text-slate-900">{{ \Carbon\Carbon::parse($book->tanggal)->translatedFormat('d F Y') }}</h3>
+                                <p class="mt-1 text-xs font-semibold text-slate-500">
+                                    {{ $book->hari }}{{ strtolower($book->hari) === 'sabtu' ? ' (Kelas Karyawan)' : '' }} · {{ substr($book->jam_mulai, 0, 5) }} - {{ substr($book->jam_selesai, 0, 5) }}
+                                </p>
+                            </div>
+                            <button type="button" onclick="closeHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}')" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-100">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4 p-5">
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Keperluan</p>
+                                <p class="mt-2 text-sm font-semibold leading-relaxed text-slate-700">{{ $book->keperluan }}</p>
+                                @if($book->alasan_perubahan)
+                                    <div class="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold leading-relaxed text-amber-700">
+                                        <i class="fas fa-info-circle mt-0.5 text-amber-500"></i>
+                                        <span>Perubahan: {{ $book->alasan_perubahan }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Alasan Penolakan</p>
+                                @if($book->status === 'rejected' && !empty($book->alasan_penolakan))
+                                    <div class="mt-2 max-h-40 overflow-y-auto rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold leading-relaxed text-red-700">
+                                        <i class="fas fa-comment-slash mr-1 text-red-400"></i>
+                                        {{ $book->alasan_penolakan }}
+                                    </div>
+                                @elseif($book->status === 'rejected')
+                                    <p class="mt-2 text-sm italic text-slate-400">Tidak ada keterangan.</p>
+                                @else
+                                    <p class="mt-2 text-sm text-slate-400">-</p>
+                                @endif
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">Aksi</p>
+                                <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                                    @if($book->status === 'rejected')
+                                        <button type="button"
+                                                onclick="closeHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}'); reapplyBooking({{ json_encode([
+                                                    'penanggung_jawab' => $book->penanggung_jawab,
+                                                    'tanggal' => $book->tanggal,
+                                                    'jam_mulai' => substr($book->jam_mulai, 0, 5),
+                                                    'jam_selesai' => substr($book->jam_selesai, 0, 5),
+                                                    'kapasitas' => $book->kapasitas,
+                                                    'keperluan' => $book->keperluan
+                                                ]) }})"
+                                                class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-xs font-bold text-indigo-600 transition hover:bg-indigo-600 hover:text-white">
+                                            <i class="fas fa-redo text-[10px]"></i> Ajukan Ulang
+                                        </button>
+                                    @endif
+                                    @if($book->status !== 'approved')
+                                        <button type="button"
+                                                onclick="closeHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}'); openEditModal({{ json_encode([
+                                                    'id' => $book->id_booking,
+                                                    'penanggung_jawab' => $book->penanggung_jawab,
+                                                    'tanggal' => $book->tanggal,
+                                                    'jam_mulai' => substr($book->jam_mulai, 0, 5),
+                                                    'jam_selesai' => substr($book->jam_selesai, 0, 5),
+                                                    'kapasitas' => $book->kapasitas,
+                                                    'jumlah_lab' => $book->jumlah_lab,
+                                                    'keperluan' => $book->keperluan
+                                                ]) }})"
+                                                class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 text-xs font-bold text-amber-600 transition hover:bg-amber-600 hover:text-white">
+                                            <i class="fas fa-edit text-[10px]"></i> Edit
+                                        </button>
+
+                                        <form action="{{ route('ormawa.booking.delete', $book->id_booking) }}" method="POST" class="m-0 flex-1" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengajuan ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white">
+                                                <i class="fas fa-trash text-[10px]"></i> Hapus
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="inline-flex h-10 flex-1 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-4 text-xs font-bold text-slate-400">
+                                            <i class="fas fa-lock text-[10px]"></i> Terkunci
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end border-t border-slate-100 bg-slate-50 px-5 py-4">
+                            <button type="button" onclick="closeHistoryDetailModal('ormawa-history-detail-{{ $book->id_booking }}')" class="inline-flex h-10 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @endif
 
         {{-- Footer --}}
         <div class="mt-8 text-center text-xs font-semibold text-slate-400">
@@ -875,6 +914,26 @@
                 modal.classList.add('hidden');
             }, 300);
         }
+
+        function openHistoryDetailModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHistoryDetailModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        document.addEventListener('click', function (event) {
+            if (event.target.classList && event.target.classList.contains('fixed') && event.target.id.startsWith('ormawa-history-detail-')) {
+                closeHistoryDetailModal(event.target.id);
+            }
+        });
     </script>
 
     {{-- Edit Booking Modal --}}
@@ -1011,5 +1070,6 @@
             </button>
         </div>
     </div>
+
 </body>
 </html>
